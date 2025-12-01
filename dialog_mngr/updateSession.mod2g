@@ -1,0 +1,38 @@
+use dialog.
+use dialogflow.
+use ingredient_hierarchies.
+use patterns.
+use recipe_database.
+use recipe_selection.
+use utils.
+
+order=linear.
+
+% Updates the session with an intent of either user or agent.
+% Tries to identify pattern based on (user) intent if current sequence is empty.
+module updateSession(Actor, Intent, Params, Txt) {
+
+	if session([ H | T ]) then {
+		% CASE 1: Intent INITIATES A NEW SEQUENCE.
+		if H = [], matchingPattern(Actor, Intent, PatternId), log_info("session: ", [ [PatternId] | T], Info) 
+			then delete(session([ [] | T])) + insert(session([ [PatternId] | T]))
+			+ updateSession(Actor, Intent, Params, Txt) + log(Info).
+
+		% CASE 2: Intent CONTRIBUTES TO THE CURRENT SEQUENCE.
+		if expectedIntent(Actor, Intent), session([H | T]), 
+			add(H, [Actor, Intent, Params], NewH), log_info("session: ", [ NewH | T], Info)
+		then delete(session([ H | T])) + insert(session([ NewH | T])) + log(Info).
+		
+		% CASE 3: Intent INITIATES A SUBSEQUENCE.
+		if matchingPattern(Actor, Intent, PatternId), add(H, [PatternId], NewH), log_info("session: ", [NewH | T], Info)
+			then delete(session([H | T])) + insert(session([NewH | T])) % expand session with PatternId 
+			+ updateSession(Actor, Intent, Params, Txt) + log(Info). % and add intent (CASE 2)
+						
+		% CASE 4b: Agent indicates it recognised text but does not understand the dialog move.
+		% Note that an agent never triggers a b13 pattern and the b13 pattern will accept any user
+		% intent, so case 2 should be applicable now, and no new recursive call should be triggered.
+		if add(H, [b13], NewH), log_info("session: ", [ NewH | T], Info)
+			then delete(session([H | T])) + insert(session([NewH | T])) % expand session with b13 
+			+ updateSession(Actor, Intent, Params, Txt) + log(Info).
+	}
+}

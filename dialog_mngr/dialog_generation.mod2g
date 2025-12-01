@@ -1,0 +1,36 @@
+% generic agent files (do not include domain specific references)
+use dialog.
+use updateSession. % module
+use utils.
+
+% generic agent files (include domain specific references)
+use dialog.
+use updateSession. % module
+use utils.
+
+% generic agent files (include domain specific references)
+use dialogflow.
+use patterns.
+use responses.
+
+% domain specific data and logic
+use ingredient_hierarchies.
+use recipe_database.
+use recipe_selection.
+
+
+% This is the agent's decision module where it decides on which dialog moves to generate.
+% This module also updates the display (page shown to user).
+module dialog_generation {
+
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	%%% SAY SOMETHING AND/OR UPDATE WHAT IS DISPLAYED TO USER (PAGE)					%%%
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	% When it's the agent's turn, make the agent say something.
+	if expectedIntent(agent, Intent), not(waiting),
+		text_generator(Intent, Txt), log_info("agent says: ", Txt, Info)
+	then insert(waitingForEvent('TextDone'))
+		+ log(Info) + log("waiting for: TextDone")
+		+ say(Txt)
+		+ updateSession(agent, Intent, [], Txt).
+}

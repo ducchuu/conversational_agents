@@ -1,0 +1,1 @@
+In the folder social-interaction-cloud/sic_framework/services/eis/nlu/utils/checkpoints, you need to have the checkpoints file from your trained model (model_checkpoint.pt)

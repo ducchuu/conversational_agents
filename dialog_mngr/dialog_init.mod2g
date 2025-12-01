@@ -1,0 +1,54 @@
+% generic agent files (do not include domain specific references)
+use dialog.
+use utils.
+
+% generic agent files (include domain specific references)
+use dialogflow.
+use patterns.
+
+% domain specific files
+use ingredient_hierarchies.
+use recipe_database.
+use recipe_selection.
+
+module dialog_init {
+
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	%%% Initialize dialog management parameters.										%%%
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	if true then
+		% Agenda (list of patterns)
+		% Agent first asks user to select a recipe and then continues with a small confirmation
+		% dialog about recipe choice (while displaying ingredients and instructions for review by
+		% the user) ,
+		insert(agenda([])) +
+		insert(currentPattern(start)) +
+		% Session history (initialized to a list of one empty sequence).
+		insert(session([[]])) +
+		% Memory (initially empty).
+		insert(memory([])) +
+		% Initialize missingSlots/1. See dialog.pl for more info.
+		insert(missingSlots([])) +
+		% Initialize stepCounter/1 and totalSteps/1. See dialog.pl for more info.
+		insert(stepCounter(-1), totalSteps(0)).
+
+	% Copy agenda to be able to reinitialize (restart) agenda.
+	if agenda(Agenda) then insert(initialAgenda(Agenda)).
+
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	%%% Initialize behavioural parameters (to finetune agent behavior)	%%%
+	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+	if true then insert(agentName(''), lastTopicCheck).
+	
+	% Keep track of recipes that have been selected. Insert initial fact here;
+	% Update module will update to correct value.
+	if true then insert(recipeCounter(-1)).
+
+	% Next line prints all user intents that occur in patterns to agent's console
+	if retrieveIntentsfromPatterns(user, Intents),
+		term_to_atom(Intents, A)
+	then print(A).
+
+	% Insert statement to wait for 'start' button to be pressed.
+	if true then insert(waitingForEvent('start')) + log("waiting for: start").
+}

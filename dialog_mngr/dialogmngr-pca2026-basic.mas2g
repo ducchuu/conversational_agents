@@ -1,0 +1,16 @@
+use 'eis-for-sic-0.0.3.jar'.
+		
+define dialogmngr {
+	use dialog_init for init.
+	use dialog_update for updates.
+	use dialog_generation for decisions.
+	
+	replace answer/1.
+	replace event/1.
+	replace intent/5.
+	replace transcript/1.
+}
+
+launchpolicy{
+	when * launch dialogmngr.
+}
