@@ -46,8 +46,9 @@ extras_require = {
     "text2speech": [  # Adding text2speech dependencies
         "google-cloud-texttospeech",
     ],
-
-
+    "google-stt": [
+        "google-cloud-speech",
+    ],
 }
 
 setup(
@@ -77,7 +78,7 @@ setup(
             "run-webserver=sic_framework.services.webserver.webserver_pca:main",
             "run-eis=sic_framework.services.eis.run_eis:main",
             "start-framework=sic_framework.services.eis.eiscomponent:main",
-
+            "run-google-stt=sic_framework.services.google_stt.google_stt:main",
         ],
     },
 )

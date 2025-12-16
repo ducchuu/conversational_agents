@@ -5,6 +5,7 @@ import json
 import string
 import numpy as np
 from subprocess import call
+import sys
 from sic_framework import SICComponentManager
 from sic_framework.core.component_python2 import SICComponent
 from sic_framework.core.connector import SICConnector
@@ -15,7 +16,7 @@ from sic_framework.devices.common_desktop.desktop_speakers import DesktopSpeaker
 from sic_framework.services.text2speech.text2speech_service import \
     (Text2Speech, Text2SpeechConf, GetSpeechRequest)
 from sic_framework.services.dialogflow.dialogflow import\
-    (DialogflowConf, GetIntentRequest, StopListeningMessage, RecognitionResult, QueryResult, Dialogflow)
+    (DialogflowConf, GetIntentRequest, StopListeningMessage, RecognitionResult as DFRecognitionResult, QueryResult, Dialogflow)
 from sic_framework.services.webserver.webserver_pca import \
     (ButtonClicked, HtmlMessage, SetTurnMessage, TranscriptMessage, WebInfoMessage, Webserver, WebserverConf)
 from importlib.resources import files
@@ -30,6 +31,11 @@ from sic_framework.services.openai_whisper_speech_to_text.whisper_speech_to_text
     GetTranscript,
     SICWhisper,
 )
+from sic_framework.services.google_stt.google_stt import (
+    GoogleSpeechToText,
+    GoogleSpeechToTextConf,
+    GetStatementRequest,
+)
 import threading
 
 
@@ -42,8 +48,13 @@ class EISConf(SICConfMessage):
     EIS SICConfMessage
     """
 
-    def __init__(self, use_espeak=False):
+    def __init__(self, use_espeak=True, use_whisper=False, nlu=False):
+        # Toggle espeak vs cloud TTS
         self.use_espeak = use_espeak
+        # Toggle Whisper vs Google STT
+        self.use_whisper = use_whisper
+        # Toggle local NLU+Whisper/Google STT vs Dialogflow
+        self.nlu = nlu
 
 
 class EISRequest(SICRequest):
@@ -97,17 +108,14 @@ class EISComponent(SICComponent):
         # # Lock for thread-safe message handling
         # self._lock = threading.Lock()
 
-        # Init parameters
-        # ASSUMPTION: Google TTS service will be used
-        self.params.use_espeak = True
-
-        # If true then you use your intent and slot classifier including Whisper otherwise Dialogflow
-        self.params.nlu = False
+        # Init parameters from configuration (defaults provided by EISConf)
+        self.params.use_espeak = getattr(self.params, "use_espeak", True)
+        self.params.use_whisper = getattr(self.params, "use_whisper", False)
+        self.params.nlu = getattr(self.params, "nlu", False)
 
         # Keyfile needed for Dialogflow and Google TTS
-        # ASSUMPTION: This file is named 'dialogflow-keyfile.json' and added to the services/eis folder
-        if not self.params.nlu:
-            self.keyfile_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dialogflow-keyfile.json")
+        # ASSUMPTION: This file is named 'google-key.json' and added to the services/eis folder
+        self.google_key_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "google-key.json")
 
         # IP and port parameters
         # ASSUMPTION: code is run locally on a single machine, where Redis also runs
@@ -153,12 +161,12 @@ class EISComponent(SICComponent):
     def _setup_text_to_speech(self):
         """Configure text-to-speech."""
         if not self.params.use_espeak:
-            conf = Text2SpeechConf(keyfile=self.keyfile_path)
+            conf = Text2SpeechConf(keyfile=self.google_key_path)
             self.tts = Text2Speech(conf=conf)
 
     def _setup_dialogflow(self):
         """Initialize Dialogflow integration."""
-        with open(self.keyfile_path, 'r') as keyfile:
+        with open(self.google_key_path, 'r') as keyfile:
             keyfile_json = json.load(keyfile)
 
         conf = DialogflowConf(
@@ -172,8 +180,21 @@ class EISComponent(SICComponent):
         self.conversation_id = np.random.randint(10000)
 
     def _setup_nlu(self):
-        self.whisper = SICWhisper()
-        self.whisper.connect(self.desktop.mic)
+        if self.params.use_whisper:
+            self.whisper = SICWhisper()
+            self.whisper.connect(self.desktop.mic)
+        else:
+            with open(self.google_key_path, "r") as keyfile:
+                google_key = json.load(keyfile)
+            google_conf = GoogleSpeechToTextConf(
+                keyfile_json=google_key,
+                sample_rate_hertz=44100,
+                language="en-US",
+                interim_results=False,
+            )
+            self.google_stt = GoogleSpeechToText(ip=self.your_ip, conf=google_conf)
+            self.google_stt.connect(self.desktop.mic)
+
         # add path to ontology and model.
         model_path = str(files("sic_framework.services.nlu.utils.checkpoints").joinpath("model_checkpoint.pt"))
         ontology_path = str(files("sic_framework.services.nlu.utils.data").joinpath("ontology.json"))
@@ -182,7 +203,7 @@ class EISComponent(SICComponent):
 
 
     def on_dialog(self, message):
-        if is_sic_instance(message, RecognitionResult):
+        if is_sic_instance(message, DFRecognitionResult):
             # Send intermediate transcript (recognition) results to the webserver to enable live display
             self.web_server.send_message(TranscriptMessage(transcript=message.response.recognition_result.transcript))
 
@@ -345,12 +366,20 @@ class EISComponent(SICComponent):
             self.logger.info("Sending event: ListeningStarted")
             self.redis_client.publish(self.marbel_channel, "event('ListeningStarted')")
 
-            # Perform Whisper transcription
-            self.logger.info("Requesting transcript from Whisper...")
-            transcript_response = self.whisper.request(GetTranscript(timeout=3, phrase_time_limit=2))
-            transcript = getattr(transcript_response, "transcript", None)
+            # Perform ASR transcription
+            if self.params.use_whisper:
+                self.logger.info("Requesting transcript from Whisper...")
+                transcript_response = self.whisper.request(GetTranscript(timeout=3, phrase_time_limit=2))
+                transcript = getattr(transcript_response, "transcript", None)
+            else:
+                self.logger.info("Requesting transcript from Google STT...")
+                transcript_response = self.google_stt.request(GetStatementRequest(), block=True)
+                response_obj = getattr(transcript_response, "response", None)
+                transcript = None
+                if response_obj and hasattr(response_obj, "alternatives") and response_obj.alternatives:
+                    transcript = response_obj.alternatives[0].transcript
 
-            if transcript is None or not isinstance(transcript, str):
+            if transcript is None or not isinstance(transcript, str) or not transcript:
                 raise ValueError(f"Invalid transcript: expected a string, got {type(transcript).__name__}")
 
             self.logger.info(f"Received transcript: {transcript}")
