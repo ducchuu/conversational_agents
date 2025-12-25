@@ -369,7 +369,7 @@ class EISComponent(SICComponent):
             # Perform ASR transcription
             if self.params.use_whisper:
                 self.logger.info("Requesting transcript from Whisper...")
-                transcript_response = self.whisper.request(GetTranscript(timeout=3, phrase_time_limit=2))
+                transcript_response = self.whisper.request(GetTranscript(timeout=60, phrase_time_limit=60))
                 transcript = getattr(transcript_response, "transcript", None)
             else:
                 self.logger.info("Requesting transcript from Google STT...")
