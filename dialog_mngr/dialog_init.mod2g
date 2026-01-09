@@ -21,7 +21,7 @@ module dialog_init {
 		% Agent first asks user to select a recipe and then continues with a small confirmation
 		% dialog about recipe choice (while displaying ingredients and instructions for review by
 		% the user) ,
-		insert(agenda([])) +
+		insert(agenda([start, c10])) +
 		insert(currentPattern(start)) +
 		% Session history (initialized to a list of one empty sequence).
 		insert(session([[]])) +
@@ -38,7 +38,7 @@ module dialog_init {
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 	%%% Initialize behavioural parameters (to finetune agent behavior)	%%%
 	%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-	if true then insert(agentName(''), lastTopicCheck).
+	if true then insert(agentName('CookingBroski'), lastTopicCheck).
 	
 	% Keep track of recipes that have been selected. Insert initial fact here;
 	% Update module will update to correct value.

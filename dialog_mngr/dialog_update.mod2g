@@ -108,7 +108,7 @@ module dialog_update {
 	if answer('mic'), not(disabled('mic'))
 	then insert(waitingForEvent('ListeningDone')) % OLD: then insert(waitingForEvent('IntentDetectionDone'))
 		+ log("waiting for: ListeningDone") 
-		+ OLDstartListening(15, '')
+		%+ OLDstartListening(15, '')
 		+ delete(answer('mic')). % avoid processing it again below
 	
 	% Handling of recipe choice via button as a recipeRequest
@@ -316,6 +316,10 @@ module dialog_update {
 			
 		if Intent = start
 		then updateSession(agent, start, [], '').
+		
+		if text_generator(Intent, Text)
+		then updateSession(agent, Intent, [], Text)
+			+ webinfo(speech, Text).
 		
 	}
 			

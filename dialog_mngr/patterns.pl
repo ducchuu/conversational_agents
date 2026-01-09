@@ -307,6 +307,8 @@ pattern([c10, [agent, greeting], [user, greeting]]) :- agentName('').
 % NB: We deviate here from Moore and Arar's taxonomy of pattern codes and also label this 
 % 	pattern c10 to simplify things from an agenda management perspective.
 
+pattern([c10, [agent, greeting], [agent, selfIdentification], [user, greeting]]) :- 
+    not(agentName('')).
 
 %%% C3 Patterns: Capabilities
 % Pattern C3.0: General Capability Check

@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "bot-pca-miko-hafe",
+  "private_key_id": "b076ef6bd63df553cdb432033603db8e94d2174f",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDHjV5xpWqp3Kvk\nUuFN7O4Wrd5i6mNkPkeUiI/PAAAmfY2YCqakUFJma3eIbs3JBiep8CxtTNl12JhV\novpqVDvcZ/zlgQ5vkfiK9Fk/R3bc7PgfG8pI5hQ3QyH7NkUEEX75BaLJZA6a4KNL\nPvbXfsDxHsWlMX13weu/S803nLWjXoDips5YzZRQ+i/tYGLS83Wbt/YVPcQ7FYMw\nWW9G8Zw33ewmwKYoF/UbAF5qdYUkPbwo5SUK98SDyyXaE2ThCZFgHHYcRpzBwfy/\n7mDd1/Dh3CJbME89NSaToqotXQ+OtXxATsdGGvoFA5rXN6mvDuP/HxiMBGEs7vLq\n2sfb0XPZAgMBAAECggEAJVNdl49T4LrskhQonX1UWXyjLMhf1/fIRtG2aIc8//Yb\nHpXbbr+xcgPnA2eKaXATyjco8DbgNClT8Sy/f1ULL2JqDPmzXA4nOcKT0QDKjG9s\nx9DYaQNUQ7P0brtLdIPbRrQVq2riSnj7Qk9gN5W3fEJ/wLL9n4Fv2cPRenX/CbQG\ng/YJ1QIOiyEreoaoDVKHBdRI5WSWVeggGARb/heSvgWRQlt0LHrnSf5BAprUVVUV\n5JdhUbMqZcZIs/n7WU1P1VkyjmL67r2/iL+28cuYjOC285IOJQwpxhKOsKSg9KPW\nf1JiiDXLXL1dcsVXiHXU0tnAJtxesGIhg/66QIGYwwKBgQDj7BDN3jmQQfAP3t6Q\n7DUhoCNQRhf1c5IIj6x5xEdp+eZ+QuXURp/ZzUxDNCij352RFJgoC/kGZJepZ0yO\nOVbNzAdGnYfT4bNWeQl68/ejbSF/EkgduntcXz5yfOlqkAhnvnzKnI87zk7M+9po\nDxfkBTHL3IRNXMVe+KSV22mPJwKBgQDgIptvlp3XJ8gxoEKtWGO/zpy0OboQrWD1\naLV6shxWm89z0pG6II53nFGGm7lm9e2RckVIvR5WWmmTJKsuluTprU8w/Ivn50d1\nDf3u714g8YM/fLgAE8v4/+TarjiS1L8UK22FB4PA6tpOkb52aXY5/JvioxBRh2h9\n0UX9Dp7E/wKBgQCa8Pfbe56WOrz/jPqwemMEIODgyUWwToiP2Vvey1fg60mNu9yR\nmhFA9xdI+ERIYtOytNVbJAh+GBQhzV91r/UaogCwOJcFqwFHX7DaLM/EAYQr5jmw\nO/1wpi7FlbT4BEIyhIRBGH0movFe2Dd5VglfsUhQ1e/6x35FObJpTWdNMQKBgHao\n27GQA7BMl2fueF5dVTHOqJehmCgMIjDKZom2kdooUwP2jsADTGl2kJK7DsS7njJK\nVPPVa6I763jDCP15VWeBIVPF4Cu9/c6ywaUlhKfcNKf/10nzMSF6GCbN5ZWWnDKJ\na0nqWI5hx4GhFzyJSNYaLk0mFxWSonc5u9vlSZjxAoGAboKnIl0MhX3M9ipSpU+W\n0P16T6Cv5pvFFLQM5UqY4B3F103P9P3oxV6REce/YEbL6TaiZEMWz930mLMEednm\na5UuJhlJNtXB8AV5XHa2XRlahdA8Yox35A1XreSW8jX+tG+ijjGDRzWYb5n2om3t\nmM5gmZtTFHaegnq0xsPBqmM=\n-----END PRIVATE KEY-----\n",
+  "client_email": "pca-miko@bot-pca-miko-hafe.iam.gserviceaccount.com",
+  "client_id": "109478684122029489133",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/pca-miko%40bot-pca-miko-hafe.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

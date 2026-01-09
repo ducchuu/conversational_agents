@@ -80,13 +80,21 @@ text_generator(Intent, SelectedText) :-
 
 
 % Intent: greeting
-text(greeting, "Hey there!").
+text(greeting, 'Hey there!').
+text(greeting, 'Hello!').
+text(greeting, 'Hi there!').
+text(greeting, 'Welcome!').
 
 % Intent: paraphraseRequest
 
 
 % Intent: selfIdentification (for self-identification of the agent)
 
+% Intent: selfIdentification (for self-identification of the agent)
+% The instructions require using string_concat/3 to join the strings.
+text(selfIdentification, Txt) :-
+    agentName(Name),
+    string_concat("My name is ", Name, Txt).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Scripted text and phrases for ** DOMAIN SPECIFIC ** intents (sorted on intent name)	%%%

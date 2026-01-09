@@ -154,6 +154,9 @@ applyFilterCheck(ParamName, Value, RecipeIDsIn, RecipeIDsOut) :-
 % Project Assignment: Capability 5: Filter Recipes
 % Instruction: Add a clause for applyFilter('cuisine', Cuisine, RecipeIDsIn, RecipeIDsOut)
 
+applyFilter('cuisine', Cuisine, RecipeIDsIn, RecipeIDsOut) :- 
+	findall(RecipeID, (member(RecipeID, RecipeIDsIn), cuisine(RecipeID, Cuisine)), RecipeIDsOut).
+
 
 %%% 
 % Apply filter that excludes recipes that are of a particular cuisine.
