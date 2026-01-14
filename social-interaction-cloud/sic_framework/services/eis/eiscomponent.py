@@ -260,7 +260,7 @@ class EISComponent(SICComponent):
             self._handle_say_command(content)
         elif content.startswith("webinfo"):
             self._handle_web_info_command(content)
-        elif content.startswith("startListening"):
+        elif content.startswith("startListening") or content.startswith("action(startListening)"):
             self._handle_start_listening_command()
         elif content.startswith("stopListening"):
             self._handle_stop_listening_command()

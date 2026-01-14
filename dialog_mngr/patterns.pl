@@ -222,19 +222,14 @@ pattern([a21removeKeyFromMemory,
 %	A: What about ___*.
 % Instruction:
 %	Add a pattern with pattern ID a50recipeSelect here where the agent asks the user
-%	for input on what recipe to select and the user just asks for a recommendation.  
+%	for input on what recipe to select and the user just asks for a recommendation. 
 
-
-% Pattern a50recipeSelect: user asks for a recipe.
-% Variant where user requests a specific recipe by mentioning the recipe's name.
-% Example:
-% 	A: What recipe would you like to cook?
-%	U: I'd like to make an artichoke and pine nut pasta.
-%	A: Artichoke and pine nut pasta is a great choice!
-% Instruction:
-%	Add a pattern with pattern ID a50recipeSelect here where the agent asks the user
-%	for input on what recipe to select and the user asks for a specific recipe by name.
-
+pattern([a50recipeSelect,
+    [agent, specifyGoal],
+    [user, requestRecommendation],
+    [agent, recommend],
+    [agent, insert(a50recipeConfirm)]
+]).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

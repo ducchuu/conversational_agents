@@ -80,10 +80,10 @@ text_generator(Intent, SelectedText) :-
 
 
 % Intent: greeting
-text(greeting, 'Hey there!').
-text(greeting, 'Hello!').
-text(greeting, 'Hi there!').
-text(greeting, 'Welcome!').
+text(greeting, "Hey there!").
+text(greeting, "Hello!").
+text(greeting, "Hi there!").
+text(greeting, "Welcome!").
 
 % Intent: paraphraseRequest
 
@@ -124,11 +124,14 @@ text(selfIdentification, Txt) :-
 
 % Intent: recommend (a recipe)
 
+text(recommend, "I recommend checking the database.").
 
 % Intent: recipeCheck
 
 
 % Intent: specifyGoal (asking a user about recipe features they are looking for)
+
+text(specifyGoal, "What recipe would you like to cook?").
 
 
 text(clearMemory, ".").
