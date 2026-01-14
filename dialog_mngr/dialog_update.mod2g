@@ -71,6 +71,8 @@ module dialog_update {
 	if event('TextStarted') then  insert(talking).
 	if event('TextDone') then delete(talking).
 
+	if event('SpeechDone') then delete(talking) + log("DEBUG: Speech Finished -> Mic Enabled").
+
 	% Before deleting statements to wait for an event, first delete all flags to enable
 	% buttons again when:
 	% - a button that the bot was waiting for is pressed, or
@@ -108,7 +110,7 @@ module dialog_update {
 	if answer('mic'), not(disabled('mic'))
 	then insert(waitingForEvent('ListeningDone')) % OLD: then insert(waitingForEvent('IntentDetectionDone'))
 		+ log("waiting for: ListeningDone") 
-		%+ OLDstartListening(15, '')
+		+ action('startListening')
 		+ delete(answer('mic')). % avoid processing it again below
 	
 	% Handling of recipe choice via button as a recipeRequest

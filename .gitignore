@@ -1,6 +1,9 @@
 # macOS system files
 .DS_Store
 
+# redis cache files
+*.rdb
+
 # IDE-specific files
 *.idea/
 .idea/
