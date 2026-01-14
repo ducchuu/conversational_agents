@@ -110,7 +110,7 @@ module dialog_update {
 	if answer('mic'), not(disabled('mic'))
 	then insert(waitingForEvent('ListeningDone')) % OLD: then insert(waitingForEvent('IntentDetectionDone'))
 		+ log("waiting for: ListeningDone") 
-		+ action('startListening')
+		+ startListening %added startListening from eis_component, otherwise teh agent does not listen
 		+ delete(answer('mic')). % avoid processing it again below
 	
 	% Handling of recipe choice via button as a recipeRequest
