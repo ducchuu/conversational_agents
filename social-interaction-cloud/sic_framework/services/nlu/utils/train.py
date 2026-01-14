@@ -45,52 +45,62 @@ def train_model(model, dataset, num_epochs=3, batch_size=2, learning_rate=5e-5, 
     Returns:
         BERTNLUModel: The trained model, ready for evaluation or inference.
     """
+    
     # Move the model to the specified device (e.g., CPU or CUDA)
-    # model.to(device)
+    model.to(device)
 
     # Define the loss functions for intent and slot classification
-    # intent_loss_fn -> Use nn.
-    # slot_loss_fn -> Use nn.
+    intent_loss_fn= nn.CrossEntropyLoss() #-> Use nn.
+    slot_loss_fn= nn.CrossEntropyLoss()     #-> Use nn.
 
     # Define the optimizer (use torch.optim.Adam with the model parameters and learning_rate)
     # optimizer -> Initialize with model.parameters() and lr=learning_rate
+    optimizer = torch.optim.Adam(model.parameters(),lr=learning_rate)
+
 
     # Prepare the DataLoader
-    # dataloader -> Use DataLoader(dataset, batch_size=batch_size, shuffle=True)
+    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+
 
     # Training loop for the specified number of epochs
-    #for epoch in range(num_epochs):
+    for epoch in range(num_epochs):
         # Set the model to training mode
-        # model.train()
-
-        #for batch in dataloader:
+        model.train()
+        total_loss = 0.0
+        for batch in dataloader:
             # Zero out gradients from the previous step
-            # optimizer.zero_grad()
+            optimizer.zero_grad()
+
 
             # Move inputs and labels to the specified device
-            # input_ids -> Extract from batch['input_ids'] and move to device
-            # attention_mask -> Extract from batch['attention_mask'] and move to device
-            # intent_labels -> Extract from batch['intent_label'] and move to device. Ensure intent_labels is Long
-            # slot_labels -> Extract from batch['slot_labels'] and move to device. Ensure slot_labels is Long
+            input_ids = batch['input_ids'].to(device) #and move to device
+            attention_mask = batch['attention_mask'].to(device) #and move to device
+            intent_labels = batch['intent_label'].long().to(device) #and move to device. Ensure intent_labels is Long
+            slot_labels = batch['slot_labels'].long().to(device) #and move to device. Ensure slot_labels is Long
 
             # Perform a forward pass through the model
             # intent_logits, slot_logits -> Call the model with input_ids and attention_mask
+            intent_logits, slot_logits = model(input_ids,attention_mask)
 
             # Compute the intent and slot losses
             # intent_loss -> Compute using intent_loss_fn and intent_logits, intent_labels
+            intent_loss = intent_loss_fn(intent_logits,intent_labels)
+
             # slot_loss -> Compute using slot_loss_fn, slot_logits.view(-1, slot_logits.shape[-1]), and slot_labels.view(-1)
+            slot_loss = slot_loss_fn(slot_logits.view(-1, slot_logits.shape[-1]), slot_labels.view(-1))
 
             # Combine the intent and slot losses
             # loss -> intent_loss + slot_loss
+            loss = intent_loss + slot_loss
 
             # Backpropagation step - send loss backward
-            # loss.backward()
+            loss.backward()
 
             # Update model parameters with optimizer
-            # optimizer.step()
+            optimizer.step()
 
             # Print progress for the current epoch and batch loss
-            # print(f'Epoch {epoch + 1}, Loss: {loss.item()}')
+            print(f'Epoch {epoch + 1}, Loss: {loss.item()}')
 
     # Return the trained model
-    # return model
+    return model
