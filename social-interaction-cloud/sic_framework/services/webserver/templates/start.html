@@ -1,57 +1,89 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="utf-8"/>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
 
-        <title>Project Conversational Agents - Start</title>
+  <title>CookingBroski — Start</title>
 
-        <!-- Suppress favicon.ico request; https://www.reddit.com/r/flask/comments/aucgy9/template_rendering/ -->
-        <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+  <link rel="stylesheet" href="static/css/bootstrap.min.css">
+  <link rel="stylesheet" href="static/css/pca_sleek.css">
 
-        <!-- Bootstrap CSS -->
-        <link rel="stylesheet" href="static/css/bootstrap.min.css">
+  <script src="static/js/bootstrap.bundle.min.js"></script>
+  <script src="static/js/jquery-3.7.1.min.js"></script>
+  <script src="static/js/socket.io.min.js"></script>
+  <script src="static/js/pca.js" defer></script>
+</head>
 
-        <!-- jQuery from a CDN -->
-        <script src="static/js/jquery-3.7.1.min.js"></script>
+<body>
+  <div class="pca-bg" style="background-image:url('static/images/PCAImage2.webp');"></div>
+  <div class="pca-overlay"></div>
 
-        <!-- Bootstrap JS Bundle -->
-        <script src="static/js/bootstrap.bundle.min.js"></script>
-
-
-        <!-- Socket.IO JS Bundle -->
-        <script src="static/js/socket.io.min.js"></script>
-
-        <!-- JS for Project Conversational Agents (feel free to add and/or edit) -->
-        <script src="static/js/pca.js" defer></script>
-    </head>
-    <body>
-        <div id="main">
-            <main class="container-fluid" style="width:100vw; height:60vh">
-                <img class="bg-image" style="width: 100%; height: 100vh; position: fixed; top: 0; left: 0; z-index: -1;" src="https://images.pexels.com/photos/349609/pexels-photo-349609.jpeg" alt="Can not show this image">
-                <div class="jumbotron" style="background: none">
-                    <h1 class="text-center">Please read this first:</h1>
-                </div>
-                <div class="jumbotron mx-auto" style="width: 70%; background-color:#deb887;">
-                    <h5>
-                        <center>
-                            You are about to interact with <b>CookingBroski</b>.<br>
-                            It can recommend and help you find recipes to your taste.<br><hr>
-                            <h4>Instructions</h4>
-                            On the pages that follow, push the microphone button
-                            <img class="img-fluid" style="width:1.5rem;" src="static/images/mic_out.png" alt="Can not show this image">
-                            to talk to the agent when it is your turn to talk (when the agent is not talking). When you see
-                            <img class="img-fluid" style="width:1.5rem;" src="static/images/mic_on.png" alt="Can not show this image">
-                            the agent is listening to you.
-                        </center>
-                    </h5>
-                </div>
-                <div class="jumbotron text-center" style="background: none">
-                    <h3>Done reading? Then please press start to begin</h3>
-                    <button class="btn btn-lg btn-info" id="start">
-                        <b>Start</b>
-                    </button>
-                </div>
-            </main>
+  <div class="pca-shell" id="main">
+    <header class="pca-topbar">
+      <nav class="navbar">
+        <div class="pca-brand">
+          <div class="pca-logo" aria-hidden="true">🍲</div>
+          <div>
+            <div class="font-weight-bold">CookingBroski</div>
+            <small>Find recipes by voice</small>
+          </div>
         </div>
-    </body>
+      </nav>
+    </header>
+
+    <main class="container py-4 py-md-5 flex-grow-1 d-flex align-items-center">
+      <div class="w-100">
+        <div class="pca-card p-3 p-md-4 mx-auto" style="max-width: 920px;">
+          <div class="pca-card-inner p-3 p-md-4">
+            <div class="d-flex flex-wrap align-items-center justify-content-between mb-3">
+              <span class="pca-chip pca-chip--info">Start</span>
+              <span class="pca-chip">🎤 Voice interaction</span>
+            </div>
+
+            <h1 class="pca-title mb-2">Welcome to <span style="color:var(--pca-accent);">CookingBroski</span></h1>
+            <p class="lead pca-muted mb-4" style="max-width: 62ch;">
+              Tell me what you feel like eating, and I’ll help you narrow down recipes that match your taste.
+            </p>
+
+            <div class="row">
+              <div class="col-lg-7">
+                <h4 class="mb-2">How it works</h4>
+                <p class="pca-muted mb-3">
+                  On the pages that follow, press the microphone when it is your turn to speak (when the agent is not talking).
+                </p>
+
+                <div class="d-flex flex-wrap align-items-center">
+                  <span class="pca-chip mr-2 mb-2">
+                    <img class="img-fluid mr-2" style="width:1.1rem;" src="static/images/mic_out.png" alt="Mic off">
+                    Mic off
+                  </span>
+                  <span class="pca-chip mr-2 mb-2">
+                    <img class="img-fluid mr-2" style="width:1.1rem;" src="static/images/mic_on.png" alt="Mic on">
+                    Listening
+                  </span>
+                </div>
+              </div>
+
+              <div class="col-lg-5 mt-4 mt-lg-0">
+                <div class="pca-block">
+                  <h5 class="mb-2">Ready?</h5>
+                  <p class="pca-muted mb-3">Press Start to begin the conversation.</p>
+                  <button class="btn btn-lg btn-block pca-btn-primary" id="start" type="button">
+                    Start
+                  </button>
+                  <small class="d-block mt-2 pca-muted">
+                    Tip: You can say things like “vegetarian”, “under 30 minutes”, or “Italian”.
+                  </small>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
 </html>

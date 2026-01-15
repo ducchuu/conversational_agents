@@ -1,10 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+  <title>CookingBroski — Pick a Recipe</title>
+
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+  <link rel="stylesheet" href="static/css/bootstrap.min.css">
+  <link rel="stylesheet" href="static/css/pca_sleek.css">
+
+  <script src="static/js/bootstrap.bundle.min.js"></script>
+  <script src="static/js/jquery-3.7.1.min.js"></script>
+  <script src="static/js/socket.io.min.js"></script>
+  <script src="static/js/pca.js" defer></script>
 </head>
+
 <body>
-$END$
+  <div class="pca-bg" style="background-image:url('https://images.pexels.com/photos/349609/pexels-photo-349609.jpeg');"></div>
+  <div class="pca-overlay"></div>
+
+  <div class="pca-shell" id="main">
+    <header class="pca-topbar">
+      <nav class="navbar d-flex justify-content-between">
+        <div class="pca-brand">
+          <div class="pca-logo" aria-hidden="true">🍲</div>
+          <div>
+            <div class="font-weight-bold">CookingBroski</div>
+            <small>Choose one you like</small>
+          </div>
+        </div>
+
+        <button class="btn pca-mic pca-mic--sm" id="mic" type="button" aria-label="Microphone">
+          <img class="img-fluid" id="micimg" src="static/images/mic_out.png" alt="Microphone">
+        </button>
+      </nav>
+    </header>
+
+    <main class="container py-4 py-md-5 flex-grow-1">
+      <div class="pca-card p-3 p-md-4">
+        <div class="pca-card-inner p-3 p-md-4">
+          <div class="d-flex flex-wrap align-items-center justify-content-between mb-3">
+            <div>
+              <h2 class="pca-title mb-1">I found these recipes you might like</h2>
+              <div class="pca-muted">Tap a recipe card to select it.</div>
+            </div>
+            <span class="pca-chip pca-chip--info">
+              <span id="recipecounter">—</span> recipes
+            </span>
+          </div>
+
+          <div class="pca-block mb-3">
+            <div class="d-flex align-items-center justify-content-between">
+              <div class="font-weight-bold">Filters applied</div>
+              <span class="pca-muted"><small>Updates live</small></span>
+            </div>
+            <div class="mt-3">
+              <div class="d-flex flex-wrap" id="addFiltersHere"></div>
+            </div>
+
+            <template id="filterCardTemplate">
+              <span class="pca-chip mr-2 mb-2" id="filterText">With pasta</span>
+            </template>
+          </div>
+
+          <div id="recipesEmptyState" class="pca-muted" style="display:none;">
+            <div class="pca-block">
+              No recipes to show yet. Keep refining your preferences using the microphone.
+            </div>
+          </div>
+
+          <div class="pca-grid" id="recipesGrid"></div>
+
+          <!-- Template used by pca.js to render each recipe card -->
+          <template id="recipeCardTemplate">
+            <div class="pca-recipe" role="button" tabindex="0" data-recipe-id="">
+              <div class="pca-recipe-img" data-recipe-img=""></div>
+              <div class="pca-recipe-body">
+                <h5 class="pca-recipe-title" data-recipe-title="">Recipe title</h5>
+                <p class="pca-recipe-desc" data-recipe-desc="">Short description goes here.</p>
+                <div class="pca-recipe-meta" data-recipe-meta="">
+                  <span class="pca-chip">⏱ <span data-recipe-time="">—</span></span>
+                  <span class="pca-chip">🍽 <span data-recipe-servings="">—</span></span>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </main>
+
+    <footer class="pca-footer fixed-bottom">
+      <div class="container py-2">
+        <p class="lead text-center" style="font-size: 1rem;" id="transcript"></p>
+      </div>
+    </footer>
+  </div>
 </body>
 </html>
