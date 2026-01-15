@@ -35,6 +35,16 @@ class BERTNLUModel(nn.Module):
         # self.intent_classifier -> Initialize as nn.Linear with appropriate dimensions
         # self.slot_classifier -> Initialize as nn.Linear with appropriate dimensions
 
+        self.bert = BertModel.from_pretrained('bert-base-uncased')
+        #hidden_size is for the input used, using conf. as it has to be exact
+        self.intent_classifier = nn.Linear(self.bert.config.hidden_size,num_intents)
+        self.slot_classifier = nn.Linear(self.bert.config.hidden_size,num_slots)
+
+
+
+
+
+
     def forward(self, input_ids, attention_mask):
         # outputs -> Call self.bert with input_ids and attention_mask as arguments
         # sequence_output -> Extract last_hidden_state from outputs
