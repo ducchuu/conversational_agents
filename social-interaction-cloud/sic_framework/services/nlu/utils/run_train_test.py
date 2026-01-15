@@ -34,19 +34,24 @@ def analyze_distribution(data):
     """
     # Extract intents from the dataset (list comprehension over item['intent'])
     # intents -> List of intents from the data
+    intents = [item["intent"] for item in data]
 
     # Extract slots from the dataset (nested list comprehension over item['slots'])
     # slots -> Flattened list of all slots from the data
+    slots = [slot_name for item in data for slot_name in item["slots"].keys()]
 
     # Count the frequency of each intent using Counter
     # intent_distribution -> Use Counter on the intents list
+    intent_distribution = Counter(intents)
 
     # Count the frequency of each slot using Counter
     # slot_distribution -> Use Counter on the slots list
+    slot_distribution = Counter(slots)
+
 
     # Return intent_distribution and slot_distribution as a tuple
     # return intent_distribution, slot_distribution
-
+    return (intent_distribution, slot_distribution)
 
 
 def main():
