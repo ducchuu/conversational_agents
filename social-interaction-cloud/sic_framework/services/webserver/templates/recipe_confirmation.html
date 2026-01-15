@@ -1,10 +1,69 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
-</head>
-<body>
-$END$
-</body>
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <title>Project Conversational Agents - Recipe Confirmation</title>
+        
+        <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+        <link rel="stylesheet" href="static/css/bootstrap.min.css">
+
+        <script src="static/js/jquery-3.7.1.min.js"></script>
+        <script src="static/js/bootstrap.bundle.min.js"></script>
+        <script src="static/js/socket.io.min.js"></script>
+        <script src="static/js/pca.js" defer></script>
+    </head>
+    <body>
+        
+        <template id="recipeDetailsTemplate">
+            <div class="card border-0 bg-transparent">
+                <h2 class="display-6 fw-bold mb-3 recipe-title">Loading...</h2>
+                
+                <div class="mb-3">
+                    <img class="recipe-image img-fluid rounded shadow-sm" 
+                         src="" 
+                         alt="Recipe Image" 
+                         style="max-height: 250px; object-fit: cover; width: 100%;">
+                </div>
+
+                <div class="d-flex justify-content-center gap-4 mb-3 text-muted">
+                    <span>⏱️ <span class="recipe-time"></span> mins</span>
+                    <span>🍽️ <span class="recipe-servings"></span> ppl</span>
+                </div>
+            </div>
+        </template>
+
+        <div id="main">
+            
+            <main class="container-fluid d-flex flex-column justify-content-center align-items-center" style="width:100vw; height:100vh">
+                
+                <img class="bg-image" style="width: 100%; height: 100vh; position: fixed; top: 0; left: 0; z-index: -1; object-fit: cover;" src="https://images.pexels.com/photos/4199098/pexels-photo-4199098.jpeg" alt="Background">
+                
+                <div class="text-center p-4 rounded shadow" style="background-color: rgba(255, 255, 255, 0.95); max-width: 500px; width: 90%;">
+                    
+                    <div id="content">
+                        <h3>Waiting for recipe data...</h3>
+                    </div>
+                    
+                    <hr>
+
+                    <p class="lead mb-4">
+                        How does this look? <br>
+                        <small class="text-muted" style="font-size: 0.9rem;">Say "Yes" to confirm or "No" to see another.</small>
+                    </p>
+
+                    <button class="btn btn-success rounded-circle p-3 shadow-sm" id="mic" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; margin: 0 auto;" type="button" disabled>
+                        <img class="img-fluid" style="width: 2.5rem;" id="micimg" src="static/images/mic_out.png" alt="Mic">
+                    </button>
+                    
+                    <p class="text-muted mt-2"><small>Tap to speak</small></p>
+                </div>
+
+            </main>
+
+            <footer class="fixed-bottom">
+                <p class="lead mb-0 bg-light text-center py-2 shadow-lg" style="min-height:3rem; font-size: 1rem;" id="transcript"></p>
+            </footer>
+
+        </div>
+    </body>
 </html>

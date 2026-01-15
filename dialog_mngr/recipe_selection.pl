@@ -15,7 +15,11 @@
 %
 % Instruction: Add a definition for currentRecipe/1 here.
 
-
+currentRecipe(RecipeID) :-
+    memoryKeyValue('recipe', RecipeName),
+    recipeName(RecipeID, RecipeName).
+    
+    
 /**
  * ingredients(+RecipeID:atom, -IngredientList:list)
  *
@@ -64,7 +68,7 @@
 % Project Assignment: Capability 2: Request a Recommendation
 %
 % Instruction: Add a definition for recipeIDs/1 here.
-
+recipeIDs(RecipeIDs) :- setof(RecipeID, recipeID(RecipeID), RecipeIDs).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -88,7 +92,7 @@
  * 		agent's conversational memory.
 **/
 % Project Assignment: Capability 2: Request a Recommendation
-recipeIDs(RecipeIDs) :- setof(RecipeID, recipeID(RecipeID), RecipeIDs).
+
 
 %
 % recipesFilteredNew(-RecipeIDs):

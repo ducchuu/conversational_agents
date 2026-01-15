@@ -207,12 +207,24 @@ pattern([a21removeKeyFromMemory,
 % Two variants where user confirms they like the recipe by either a confirmation or
 % appreciation intent. 
 
+pattern([a50recipeConfirm,
+    [user, confirmation],
+    [agent, terminate] % Or [agent, startCooking] if you have that stage later
+]).
 
+
+pattern([a50recipeConfirm,
+    [user, appreciation],
+    [agent, terminate]
+]).
 
 % Variant where user disconfirms, i.e. expresses they do not like the recipe. The
 % conversation should move back to the recipe selection stage (a50recipeSelect).
 
-
+pattern([a50recipeConfirm,
+    [user, disconfirmation],
+    [agent, insert(a50recipeSelect)] 
+]).
 
 % Pattern a50recipeSelect: user asks for a recipe.
 % Variant where user requests a (random) recommendation.
@@ -228,6 +240,14 @@ pattern([a50recipeSelect,
     [agent, specifyGoal],
     [user, requestRecommendation],
     [agent, recommend],
+    [agent, insert(a50recipeConfirm)]
+]).
+
+
+pattern([a50recipeSelect,
+    [agent, specifyGoal],
+    [user, recipeRequest],
+    [agent, recipeChoiceReceipt],
     [agent, insert(a50recipeConfirm)]
 ]).
 

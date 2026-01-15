@@ -7,6 +7,7 @@
 	intent/5,
 	transcript/1.
 
+    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Parameter specific content								%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -15,7 +16,7 @@
 dual_parameter_name_pairs([
 	['cuisine', 'cuisineDel'],
 	['dietaryrestriction', 'dietaryRestrictionDel'],
-	["duration", 'durationDel'],
+	['duration', 'durationDel'],
 	['easykeyword', 'easyKeyWordDel'],
 	['excludeingredient', 'excludeIngredientDel'],
 	['excludeingredienttype', 'excludeIngredientTypeDel'],
@@ -36,7 +37,28 @@ dual_parameter_name_pairs([
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Logic for handling and formatting filter parameters					%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+intent(recipeRequest, [recipe=Name], Confidence, Text, Source) :-
+    % 1. Intercept the 'addFilter' intent from Dialogflow
+    intent(addFilter, _, Confidence, Text, Source),
+    
+    % 2. Retrieve a recipe name from the database (e.g., 'traditional polish...')
+    recipeName(_ID, Name),
+    
+    % 3. Normalize USER TEXT to lowercase string
+    %    (Handles "Traditional Polish..." -> "traditional polish...")
+    (atom(Text) -> atom_string(Text, TextS) ; TextS = Text),
+    string_lower(TextS, TextLower),
+    
+    % 4. Normalize DATABASE NAME to lowercase string
+    %    (Handles 'traditional polish...' -> "traditional polish...")
+    (atom(Name) -> atom_string(Name, NameS) ; NameS = Name),
+    string_lower(NameS, NameLower),
 
+    % 5. Check if the recipe name is inside the text
+    sub_string(TextLower, _, _, _, NameLower),
+    
+    % 6. Stop searching immediately if found (The Cut)
+    !.
 /**
  * filters_from_memory(-Filters)
  *
@@ -132,6 +154,16 @@ parameter_text_templates([
 	['durationlonger', 'take more than ~a minutes'],
 	['nrOfIngredientsMore', 'include more than ~a ingredients']
 ]).
+
+
+% so for the webinfo data we use this predicate recipe_to_json/2 in order to translate a recipe from the database to a json format dictionary, that is compatible with the html pages and pca.js functions
+recipe_to_json(ID, JSON) :-
+    recipeName(ID, Name),
+    picture(ID, Url),
+    time(ID, Time),
+    servings(ID, Servings),
+    format(string(JSON), '{"title": "~w", "image": "~w", "time": "~w", "servings": "~w"}', [Name, Url, Time, Servings]).
+
 
 	
 format_text_value(Filter, Ingredients, String) :-

@@ -121,10 +121,19 @@ text(selfIdentification, Txt) :-
 
 % Intent: recipeChoiceReceipt (acknowledge user's choice of recipe)
 
+text(recipeChoiceReceipt, Txt) :-
+    currentRecipe(RecipeID),
+    recipeName(RecipeID, Name),
+    string_concat(Name, ' is a great choice!', Txt).
+
 
 % Intent: recommend (a recipe)
 
-text(recommend, "I recommend checking the database.").
+text(recommend, Output) :-
+    currentRecipe(RecipeID),
+    recipeName(RecipeID, Name),
+    string_concat("What about ", Name, TempString),
+    string_concat(TempString, "?", Output).
 
 % Intent: recipeCheck
 
@@ -132,6 +141,8 @@ text(recommend, "I recommend checking the database.").
 % Intent: specifyGoal (asking a user about recipe features they are looking for)
 
 text(specifyGoal, "What recipe would you like to cook?").
+text(specifyGoal, "What would you like to cook today?").
+text(specifyGoal, "What kind of recipe are you looking for today today?").
 
 
 text(clearMemory, ".").

@@ -51461,3 +51461,77 @@ ingredientAndQuantity('891', '4 frozen cod fillets').
 ingredientAndQuantity('891', 'salt'). 
 ingredientAndQuantity('891', 'pepper'). 
 ingredientAndQuantity('891', 'olive oil'). 
+
+
+%%%% Recipe 892: traditional polish cabbage rolls (golabki) %%%%
+% added by Mikolaj Duchlinski mdu219
+
+recipeID('892').
+recipeName('892', 'traditional polish cabbage rolls').
+picture('892', 'https://pieprzyczfantazja.pl/wp-content/uploads/2020/07/PicsArt_07-12-04.55.04-scaled-e1594671396655.jpg').
+time('892', 90).
+servings('892', 5).
+cuisine('892', 'polish').
+mealType('892', 'dinner').
+step('892', 1, 'place the minced meat in a large bowl.').
+step('892', 2, 'cook the rice, let it cool down, and add it to the meat.').
+step('892', 3, 'peel and grate the onions, then add them to the meat and rice mixture.').
+step('892', 4, 'season with salt (about half a teaspoon) and pepper (1/4 teaspoon).').
+step('892', 5, 'mix everything thoroughly by hand and form small oblong cutlets.').
+step('892', 6, 'cut the core out of the cabbage and place the cabbage in a large pot of boiling water, core side down.').
+step('892', 7, 'cook for about 10 minutes on low heat, then flip and cook for another 5 minutes.').
+step('892', 8, 'remove the cabbage, let it cool, separate the leaves, and trim any thick veins.').
+step('892', 9, 'place a portion of the meat mixture on each leaf.').
+step('892', 10, 'roll them up like croquettes: fold one side over the meat, fold the sides in, and roll tightly to the end.').
+step('892', 11, 'line the bottom of a large, wide pot with a few leftover cabbage leaves.').
+step('892', 12, 'place the cabbage rolls in the pot, seam side down.').
+step('892', 13, 'bring the broth to a boil in a separate pot and pour it over the cabbage rolls.').
+step('892', 14, 'cover and simmer for about 45 to 60 minutes until the cabbage is soft (do not stir, just shake the pot gently).').
+step('892', 15, 'pour the cooking liquid into another pot to make the sauce.').
+step('892', 16, 'add the tomato puree and the flour (mixed with a little cold water) to the liquid.').
+step('892', 17, 'boil the sauce and season with salt, pepper, dried oregano, marjoram, and paprika.').
+step('892', 18, 'cook the sauce for 10 minutes uncovered.').
+step('892', 19, 'optionally, temper the sour cream with hot sauce and add it to the pot.').
+step('892', 20, 'pour the sauce back over the rolls and cook for a few more minutes.').
+step('892', 21, 'serve with fresh bread or boiled potatoes.').
+ingredient('892', 'pork').
+ingredient('892', 'rice').
+ingredient('892', 'onion').
+ingredient('892', 'cabbage').
+ingredient('892', 'broth').
+ingredient('892', 'tomato puree').
+ingredient('892', 'flour').
+ingredient('892', 'salt').
+ingredient('892', 'pepper').
+ingredient('892', 'paprika').
+ingredient('892', 'oregano').
+ingredient('892', 'marjoram').
+ingredient('892', 'sour cream').
+ingredientAndQuantity('892', '700g minced pork').
+ingredientAndQuantity('892', '100g rice').
+ingredientAndQuantity('892', '2 onions').
+ingredientAndQuantity('892', '1 white or savoy cabbage').
+ingredientAndQuantity('892', '1.5l broth').
+ingredientAndQuantity('892', '600g tomato puree').
+ingredientAndQuantity('892', '1 tbsp flour').
+ingredientAndQuantity('892', 'salt').
+ingredientAndQuantity('892', 'pepper').
+ingredientAndQuantity('892', 'paprika').
+ingredientAndQuantity('892', 'oregano').
+ingredientAndQuantity('892', 'marjoram').
+ingredientAndQuantity('892', '4 tbsp thick sour cream').
+
+
+%%%% Recipe 893: %%%%
+
+
+
+%%%% Recipe 894: %%%%
+
+
+
+%%%% Recipe 895: %%%%
+
+
+
+%%%% Recipe 896: %%%%

@@ -71,8 +71,6 @@ module dialog_update {
 	if event('TextStarted') then  insert(talking).
 	if event('TextDone') then delete(talking).
 
-	if event('SpeechDone') then delete(talking) + log("DEBUG: Speech Finished -> Mic Enabled").
-
 	% Before deleting statements to wait for an event, first delete all flags to enable
 	% buttons again when:
 	% - a button that the bot was waiting for is pressed, or
@@ -102,16 +100,18 @@ module dialog_update {
 		answer(Button), not(Button='mic'), waitingForEvent('start')
 	then log('event: start') + delete(waitingForEvent('start')).
  
-	% If mic button is pressed and button is enabled, then start listening for 15 seconds.
-	% We'll be waiting for the results of intention detection, not just that listening has
-	% finished, as this may take slightly longer. Assumption here is that intent results
-	% are delivered at the same time as the event 'IntentionDetectionDone' so that we
-	% process the results and update the session accordingly.
-	if answer('mic'), not(disabled('mic'))
-	then insert(waitingForEvent('ListeningDone')) % OLD: then insert(waitingForEvent('IntentDetectionDone'))
-		+ log("waiting for: ListeningDone") 
-		+ startListening %added startListening from eis_component, otherwise teh agent does not listen
-		+ delete(answer('mic')). % avoid processing it again below
+
+	if answer('mic'), not(disabled('mic')), currentTopLevel(c10)
+	then insert(waitingForEvent('ListeningDone')) 
+		+ log("Mic clicked on Greeting: Trusting Framework auto-listen") 
+		+ delete(answer('mic')).
+
+	% This is needed, otherwise the agent was not listening after the greeting (c10 pattern)
+	if answer('mic'), not(disabled('mic')), not(currentTopLevel(c10))
+	then insert(waitingForEvent('ListeningDone')) 
+		+ log("Mic clicked on inner page: Forcing startListening") 
+		+ startListening
+		+ delete(answer('mic')).
 	
 	% Handling of recipe choice via button as a recipeRequest
 	if answer(Button), recipeName(_, Button),
@@ -133,7 +133,7 @@ module dialog_update {
 	% If an intent has been perceived, somebody must have been talking if we are listening. 
 	% Because we only want to process one intent at each turn, if the mic is still open we 
 	% close it and stop listening.
-	if intent(_, _, _, _, _), listening then OLDstopListening.
+	if intent(_, _, _, _, _), listening then stopListening.
 	
 	% OLD: interaction logic now handled by SIC
 	% If an intent was received via the chat instead of via the mic, and we are still 
@@ -176,8 +176,13 @@ module dialog_update {
 
 	% Request Recommendation Function Goes here!
 	% Copy-paste random recommendation rule here...
-
-
+	
+	
+	if intent(requestRecommendation, _, _, _, _),
+  		recipesFiltered(RecipeIDs), random_member(RecipeID, RecipeIDs),
+  		recipeName(RecipeID, RecipeName), Params = ['recipe'= RecipeName],
+  		updateMemory(Params, OldMemory, NewMemory), log_info("memory: ", NewMemory, Info)
+	then delete(memory(OldMemory)) + insert(memory(NewMemory)) + log(Info).
 		
 	% Check if intent can be used in a (currently active) pattern (otherwise, we cannot
 	% handle it). If this is not the case, then print message to the console as a warning.
@@ -345,5 +350,10 @@ module dialog_update {
 	% filters_to_strings is defined in dialogflow.pl - check it out! You need to do something
 	% similar for converting recipes to strings in dialogflow.pl, then come back here and create a similar rule to the one below
 	% to send the recipe strings using webinfo
-	if filters_to_strings(Strings) then webinfo('filters', Strings).  
+	if filters_to_strings(Strings) then webinfo('filters', Strings).
+	
+	if Intent = recipeChoiceReceipt,
+        currentRecipe(ID),
+        recipe_to_json(ID, JSON)
+    then webinfo('showRecipe', JSON).  
 }

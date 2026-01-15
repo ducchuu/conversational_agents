@@ -23,13 +23,23 @@
         
 	</head>
 	<body>
+        <template id="recipeDetailsTemplate">
+            <div style="background: white; padding: 20px; border-radius: 10px; text-align: center; max-width: 600px; margin: 0 auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <h2 class="recipe-title" style="color: #333; margin-bottom: 15px;"></h2>
+            <img class="recipe-image" src="" alt="Recipe" style="width: 100%; max-height: 300px; object-fit: cover; border-radius: 8px; margin-bottom: 15px;">
+            <div style="display: flex; justify-content: space-around; font-size: 1.1em; color: #555;">
+                <span>⏱️ <span class="recipe-time"></span></span>
+                <span>🍽️ <span class="recipe-servings"></span></span>
+            </div>
+            </div>
+        </template>
         <div id="main">
             </div><nav class="navbar mb-1" style="position: static">
-                <button class="btn" id="mic">
+                <button class="btn" id="mic" type="button" disabled>
                     <img class="img-fluid" style="width:1.5rem;" id="micimg" src="static/images/mic_out.png" alt="Can not show this image">
                 </button>
             </nav>
-            <main class="container-fluid" style="width:100vw; height:60vh">
+            <main id="content" class="container-fluid" style="width:100vw; height:60vh">
                 <img class="bg-image" style="width: 100%; height: 100vh; position: fixed; top: 0; left: 0; z-index: -1;" src="https://images.pexels.com/photos/349609/pexels-photo-349609.jpeg" alt="Can not show this image">
                 <br>
                 <center>
@@ -58,5 +68,18 @@
         </div>
         <!-- JS for Project Conversational Agents (feel free to add and/or edit) -->
         <script src="static/js/pca.js"></script>
+        <script>
+            
+            (function() {
+                var socket = io.connect('http://' + document.domain + ':' + location.port);
+                
+                socket.on('webinfo', function(data) {
+                    if (data.pattern === 'a50recipeConfirm') {
+                        console.log("Manual Override: Forcing navigation to Recipe Confirmation");
+                        window.location.href = 'recipe_confirmation.html'; 
+                    }
+                });
+            })();
+        </script>
     </body>
 </html>
