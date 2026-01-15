@@ -1,25 +1,9 @@
 "use strict";
 
-/**
- * Project Conversational Agents — front-end glue
- *
- * Notes:
- * - SocketIO messages arrive as strings.
- * - This file is defensive: pages may not have all elements.
- */
-
 var socket = io();
 
-// Flag to keep track of whose turn it is (true --> user, false --> agent)
-// Initially, it is the agent's turn; DO NOT CHANGE here, this flag is set by EISComponent in SIC framework
 var user_turn = false;
-
-// Variable to keep track of number of recipes that fulfill criteria
 var recipecounter = -1;
-
-// ---------------------------
-// Utility helpers
-// ---------------------------
 
 function $(id) {
   return document.getElementById(id);
@@ -35,14 +19,6 @@ function safeSetHTML(id, html) {
   if (el) el.innerHTML = html;
 }
 
-function currentPageName() {
-  var p = window.location.pathname.split("/").pop();
-  return p || "";
-}
-
-/**
- * Try to parse JSON; returns null if it fails.
- */
 function tryParseJSON(str) {
   if (typeof str !== "string") return null;
   var s = str.trim();
@@ -55,10 +31,6 @@ function tryParseJSON(str) {
   }
 }
 
-/**
- * Parse strings like: "[a, b, c]" or "['a','b']" into ["a","b"].
- * This is NOT a full Prolog parser—just a practical fallback.
- */
 function parseSimpleListString(listString) {
   if (typeof listString !== "string") return [];
   var s = listString.trim();
@@ -68,7 +40,6 @@ function parseSimpleListString(listString) {
   }
   if (!s.trim()) return [];
 
-  // Split on commas that are not inside quotes (basic)
   var out = [];
   var buf = "";
   var inQuote = false;
@@ -95,7 +66,6 @@ function parseSimpleListString(listString) {
   }
   if (buf.trim()) out.push(buf.trim());
 
-  // Clean tokens
   return out
     .map(function (t) {
       t = t.trim();
@@ -107,17 +77,7 @@ function parseSimpleListString(listString) {
     .filter(Boolean);
 }
 
-/**
- * Normalize incoming recipe payload to:
- * [{id,title,image,description,time,servings,ingredients,instructions}, ...]
- *
- * Accepted (best) formats:
- * 1) JSON string of array of objects
- * 2) JSON string of array of arrays: [[title,img,desc,time,servings], ...]
- * 3) Fallback list of strings: "[Spaghetti, Curry]"
- */
 function normalizeRecipes(payloadString) {
-  // 1) JSON
   var parsed = tryParseJSON(payloadString);
   if (parsed) {
     if (Array.isArray(parsed)) {
@@ -152,7 +112,6 @@ function normalizeRecipes(payloadString) {
       }
     }
     if (typeof parsed === "object") {
-      // Single recipe object
       return [{
         id: parsed.id != null ? String(parsed.id) : "0",
         title: parsed.title || parsed.name || "Recipe",
@@ -166,7 +125,6 @@ function normalizeRecipes(payloadString) {
     }
   }
 
-  // 2) Fallback list string
   var titles = parseSimpleListString(payloadString);
   return titles.map(function (t, idx) {
     return { id: String(idx), title: t, image: "", description: "", time: "", servings: "", ingredients: [], instructions: [] };
@@ -178,58 +136,97 @@ function normalizeSingleRecipe(payloadString) {
   return recipes.length ? recipes[0] : null;
 }
 
-// ---------------------------
-// Buttons: send all .btn clicks (existing framework expectation)
-// ---------------------------
+if (sessionStorage.getItem("user_turn_saved") === "true") {
+  user_turn = true;
+  sessionStorage.removeItem("user_turn_saved");
+}
+
+socket.off("speech");
+window.currentUtterance = null;
+
+socket.on("speech", (text) => {
+  if (window.speechSynthesis.paused) {
+    window.speechSynthesis.resume();
+  }
+  window.speechSynthesis.cancel();
+
+  window.currentUtterance = new SpeechSynthesisUtterance(text);
+
+  window.currentUtterance.onend = function(event) {
+    socket.emit('event', 'SpeechDone');
+  };
+
+  user_turn = true;
+  sessionStorage.setItem("user_turn_saved", "true");
+
+  var micImage = $("micimg");
+  if (micImage) {
+    micImage.src = 'static/images/mic_out.png';
+  }
+
+  window.speechSynthesis.speak(window.currentUtterance);
+});
 
 var elements = document.getElementsByClassName("btn");
 
-var sendButtonClick = function () {
+var sendButtonClick = function() {
   var name = this.getAttribute("id");
-  if (name) socket.emit("buttonClick", name);
+  if (name !== "mic") {
+    socket.emit('buttonClick', name);
+  }
 };
 
 for (var i = 0; i < elements.length; i++) {
-  elements[i].addEventListener("click", sendButtonClick, false);
+  elements[i].addEventListener('click', sendButtonClick, false);
 }
 
-// Dedicated mic behaviour
 var micButton = $("mic");
+
 if (micButton) {
-  micButton.addEventListener("click", function () {
+  micButton.addEventListener('click', function() {
     if (user_turn) {
       var micImg = $("micimg");
-      if (micImg) micImg.src = "static/images/mic_on.png";
+      if(micImg) micImg.src = 'static/images/mic_on.png';
+      socket.emit('buttonClick', 'mic');
     } else {
       alert("It is not your turn.");
     }
   });
 }
 
-// ---------------------------
-// Socket handlers
-// ---------------------------
-
-socket.on("connect", function () {
-  console.log("Connected to the server.");
+socket.on('connect', function() {
+  var micButton = $("mic");
+  if (micButton) {
+    micButton.disabled = false;
+    micButton.style.opacity = "1.0";
+  }
 });
 
-socket.on("connect_error", function (error) {
-  console.log("Connection error:", error);
+socket.on('connect_error', function(error) {
+  console.log('Connection error:', error);
 });
 
-socket.on("disconnect", function () {
-  console.log("Disconnected from the server.");
+socket.on('disconnect', function() {
+  console.log('Disconnected from server.');
 });
 
-socket.on("transcript", function (text) {
+socket.on("transcript", (text) => {
   if ($("transcript")) safeSetHTML("transcript", text);
 });
 
-// Page routing by pattern name.
-// (If your MARBEL team uses different labels, just tweak these cases.)
-socket.on("pattern", function (pattern) {
-  switch (pattern) {
+socket.on("pattern", (pattern) => {
+  socket.emit('event', 'SpeechDone');
+
+  if (user_turn) {
+    sessionStorage.setItem("user_turn_saved", "true");
+  }
+  
+  if (pattern === "start" || pattern === "c10") {
+      sessionStorage.removeItem("currentRecipeData");
+      console.log("Session cleared: New conversation started.");
+  }
+
+  switch(pattern) {
     case "start":
       window.location.href = "start.html";
       break;
@@ -237,7 +234,6 @@ socket.on("pattern", function (pattern) {
       window.location.href = "welcome.html";
       break;
     case "a50recipeSelect":
-      // This might route to overview2 later based on recipe count; see recipecounter handler.
       window.location.href = "recipe_overview.html";
       break;
     case "a50recipeConfirm":
@@ -247,41 +243,46 @@ socket.on("pattern", function (pattern) {
       window.location.href = "closing.html";
       break;
     default:
-      // Keep a sane fallback
       window.location.href = "closing.html";
-      break;
   }
 });
 
-// Turn switching
-socket.on("set_turn", function (whoseturn) {
-  user_turn = (whoseturn === "true");
-  if (!user_turn) {
-    var micImg = $("micimg");
-    if (micImg) micImg.src = "static/images/mic_out.png";
+socket.on("set_turn", (whoseturn) => {
+  if (whoseturn == "true") {
+    user_turn = true;
+    sessionStorage.setItem("user_turn_saved", "true");
+  } else {
+    user_turn = false;
+    sessionStorage.removeItem("user_turn_saved");
+
+    var micImage = $("micimg");
+    if (micImage) {
+      micImage.src = 'static/images/mic_out.png';
+    }
   }
 });
 
-// Recipe counter
-socket.on("recipecounter", function (number) {
+socket.on("recipecounter", (number) => {
   recipecounter = number;
   safeSetText("recipecounter", String(recipecounter));
-
-  // Optional: auto-switch between overview pages based on the count.
-  // Only do this when you are in the selection flow.
-  var page = currentPageName();
-  if (page === "recipe_overview.html" && recipecounter > -1 && recipecounter <= 15) {
-    window.location.href = "recipe_overview2.html";
-  } else if (page === "recipe_overview2.html" && recipecounter > 15) {
-    window.location.href = "recipe_overview.html";
-  }
 });
 
-// Filters (template-driven)
 socket.on("filters", function (filterString) {
   var target = $("addFiltersHere");
   var tpl = document.querySelector("#filterCardTemplate");
-  if (!target || !tpl) return;
+  
+  if (!target || !tpl) {
+      if(target && !tpl) {
+          const filters = parseSimpleListString(filterString);
+          target.innerHTML = "";
+          filters.forEach(f => {
+              var p = document.createElement("p");
+              p.textContent = f;
+              target.appendChild(p);
+          });
+      }
+      return;
+  }
 
   var filters = parseSimpleListString(filterString);
 
@@ -294,19 +295,12 @@ socket.on("filters", function (filterString) {
   });
 });
 
-// ---------------------------
-// Recipe receivers (NEW)
-// ---------------------------
+socket.on("showRecipe", (jsonString) => {
+  sessionStorage.setItem("currentRecipeData", jsonString);
+  var data = tryParseJSON(jsonString);
+  if(data) renderRecipeCard(data);
+});
 
-/**
- * Receives a list of recipes and renders cards (used on recipe_overview2.html).
- *
- * Recommended payload (string): JSON, e.g.
- *  [
- *    {"id":"r1","title":"Pasta Primavera","image":"https://...","description":"Fresh & quick","time":"25 min","servings":"2"},
- *    ...
- *  ]
- */
 socket.on("recipes", function (recipesString) {
   var grid = $("recipesGrid");
   var empty = $("recipesEmptyState");
@@ -324,14 +318,9 @@ socket.on("recipes", function (recipesString) {
     var card = node.querySelector(".pca-recipe");
     if (card) {
       card.setAttribute("data-recipe-id", r.id);
-
-      // Clicking a card emits a selection event for the backend/agent.
-      // Your teammate can map this to MARBEL later.
       card.addEventListener("click", function () {
         socket.emit("recipeSelect", { id: r.id, title: r.title });
       });
-
-      // Keyboard accessibility
       card.addEventListener("keydown", function (ev) {
         if (ev.key === "Enter" || ev.key === " ") {
           ev.preventDefault();
@@ -361,13 +350,6 @@ socket.on("recipes", function (recipesString) {
   });
 });
 
-/**
- * Receives a single recipe and renders the confirmation page.
- *
- * Recommended payload (string): JSON object, e.g.
- *  {"title":"Pasta Primavera","image":"https://...","time":"25 min","servings":"2",
- *   "ingredients":["..."], "instructions":["..."]}
- */
 socket.on("recipe_detail", function (recipeString) {
   var recipe = normalizeSingleRecipe(recipeString);
   if (!recipe) return;
@@ -382,7 +364,6 @@ socket.on("recipe_detail", function (recipeString) {
     img.style.backgroundImage = "url('" + recipe.image.replace(/'/g, "%27") + "')";
   }
 
-  // Ingredients
   var ing = $("ingredientsList");
   if (ing) {
     ing.innerHTML = "";
@@ -395,7 +376,6 @@ socket.on("recipe_detail", function (recipeString) {
     });
   }
 
-  // Instructions
   var steps = $("instructionsList");
   if (steps) {
     steps.innerHTML = "";
@@ -406,5 +386,70 @@ socket.on("recipe_detail", function (recipeString) {
       li.textContent = x;
       steps.appendChild(li);
     });
+  }
+});
+
+function renderRecipeCard(data) {
+  var titleEl = document.getElementById("recipeTitle");
+  if (titleEl) {
+    safeSetText("recipeTitle", data.title);
+    safeSetText("recipeTime", (data.time || "—"));
+    safeSetText("recipeServings", (data.servings || "—"));
+    safeSetText("recipeDescription", data.description || "");
+
+    var img = document.getElementById("recipeImage");
+    if (img && data.image) {
+      if (img.tagName === "IMG") {
+          img.src = data.image;
+      } else {
+          img.style.backgroundImage = "url('" + data.image.replace(/'/g, "%27") + "')";
+      }
+    }
+    var ing = document.getElementById("ingredientsList");
+    if (ing && data.ingredients) {
+        ing.innerHTML = "";
+        var list = Array.isArray(data.ingredients) ? data.ingredients : parseSimpleListString(String(data.ingredients));
+        if (!list.length) list = ["—"];
+        list.forEach(function (x) {
+            var li = document.createElement("li");
+            li.textContent = x;
+            ing.appendChild(li);
+        });
+    }
+    return;
+  }
+
+  var container = document.querySelector("#content");
+  var template = document.querySelector("#recipeDetailsTemplate");
+
+  if (container && template) {
+    container.innerHTML = "";
+    var card = template.content.cloneNode(true);
+
+    var t = card.querySelector(".recipe-title");
+    if(t) t.textContent = data.title;
+    
+    var i = card.querySelector(".recipe-image");
+    if(i) i.src = data.image;
+
+    var tm = card.querySelector(".recipe-time");
+    if(tm) tm.textContent = (data.time || "") + " mins";
+
+    var sv = card.querySelector(".recipe-servings");
+    if(sv) sv.textContent = (data.servings || "") + " people";
+
+    container.appendChild(card);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+  var savedRecipe = sessionStorage.getItem("currentRecipeData");
+  
+  if (savedRecipe) {
+    var data = tryParseJSON(savedRecipe);
+    if(data) {
+        console.log("Restoring recipe data...", data);
+        renderRecipeCard(data);
+    }
   }
 });
