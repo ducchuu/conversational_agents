@@ -7,7 +7,6 @@
 	intent/5,
 	transcript/1.
 
-    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Parameter specific content								%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -37,34 +36,12 @@ dual_parameter_name_pairs([
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Logic for handling and formatting filter parameters					%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-intent(recipeRequest, [recipe=Name], Confidence, Text, Source) :-
-    % 1. Intercept the 'addFilter' intent from Dialogflow
-    intent(addFilter, _, Confidence, Text, Source),
-    
-    % 2. Retrieve a recipe name from the database (e.g., 'traditional polish...')
-    recipeName(_ID, Name),
-    
-    % 3. Normalize USER TEXT to lowercase string
-    %    (Handles "Traditional Polish..." -> "traditional polish...")
-    (atom(Text) -> atom_string(Text, TextS) ; TextS = Text),
-    string_lower(TextS, TextLower),
-    
-    % 4. Normalize DATABASE NAME to lowercase string
-    %    (Handles 'traditional polish...' -> "traditional polish...")
-    (atom(Name) -> atom_string(Name, NameS) ; NameS = Name),
-    string_lower(NameS, NameLower),
 
-    % 5. Check if the recipe name is inside the text
-    sub_string(TextLower, _, _, _, NameLower),
-    
-    % 6. Stop searching immediately if found (The Cut)
-    !.
+% Conflict logic is defined in ingredient_hierarchies.pl (conflicts/3).
+
 /**
  * filters_from_memory(-Filters)
- *
  * Extracts parameters used to filter recipes from memory.
- *
- * @Filters: list of parameter-value pairs from memory that are used to filter recipes.
 **/
 filters_from_memory(Filters) :-
 	memory(Params),
@@ -107,7 +84,12 @@ parameter_display_templates([
 	['nrOfIngredientsMore', 'More than ~a ingredients']
 ]).
 
-
+format_display_value(_, Value, FormattedValue) :-
+	is_list(Value),
+	convert_to_string(Value, FormattedValue), !.
+format_display_value(_, Value, FormattedValue) :-
+	not(atomic(Value)),
+	convert_to_string(Value, FormattedValue), !.
 format_display_value(Filter, Value, FormattedValue) :- 
 	member(Filter, [ 'cuisine', 'dietaryrestriction', 'mealType', 'tag', 'excludedietaryrestriction', 'excludecuisine' ]),
 	to_upper_case(Value, FormattedValue), !.
@@ -117,12 +99,13 @@ format_display_value(_, Value, Value).
 filter_to_atom(Filter, Value, Atom) :-
 	format_display_value(Filter, Value, FormattedValue),
 	parameter_display_templates(Templates),
-	member([Filter, Template], Templates),
-	applyTemplate(Template, FormattedValue, Atom).
+	(	member([Filter, Template], Templates)
+	->	applyTemplate(Template, FormattedValue, Atom)
+	;	format(string(Atom), "~w = ~w", [Filter, FormattedValue])
+	).
 
 % Format display for multiple filters 
 filters_to_strings(Strings) :-
-	% only show filters used to select recipes
 	filters_from_memory(Filters), 
 	filters_to_strings(Filters, Strings).
 
@@ -130,6 +113,10 @@ filters_to_strings([], []).
 filters_to_strings([ Param = Value | Filters], [ String | Strings]) :- 
 	filter_to_atom(Param, Value, String),
 	filters_to_strings(Filters, Strings).
+
+% Safe wrapper to avoid crashing update rules if formatting fails.
+filters_to_strings_or_empty(Strings) :-
+	( filters_to_strings(Strings) -> true ; Strings = [] ).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Formatting of filter parameters for agent to acknowledge filters (text to say)	%%%
@@ -155,27 +142,45 @@ parameter_text_templates([
 	['nrOfIngredientsMore', 'include more than ~a ingredients']
 ]).
 
-
-% so for the webinfo data we use this predicate recipe_to_json/2 in order to translate a recipe from the database to a json format dictionary, that is compatible with the html pages and pca.js functions
 recipe_to_json(ID, JSON) :-
     recipeName(ID, Name),
     picture(ID, Url),
     time(ID, Time),
     servings(ID, Servings),
-    format(string(JSON), '{"title": "~w", "image": "~w", "time": "~w", "servings": "~w"}', [Name, Url, Time, Servings]).
+    recipe_ingredients(ID, Ingredients),
+    recipe_instructions(ID, Instructions),
+    json_array(Ingredients, IngredientsJson),
+    json_array(Instructions, InstructionsJson),
+    json_string(ID, IdJson),
+    json_string(Name, NameJson),
+    json_string(Url, UrlJson),
+    json_string(Time, TimeJson),
+    json_string(Servings, ServingsJson),
+    format(string(JSON), '{"id": ~w, "title": ~w, "image": ~w, "time": ~w, "servings": ~w, "ingredients": ~w, "instructions": ~w}', [IdJson, NameJson, UrlJson, TimeJson, ServingsJson, IngredientsJson, InstructionsJson]).
 
+recipe_summary_json(ID, JSON) :-
+    recipeName(ID, Name),
+    picture(ID, Url),
+    time(ID, Time),
+    servings(ID, Servings),
+    json_string(ID, IdJson),
+    json_string(Name, NameJson),
+    json_string(Url, UrlJson),
+    json_string(Time, TimeJson),
+    json_string(Servings, ServingsJson),
+    format(string(JSON), '{"id": ~w, "title": ~w, "image": ~w, "time": ~w, "servings": ~w}', [IdJson, NameJson, UrlJson, TimeJson, ServingsJson]).
 
+recipes_to_json(RecipeIDs, JSON) :-
+    maplist(recipe_summary_json, RecipeIDs, Items),
+    json_array_from_json_items(Items, JSON).
 	
 format_text_value(Filter, Ingredients, String) :-
 	(Filter == 'excludeingredient' ; Filter == 'excludeingredienttype'), 
-	%getValues(Filter, Ingredients),
 	convert_to_string(Ingredients, String), !.
 format_text_value(Filter, Ingredients, String) :-
 	(Filter == 'ingredient' ; Filter == 'ingredienttype'),
-	%getValues(Filter, Ingredients), 
 	convert_to_string(Ingredients, String), !.
 format_text_value('tag', Tags, String) :-
-	%getValues('tag', Tags),
 	convert_to_string(Tags, String).
 format_text_value(_, Value, Value).
 
@@ -196,12 +201,67 @@ filters_to_text([Param1 = Value1, Param2 = Value2 | Params], Txt) :-
 	string_concat(Str1, Txt2, Txt).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% Helper predicates for:								%%%
-%%% 	- identifying similar parameters,						%%%
-%%%	- simplifying and unravelling parameter-value pairs.				%%%
+%%% Helpers for formatting recipe payloads as JSON strings				%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Used to establish which parameter names should be identified when they need to be removed
-% See removeParam/3 in dialog.pl. 
+
+recipe_ingredients(ID, Ingredients) :-
+    findall(Item, ingredientAndQuantity(ID, Item), WithQty),
+    (   WithQty = []
+    ->  findall(Item, ingredient(ID, Item), Ingredients)
+    ;   Ingredients = WithQty
+    ).
+
+recipe_instructions(ID, Instructions) :-
+    findall(Step-Instruction, step(ID, Step, Instruction), Pairs),
+    sort(Pairs, Sorted),
+    pair_values(Sorted, Instructions).
+
+pair_values([], []).
+pair_values([_-Value | Rest], [Value | Values]) :-
+    pair_values(Rest, Values).
+
+json_array(List, Json) :-
+    maplist(json_string, List, Items),
+    json_array_from_json_items(Items, Json).
+
+json_array_from_json_items([], "[]").
+json_array_from_json_items(Items, Json) :-
+    Items \= [],
+    atomic_list_concat(Items, ",", Inner),
+    format(string(Json), "[~w]", [Inner]).
+
+json_string(Value, JsonString) :-
+    convert_to_string(Value, String),
+    json_escape(String, Escaped),
+    format(string(JsonString), "\"~w\"", [Escaped]).
+
+json_escape(String, Escaped) :-
+    string_codes(String, Codes),
+    escape_json_codes(Codes, EscapedCodes),
+    string_codes(Escaped, EscapedCodes).
+
+escape_json_codes([], []).
+escape_json_codes([92 | Rest], [92, 92 | Out]) :-
+    escape_json_codes(Rest, Out).
+escape_json_codes([34 | Rest], [92, 34 | Out]) :-
+    escape_json_codes(Rest, Out).
+escape_json_codes([10 | Rest], [92, 110 | Out]) :-
+    escape_json_codes(Rest, Out).
+escape_json_codes([13 | Rest], [92, 114 | Out]) :-
+    escape_json_codes(Rest, Out).
+escape_json_codes([9 | Rest], [92, 116 | Out]) :-
+    escape_json_codes(Rest, Out).
+escape_json_codes([C | Rest], [C | Out]) :-
+    C \= 92,
+    C \= 34,
+    C \= 10,
+    C \= 13,
+    C \= 9,
+    escape_json_codes(Rest, Out).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Helper predicates
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 same_param(ParamName, ParamName).
 same_param(ingredient, ingredienttype).
 same_param(ingredienttype, ingredient).
@@ -212,19 +272,9 @@ same_param(excludecuisine, cuisine).
 same_param(durationlonger, duration).
 same_param(nrOfIngredientsMore, nrOfIngredients).
 
-
-%
-% simplify(+Entity, +Value, -SimplifiedValue)
-%
-% Predicate for simplifying some entity-value pairs when the value is not a simple value.
-%
-% Only needs to be defined for entities that return a list of key-value pairs that together
-% make up the value of the paramater. For example, @sys.duration returns an amount (number)
-% and a unit (min, hr, etc.) as a list.
-%
-% Note that parameters that are lists because they return multiple values for a parameter,
-% e.g., multiple ingredients, as indicated by the IS LIST parameter field name do not need
-% to be simplified here. The unravel/2 predicate below takes care of that.
+% ==============================================================================
+% SIMPLIFY (ROBUST VERSION)
+% ==============================================================================
 simplify('duration', Value, Minutes) :- duration_to_min(Value, Minutes), !.
 simplify('durationDel', Value, Minutes) :- duration_to_min(Value, Minutes), !.
 simplify('nrOfIngredients', Value, Nr) :- convert_to_int(Value, Nr), !.
@@ -237,22 +287,17 @@ simplify('nrOfIngredientsMore', Value, Nr) :- convert_to_int(Value, Nr), !.
 simplify('moreIngredientNumberDel', Value, Nr) :- convert_to_int(Value, Nr), !.
 simplify('durationlonger', Value, Nr) :- duration_to_min(Value, Nr), !.
 simplify('durationlongerDel', Value, Nr) :- duration_to_min(Value, Nr), !.
-simplify(_, Value, Value) :- not(is_list(Value)).
-% Fails if ParamName is not duration, durationDel, or Value is not a list.
+% CATCH-ALL: Pass everything else (lists, atoms) through unchanged.
+simplify(_, Value, Value).
 
-% Unravel entity list and turn into list of the form entityName=entityValue pairs.
+% Unravel entity list
 unravel([], []).
-% Value can be simplified (see simplify/3).
 unravel([ ParamName = Value | Entities], [ ParamName = SimplifiedValue | Unravelled]) :-
 	simplify(ParamName, Value, SimplifiedValue),
 	unravel(Entities, Unravelled).
-% Value is a list and cannot be 'simplified'.
-% Entity with empty list as value.
 unravel([ ParamName = [] | Entities ], [ ParamName = '' | Unravelled]) :-
 	unravel(Entities, Unravelled).
-% Entity with single item list as value.
 unravel([ ParamName = [ Value ] | Entities ], Unravelled) :-
 	unravel([ ParamName = Value | Entities ], Unravelled).
-% Entity with multiple items in list as value.
 unravel([ ParamName = [ Value1, Value2 | Values ] | Entities ], Unravelled) :-
 	unravel([ ParamName = Value1, ParamName = [ Value2 | Values ] | Entities ], Unravelled).

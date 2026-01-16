@@ -350,9 +350,20 @@ module dialog_update {
 	% filters_to_strings is defined in dialogflow.pl - check it out! You need to do something
 	% similar for converting recipes to strings in dialogflow.pl, then come back here and create a similar rule to the one below
 	% to send the recipe strings using webinfo
-	if filters_to_strings(Strings) then webinfo('filters', Strings).
+	if filters_to_strings_or_empty(Strings) then webinfo('filters', Strings).
+
+	% Send recipes to the UI when the list is small enough to display.
+	if currentTopLevel(a50recipeSelect), recipesFiltered(Recipes), length(Recipes, N), N =< 15,
+		recipes_to_json(Recipes, JSON)
+	then webinfo('recipes', JSON).
 	
 	if Intent = recipeChoiceReceipt,
+        currentRecipe(ID),
+        recipe_to_json(ID, JSON)
+    then webinfo('showRecipe', JSON).  
+
+	% Also show recipe details after a recommendation is made.
+	if Intent = recommend,
         currentRecipe(ID),
         recipe_to_json(ID, JSON)
     then webinfo('showRecipe', JSON).  

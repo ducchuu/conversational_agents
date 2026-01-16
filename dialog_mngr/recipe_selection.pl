@@ -144,8 +144,9 @@ recipesFiltered(RecipeIDsIn, [ ParamName = Value | Filters], RemainingRecipeIDs)
 **/
 applyFilterCheck(ParamName, Value, RecipeIDsIn, RecipeIDsOut) :-
 	is_list(Value), [H | T] = Value,
-	applyFilter(ParamName, H, RecipeIDsIn, RecipeIDsOut),
-	applyFilterCheck(ParamName, T, RecipeIDsIn, RecipeIDsOut).
+	applyFilter(ParamName, H, RecipeIDsIn, RecipeIDsIntermediate),
+	applyFilterCheck(ParamName, T, RecipeIDsIntermediate, RecipeIDsOut).
+	
 applyFilterCheck(_, [], RecipeIDsIn, RecipeIDsIn).
 	
 applyFilterCheck(ParamName, Value, RecipeIDsIn, RecipeIDsOut) :-
@@ -160,6 +161,18 @@ applyFilterCheck(ParamName, Value, RecipeIDsIn, RecipeIDsOut) :-
 
 applyFilter('cuisine', Cuisine, RecipeIDsIn, RecipeIDsOut) :- 
 	findall(RecipeID, (member(RecipeID, RecipeIDsIn), cuisine(RecipeID, Cuisine)), RecipeIDsOut).
+	
+applyFilter('mealType', Type, RecipeIDsIn, RecipeIDsOut) :-
+    findall(R, (member(R, RecipeIDsIn), mealType(R, Type)), RecipeIDsOut).
+
+applyFilter('ingredient', Ingredient, RecipeIDsIn, RecipeIDsOut) :-
+    findall(R, (member(R, RecipeIDsIn), hasIngredient(R, Ingredient)), RecipeIDsOut).
+
+applyFilter('ingredienttype', IngredientType, RecipeIDsIn, RecipeIDsOut) :-
+    findall(R, (member(R, RecipeIDsIn), hasIngredient(R, IngredientType)), RecipeIDsOut).
+
+applyFilter('dietaryrestriction', Diet, RecipeIDsIn, RecipeIDsOut) :-
+    findall(R, (member(R, RecipeIDsIn), diet(R, Diet)), RecipeIDsOut).
 
 
 %%% 
@@ -195,11 +208,26 @@ applyFilter('cuisine', Cuisine, RecipeIDsIn, RecipeIDsOut) :-
 %
 % Instruction: Add a clause for the helper predicate diet(RecipeID, DietaryRestriction).
 
+diet(RecipeID, 'spicy') :-
+    hasIngredient(RecipeID, 'spicy').
+
+diet(RecipeID, Restriction) :-
+    Restriction \= 'spicy',
+    ingredient(RecipeID, Ingredients),
+    ingredientsMeetDiet(Ingredients, Restriction).
+
+
 
 % Project Assignment: Capability 7: Filter on Dietary Restrictions
 %
 % Instruction: Define a base and recursive clause for the helper predicate
 % 		ingredientsMeetDiet(IngredientList, DietaryRestriction).
+
+ingredientsMeetDiet([], _).
+
+ingredientsMeetDiet([Ingredient | Rest], Restriction) :-
+    typeIngredient(Ingredient, Restriction), % Defined in ingredient_hierarchies.pl
+    ingredientsMeetDiet(Rest, Restriction).
 
 
 %%%
@@ -227,6 +255,9 @@ applyFilter('cuisine', Cuisine, RecipeIDsIn, RecipeIDsOut) :-
 %
 % Instruction: Add a clause for 
 %		applyFilter('excludeingredient', Ingredient, RecipeIDsIn, RecipeIDsOut)
+
+applyFilter('excludeingredienttype', IngredientType, RecipeIDsIn, RecipeIDsOut) :-
+    findall(R, (member(R, RecipeIDsIn), not(hasIngredient(R, IngredientType))), RecipeIDsOut).
 
 
 %%%

@@ -325,6 +325,184 @@ typeIngredient('steak', 'non-vegan').
 typeIngredient('nduja', 'non-vegan').
 
 
+typeIngredient('barley squashes', 'gluten').
+typeIngredient('beer', 'gluten').
+typeIngredient('lager', 'gluten').
+typeIngredient('stout', 'gluten').
+typeIngredient('stout', 'gluten').
+typeIngredient('barley', 'gluten').
+typeIngredient('couscous', 'gluten').
+typeIngredient('bulgar wheat', 'gluten').
+typeIngredient('dinkel', 'gluten').
+typeIngredient('einkorn', 'gluten').
+typeIngredient('emmer wheat', 'gluten').
+typeIngredient('farro', 'gluten').
+typeIngredient('freekeh', 'gluten').
+typeIngredient('khorasan wheat', 'gluten').
+typeIngredient('pearl barley', 'gluten').
+typeIngredient('rye', 'gluten').
+typeIngredient('semolina', 'gluten').
+typeIngredient('spelt', 'gluten').
+typeIngredient('triticale', 'gluten').
+typeIngredient('wheat', 'gluten').
+typeIngredient('wheat flour', 'gluten').
+typeIngredient('rye flour', 'gluten').
+typeIngredient('barley flour', 'gluten').
+typeIngredient('plain flour', 'gluten').
+typeIngredient('self raising flour', 'gluten').
+typeIngredient('flour', 'gluten').
+typeIngredient('oats', 'gluten').
+typeIngredient('oat milk', 'gluten').
+typeIngredient('biscuits', 'gluten').
+typeIngredient('bread', 'gluten').
+typeIngredient('cake', 'gluten').
+typeIngredient('chapattis', 'gluten').
+typeIngredient('crackers', 'gluten').
+typeIngredient('muffins', 'gluten').
+typeIngredient('pastry', 'gluten').
+typeIngredient('pizza', 'gluten').
+typeIngredient('muesli', 'gluten').
+typeIngredient('pasta', 'gluten').
+typeIngredient('noodles', 'gluten').
+typeIngredient('batter', 'gluten').
+typeIngredient('soy sauce', 'gluten').
+typeIngredient('liquorice', 'gluten').
+typeIngredient('bread crumbs', 'gluten').
+
+
+
+
+typeIngredient('blue cheese', 'dairy').
+typeIngredient('brie', 'dairy').
+typeIngredient('burrata', 'dairy').
+typeIngredient('butter', 'dairy').
+typeIngredient('buttermilk', 'dairy').
+typeIngredient('camembert', 'dairy').
+typeIngredient('caramel ice cream', 'dairy').
+typeIngredient('cheddar', 'dairy').
+typeIngredient('cheddar cheese', 'dairy').
+typeIngredient('cheese', 'dairy').
+typeIngredient('cheese slices', 'dairy').
+typeIngredient('comte', 'dairy').
+typeIngredient('condensed milk', 'dairy').
+typeIngredient('cottage cheese', 'dairy').
+typeIngredient('cream cheese', 'dairy').
+typeIngredient('creme fraiche', 'dairy').
+typeIngredient('double cream', 'dairy').
+typeIngredient('edam cheese slices', 'dairy').
+typeIngredient('emmenthal', 'dairy').
+typeIngredient('feta', 'dairy').
+typeIngredient('feta cheese', 'dairy').
+typeIngredient('ghee', 'dairy').
+typeIngredient('goat cheese', 'dairy').
+typeIngredient('gorgonzola', 'dairy').
+typeIngredient('gouda', 'dairy').
+typeIngredient('grana padano', 'dairy').
+typeIngredient('gruyere', 'dairy').
+typeIngredient('halloumi', 'dairy').
+typeIngredient('halloumi cheese', 'dairy').
+typeIngredient('manchego', 'dairy').
+typeIngredient('manchego cheese', 'dairy').
+typeIngredient('mascarpone', 'dairy').
+typeIngredient('melted butter', 'dairy').
+typeIngredient('milk', 'dairy').
+typeIngredient('milk yoghurt', 'dairy').
+typeIngredient('mozzarella', 'dairy').
+typeIngredient('mozzarella cheese', 'dairy').
+typeIngredient('paneer', 'dairy').
+typeIngredient('parmesan', 'dairy').
+typeIngredient('parmesan cheese', 'dairy').
+typeIngredient('pecorino', 'dairy').
+typeIngredient('pecorino cheese', 'dairy').
+typeIngredient('prosociano wedge', 'dairy').
+typeIngredient('provolone cheese', 'dairy').
+typeIngredient('red leicester', 'dairy').
+typeIngredient('ricotta', 'dairy').
+typeIngredient('ricotta cheese', 'dairy').
+typeIngredient('scamorza', 'dairy').
+typeIngredient('single cream', 'dairy').
+typeIngredient('skyr yogurt', 'dairy').
+typeIngredient('sour cream', 'dairy').
+typeIngredient('stilton', 'dairy').
+typeIngredient('taleggio', 'dairy').
+typeIngredient('tzatziki', 'dairy').
+typeIngredient('vanilla buttercream', 'dairy').
+typeIngredient('vanilla custard', 'dairy').
+typeIngredient('vanilla ice cream', 'dairy').
+typeIngredient('yoghurt', 'dairy').
+typeIngredient('yogurt', 'dairy').
+typeIngredient('basil pesto sauce', 'dairy').
+typeIngredient('brioche', 'dairy').
+typeIngredient('brioche buns', 'dairy').
+typeIngredient('chilli pesto', 'dairy').
+typeIngredient('chocolate croissants', 'dairy').
+typeIngredient('chocolate hazelnut spread', 'dairy').
+typeIngredient('croissants', 'dairy').
+typeIngredient('naan', 'dairy').
+typeIngredient('pesto', 'dairy').
+typeIngredient('raita', 'dairy').
+typeIngredient('sun-dried tomato pesto', 'dairy').
+typeIngredient('toffee', 'dairy').
+
+
+
+
+typeIngredient('aleppo pepper', 'spicy').
+typeIngredient('birds eye chillies', 'spicy').
+typeIngredient('bulls-eye carolina reaper extra hot sauce', 'spicy').
+typeIngredient('cayenne', 'spicy').
+typeIngredient('cayenne pepper', 'spicy').
+typeIngredient('chili', 'spicy').
+typeIngredient('chilli', 'spicy').
+typeIngredient('chilli bean sauce', 'spicy').
+typeIngredient('chilli garlic sauce', 'spicy').
+typeIngredient('chilli jam', 'spicy').
+typeIngredient('chilli oil', 'spicy').
+typeIngredient('chilli paste', 'spicy').
+typeIngredient('chilli peppers', 'spicy').
+typeIngredient('chilli pesto', 'spicy').
+typeIngredient('chilli powder', 'spicy').
+typeIngredient('chilli sauce', 'spicy').
+typeIngredient('chillies', 'spicy').
+typeIngredient('chipotle', 'spicy').
+typeIngredient('chipotle chile', 'spicy').
+typeIngredient('chipotle ketchup', 'spicy').
+typeIngredient('chipotle paste', 'spicy').
+typeIngredient('curry paste', 'spicy').
+typeIngredient('curry powder', 'spicy').
+typeIngredient('finger chili', 'spicy').
+typeIngredient('gochujang base', 'spicy').
+typeIngredient('guajillo chiles', 'spicy').
+typeIngredient('harissa', 'spicy').
+typeIngredient('harissa paste', 'spicy').
+typeIngredient('jalapeno', 'spicy').
+typeIngredient('jalapeno cdes', 'spicy').
+typeIngredient('jalapeno chilies', 'spicy').
+typeIngredient('jalepenos', 'spicy').
+typeIngredient('madras curry powder', 'spicy').
+typeIngredient('nduja', 'spicy').
+typeIngredient('nduja paste', 'spicy').
+typeIngredient('peri peri rice', 'spicy').
+typeIngredient('peri peri seasoning', 'spicy').
+typeIngredient('peri peri strips', 'spicy').
+typeIngredient('shichimi togarashi', 'spicy').
+typeIngredient('sichuan pepper', 'spicy').
+typeIngredient('sriracha', 'spicy').
+typeIngredient('sriracha mayo', 'spicy').
+typeIngredient('tabasco', 'spicy').
+typeIngredient('tandoori masala', 'spicy').
+typeIngredient('urfa chilli', 'spicy').
+typeIngredient('wasabi', 'spicy').
+typeIngredient('wasabi paste', 'spicy').
+typeIngredient('cajun spice mix', 'spicy').
+typeIngredient('chorizo', 'spicy').
+typeIngredient('chorizo sausage', 'spicy').
+typeIngredient('horseradish', 'spicy').
+typeIngredient('horseradish cream', 'spicy').
+typeIngredient('jerk seasoning', 'spicy').
+typeIngredient('kimchi', 'spicy').
+typeIngredient('pepperoni slices', 'spicy').
+
 %%%
 % Add logic to conclude that if an ingredient is not non-vegetarian, it is vegetarian, etc.  
 %
@@ -333,8 +511,21 @@ typeIngredient('nduja', 'non-vegan').
 % Instruction: Add several rules to conclude that an ingredient fits into a diet that is:
 %		pescatarian (no meat), vegetarian, vegan.
 
+typeIngredient(Ingredient, 'vegetarian') :-
+	not(typeIngredient(Ingredient, 'non-vegetarian')), !.
 
+typeIngredient(Ingredient, 'gluten-free') :-
+	not(typeIngredient(Ingredient, 'gluten')), !.
+	
+typeIngredient(Ingredient, 'vegan') :-
+    not(typeIngredient(Ingredient, 'non-vegan')).
 
+typeIngredient(Ingredient, 'pescatarian') :-
+    not(typeIngredient(Ingredient, 'non-pescatarian')).
+
+typeIngredient(Ingredient, 'lactose-free') :-
+    not(typeIngredient(Ingredient, 'dairy')).
+	
 /**
  * hasIngredient(?RecipeID:atom, ?Ingr:atom)
  *
@@ -347,6 +538,15 @@ typeIngredient('nduja', 'non-vegan').
 %
 % Instruction: Add two rules to verify that a recipe uses an ingredient (type). One rule
 %		for checking a plain ingredient, a second for checking an ingredient type.
+
+hasIngredient(RecipeID, Ingr) :-
+    ingredient(RecipeID, Ingredients),
+    member(Ingr, Ingredients).
+    
+hasIngredient(RecipeID, IngrType) :-
+    typeIngredient(SpecificIngr, IngrType),
+    ingredient(RecipeID, Ingredients),
+    member(SpecificIngr, Ingredients).
 
 
 

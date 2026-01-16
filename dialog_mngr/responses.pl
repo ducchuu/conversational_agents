@@ -1,133 +1,54 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% Responses when a flag has been set for a button.					%%%
+%%% Responses
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% responses for NEW dialog agent 		   %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-flagResponse('mic', 'Please press Start first') :- flag('mic'), waitingForEvent('start').
-flagResponse('mic', 'I am already listening') :-
-	flag('mic'), listening.
-% We might have just stopped listening but still waiting for results from intention
-% detection; so case above does not apply but we still need user to be patient. Order of
-% these rules therefore is also important.
-%flagResponse('mic', 'Wait a second') :-
-%	flag('mic'), waitingForEvent('IntentDetectionDone'). % WAIT A SECOND BUG
-flagResponse('mic', "Please, I'm talking") :-
-	flag('mic'), talking.
-flagResponse('mic', 'Not available right now') :- flag('mic'), not(waitingForEvent(_)).
-% In all other cases, flags generate an 'empty' response.
-flagResponse(_, '').
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% Text generator that generates something to say from scripted text and phrases for 	%%%
-%%% intents that the agent will generate (use).						%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-/**
- * text(+Intent:atom, -Txt:string)
- *
- * Generates a string expression for an agent intent label.
- *
- * @Intent	Intent label.
- * @Txt		Textual response for agent to perform intent.
-**/
-
-/**
- * text(+PatternID:atom, +Intent:atom, -Txt:string)
- *
- * Generates a string expression for an agent intent in the context of an active pattern.
- *
- * @PatternID	A pattern identifier, must be at top level (see generator below).
- * @Intent	Intent label.
- * @Txt		Textual response for agent to perform intent.
-**/
 :- dynamic text/2, text/3.
 
-% Text generator that takes dialog context into account.
-% We use top level dialog context, e.g.:
-% - greeting (c10)
-% - recipe selection (a50recipeSelect)
-% - recipe choice confirmation (a50recipeConfirm)
-% - closing (c40)
+flagResponse('mic', 'Please press Start first') :- flag('mic'), waitingForEvent('start').
+flagResponse('mic', 'I am already listening') :- flag('mic'), listening.
+flagResponse('mic', "Please, I'm talking") :- flag('mic'), talking.
+flagResponse('mic', 'Not available right now') :- flag('mic'), not(waitingForEvent(_)).
+flagResponse(_, '').
+
 text_generator(Intent, SelectedText) :-
 	currentTopLevel(PatternId),
 	findall(Text, text(PatternId, Intent, Text), Texts),
 	random_select(SelectedText, Texts, _).
-
-% Text generator that does not take dialog context into account.
 text_generator(Intent, SelectedText) :-
 	findall(Text, text(Intent, Text), Texts), random_select(SelectedText, Texts, _).
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% Scripted text and phrases for ** GENERIC ** intents (sorted on intent name)		%%%
-%%% Text is only provided for those intents that the agent will generate (use). 	%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% Intent: appreciationReceipt
-
-
-% Intent: contextMismatch(Intent)
-
-
-% Intent: describeCapability
-
-
-% Intent: farewell
-
-
-% Intent: greeting
 text(greeting, "Hey there!").
 text(greeting, "Hello!").
 text(greeting, "Hi there!").
 text(greeting, "Welcome!").
 
-% Intent: paraphraseRequest
-
-
-% Intent: selfIdentification (for self-identification of the agent)
-
-% Intent: selfIdentification (for self-identification of the agent)
-% The instructions require using string_concat/3 to join the strings.
 text(selfIdentification, Txt) :-
     agentName(Name),
     string_concat("My name is ", Name, Txt).
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%% Scripted text and phrases for ** DOMAIN SPECIFIC ** intents (sorted on intent name)	%%%
-%%% Text is only provided for those intents that the agent will generate (use). 	%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Intent: ackFilter
+text(ackFilter, Txt) :-
+	not(recipesFiltered([])),
+	getParamsPatternInitiatingIntent(user, addFilter, Params),
+	filters_to_text(Params, TxtPart2),
+	string_concat("Here are recipes that ", TxtPart2, Txt1),
+	string_concat(Txt1, ". Anything else I should add?", Txt).
 
-% Intent: ackFilter (acknowledge filters added; there are recipes that satisfy all filters)
+% Intent: ackFilterEnd (User said No -> Show list)
+text(ackFilterEnd, "Okay! Have a look at the recipes I found for you.").
 
-
-% Intent: featureInquiry
-
-
-% Intent: featureRemovalRequest
-
+% Intent: tooManyRecipesLeft (User said No -> List too long)
+text(tooManyRecipesLeft, "I still have quite a few recipes left. It might be easier if you add one more preference, like a main ingredient or cuisine.").
 
 % Intent: noRecipesLeft
+text(noRecipesLeft, "I added your request but I could not find a recipe that matches all of your preferences combined.").
 
-
-% Intent: pictureGranted
-
-
-% Intent: pictureNotGranted
-
-
-% Intent: recipeChoiceReceipt (acknowledge user's choice of recipe)
+% Intent: featureRemovalRequest
+text(featureRemovalRequest, "Can you have a look again and remove one of your recipe requirements?").
 
 text(recipeChoiceReceipt, Txt) :-
     currentRecipe(RecipeID),
     recipeName(RecipeID, Name),
     string_concat(Name, ' is a great choice!', Txt).
-
-
-% Intent: recommend (a recipe)
 
 text(recommend, Output) :-
     currentRecipe(RecipeID),
@@ -135,14 +56,8 @@ text(recommend, Output) :-
     string_concat("What about ", Name, TempString),
     string_concat(TempString, "?", Output).
 
-% Intent: recipeCheck
-
-
-% Intent: specifyGoal (asking a user about recipe features they are looking for)
-
 text(specifyGoal, "What recipe would you like to cook?").
 text(specifyGoal, "What would you like to cook today?").
 text(specifyGoal, "What kind of recipe are you looking for today today?").
-
 
 text(clearMemory, ".").

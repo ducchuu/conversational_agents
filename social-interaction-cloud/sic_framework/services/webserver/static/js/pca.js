@@ -4,6 +4,7 @@ var socket = io();
 
 var user_turn = false;
 var recipecounter = -1;
+var currentPatternId = null;
 
 function $(id) {
   return document.getElementById(id);
@@ -20,6 +21,7 @@ function safeSetHTML(id, html) {
 }
 
 function tryParseJSON(str) {
+  if (str && typeof str === "object") return str;
   if (typeof str !== "string") return null;
   var s = str.trim();
   if (!s) return null;
@@ -27,7 +29,18 @@ function tryParseJSON(str) {
   try {
     return JSON.parse(s);
   } catch (e) {
-    return null;
+    // Sometimes payload arrives with escaped quotes like \"...\"; try a repair pass.
+    var repaired = s
+      .replace(/\\"/g, "\"")
+      .replace(/\\n/g, "\n")
+      .replace(/\\r/g, "\r")
+      .replace(/\\t/g, "\t")
+      .replace(/\\\\/g, "\\");
+    try {
+      return JSON.parse(repaired);
+    } catch (e2) {
+      return null;
+    }
   }
 }
 
@@ -215,6 +228,7 @@ socket.on("transcript", (text) => {
 });
 
 socket.on("pattern", (pattern) => {
+  currentPatternId = pattern;
   socket.emit('event', 'SpeechDone');
 
   if (user_turn) {
@@ -223,7 +237,6 @@ socket.on("pattern", (pattern) => {
   
   if (pattern === "start" || pattern === "c10") {
       sessionStorage.removeItem("currentRecipeData");
-      console.log("Session cleared: New conversation started.");
   }
 
   switch(pattern) {
@@ -234,7 +247,7 @@ socket.on("pattern", (pattern) => {
       window.location.href = "welcome.html";
       break;
     case "a50recipeSelect":
-      window.location.href = "recipe_overview.html";
+      goToRecipeOverview();
       break;
     case "a50recipeConfirm":
       window.location.href = "recipe_confirmation.html";
@@ -246,6 +259,21 @@ socket.on("pattern", (pattern) => {
       window.location.href = "closing.html";
   }
 });
+
+function goToRecipeOverview() {
+  var onOverview2 = window.location.pathname.indexOf("recipe_overview2.html") !== -1;
+  var onOverview1 = window.location.pathname.indexOf("recipe_overview.html") !== -1;
+  var hasCount = recipecounter > -1;
+
+  if (hasCount && recipecounter <= 15) {
+    if (!onOverview2) window.location.href = "recipe_overview2.html";
+    return;
+  }
+
+  if (!onOverview1) {
+    window.location.href = "recipe_overview.html";
+  }
+}
 
 socket.on("set_turn", (whoseturn) => {
   if (whoseturn == "true") {
@@ -263,8 +291,13 @@ socket.on("set_turn", (whoseturn) => {
 });
 
 socket.on("recipecounter", (number) => {
-  recipecounter = number;
+  recipecounter = parseInt(number, 10);
   safeSetText("recipecounter", String(recipecounter));
+  
+  if (currentPatternId === "a50recipeSelect") {
+    goToRecipeOverview();
+  }
+  updateOverviewLayout();
 });
 
 socket.on("filters", function (filterString) {
@@ -296,21 +329,43 @@ socket.on("filters", function (filterString) {
 });
 
 socket.on("showRecipe", (jsonString) => {
-  sessionStorage.setItem("currentRecipeData", jsonString);
   var data = tryParseJSON(jsonString);
-  if(data) renderRecipeCard(data);
+  if (data) {
+    sessionStorage.setItem("currentRecipeData", JSON.stringify(data));
+    renderRecipeCard(data);
+  } else if (typeof jsonString === "string") {
+    sessionStorage.setItem("currentRecipeData", jsonString);
+  }
+});
+
+socket.on("recipe_detail", function (recipeString) {
+  var data = tryParseJSON(recipeString);
+  if (data) {
+    sessionStorage.setItem("currentRecipeData", JSON.stringify(data));
+    renderRecipeCard(data);
+  }
 });
 
 socket.on("recipes", function (recipesString) {
   var grid = $("recipesGrid");
   var empty = $("recipesEmptyState");
   var tpl = document.querySelector("#recipeCardTemplate");
+  
   if (!grid || !tpl) return;
 
   var recipes = normalizeRecipes(recipesString);
 
   grid.innerHTML = "";
-  if (empty) empty.style.display = recipes.length ? "none" : "block";
+  
+  // Logic: Only show empty state if we actually expected recipes (count <= 15) but got none
+  // The visibility of the container is handled by updateOverviewLayout()
+  if (empty) {
+      if (recipes.length === 0 && recipecounter <= 15 && recipecounter > -1) {
+          empty.style.display = "block";
+      } else {
+          empty.style.display = "none";
+      }
+  }
 
   recipes.forEach(function (r) {
     var node = tpl.content.cloneNode(true);
@@ -319,8 +374,10 @@ socket.on("recipes", function (recipesString) {
     if (card) {
       card.setAttribute("data-recipe-id", r.id);
       card.addEventListener("click", function () {
-        socket.emit("recipeSelect", { id: r.id, title: r.title });
+        // Use buttonClick so MARBEL treats it as a recipeRequest
+        socket.emit("buttonClick", r.title);
       });
+      // Accessibility
       card.addEventListener("keydown", function (ev) {
         if (ev.key === "Enter" || ev.key === " ") {
           ev.preventDefault();
@@ -391,54 +448,70 @@ socket.on("recipe_detail", function (recipeString) {
 
 function renderRecipeCard(data) {
   var titleEl = document.getElementById("recipeTitle");
-  if (titleEl) {
-    safeSetText("recipeTitle", data.title);
-    safeSetText("recipeTime", (data.time || "—"));
-    safeSetText("recipeServings", (data.servings || "—"));
-    safeSetText("recipeDescription", data.description || "");
+  if (!titleEl) return;
 
-    var img = document.getElementById("recipeImage");
-    if (img && data.image) {
-      if (img.tagName === "IMG") {
-          img.src = data.image;
-      } else {
-          img.style.backgroundImage = "url('" + data.image.replace(/'/g, "%27") + "')";
-      }
+  safeSetText("recipeTitle", data.title);
+  safeSetText("recipeTime", (data.time || "—"));
+  safeSetText("recipeServings", (data.servings || "—"));
+  safeSetText("recipeDescription", data.description || "");
+
+  var img = document.getElementById("recipeImage");
+  if (img && data.image) {
+    if (img.tagName === "IMG") {
+      img.src = data.image;
+    } else {
+      img.style.backgroundImage = "url('" + data.image.replace(/'/g, "%27") + "')";
     }
-    var ing = document.getElementById("ingredientsList");
-    if (ing && data.ingredients) {
-        ing.innerHTML = "";
-        var list = Array.isArray(data.ingredients) ? data.ingredients : parseSimpleListString(String(data.ingredients));
-        if (!list.length) list = ["—"];
-        list.forEach(function (x) {
-            var li = document.createElement("li");
-            li.textContent = x;
-            ing.appendChild(li);
-        });
-    }
-    return;
   }
 
-  var container = document.querySelector("#content");
-  var template = document.querySelector("#recipeDetailsTemplate");
+  var ing = document.getElementById("ingredientsList");
+  if (ing) {
+    ing.innerHTML = "";
+    var list = Array.isArray(data.ingredients) ? data.ingredients : parseSimpleListString(String(data.ingredients || ""));
+    if (!list.length) list = ["—"];
+    list.forEach(function (x) {
+      var li = document.createElement("li");
+      li.textContent = x;
+      ing.appendChild(li);
+    });
+  }
 
-  if (container && template) {
-    container.innerHTML = "";
-    var card = template.content.cloneNode(true);
+  var steps = $("instructionsList");
+  if (steps) {
+    steps.innerHTML = "";
+    var st = Array.isArray(data.instructions) ? data.instructions : parseSimpleListString(String(data.instructions || ""));
+    if (!st.length) st = ["—"];
+    st.forEach(function (x) {
+      var li = document.createElement("li");
+      li.textContent = x;
+      steps.appendChild(li);
+    });
+  }
+}
 
-    var t = card.querySelector(".recipe-title");
-    if(t) t.textContent = data.title;
-    
-    var i = card.querySelector(".recipe-image");
-    if(i) i.src = data.image;
+function updateOverviewLayout() {
+  var container = $("recipeResultsContainer");
+  var mainTitle = $("mainTitle");
+  var mainDesc = $("mainDescription");
+  var subTitle = $("pageSubTitle");
 
-    var tm = card.querySelector(".recipe-time");
-    if(tm) tm.textContent = (data.time || "") + " mins";
+  if (!container || !mainTitle) return; // Safety check if on wrong page
 
-    var sv = card.querySelector(".recipe-servings");
-    if(sv) sv.textContent = (data.servings || "") + " people";
-
-    container.appendChild(card);
+  if (recipecounter > 15) {
+    container.style.display = "none";
+    mainTitle.textContent = "Refine your preferences";
+    if (mainDesc) mainDesc.textContent = "There are still too many results (" + recipecounter + "). Please add more filters like ingredients, cuisine, or time.";
+    if (subTitle) subTitle.textContent = "Narrow down your search";
+  } else {
+    container.style.display = "block";
+    if (recipecounter === 0) {
+      mainTitle.textContent = "No recipes found";
+      if (mainDesc) mainDesc.textContent = "Try removing a filter to see more results.";
+    } else {
+      mainTitle.textContent = "I found these recipes for you";
+      if (mainDesc) mainDesc.textContent = "Here are the top " + recipecounter + " matches. Tap one to view details or add more filters.";
+    }
+    if (subTitle) subTitle.textContent = "Select a recipe";
   }
 }
 
