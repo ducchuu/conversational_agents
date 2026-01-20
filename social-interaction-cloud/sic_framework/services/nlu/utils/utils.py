@@ -22,9 +22,9 @@ def parse_arguments():
     parser.add_argument("--train_model", action="store_true", default=False, help="Train the model if this flag is set")
     parser.add_argument("--evaluate", action="store_true", default=False, help="Evaluate the model on test data if this flag is set")
 
-    parser.add_argument("--num_epochs", type=int, default=2, help="Number of training epochs")
-    parser.add_argument("--batch_size", type=int, default=16, help="Batch size for training")
-    parser.add_argument("--learning_rate", type=float, default=5e-5, help="Learning rate for the optimizer")
+    parser.add_argument("--num_epochs", type=int, default=4, help="Number of training epochs")
+    parser.add_argument("--batch_size", type=int, default=32, help="Batch size for training")
+    parser.add_argument("--learning_rate", type=float, default=2e-5, help="Learning rate for the optimizer")
     parser.add_argument("--max_length", type=int, default=16, help="Maximum sequence length for tokenization")
     parser.add_argument("--seed", type=int, default=42, help="Random seed for reproducibility")
 
