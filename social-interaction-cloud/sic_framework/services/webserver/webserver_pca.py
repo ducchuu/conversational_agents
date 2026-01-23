@@ -12,6 +12,7 @@ from sic_framework.core.connector import SICConnector
 from sic_framework.core.message_python2 import SICConfMessage, SICMessage
 from sic_framework.core.utils import is_sic_instance
 
+os.environ["YOUTUBE_API_KEY"] = "AIzaSyBMlr2WN0DZDkDZuEXOBuYyQIT8nbkHvbA"
 
 class TranscriptMessage(SICMessage):
     def __init__(self, transcript):
@@ -118,6 +119,43 @@ class WebserverComponent(SICComponent):
             web_url = f"http://localhost:{self.params.port}/{page_name}"
             self.logger.info("Open the web page at " + web_url)
             return render_template(page_name)
+
+        # YouTube visual enhancement API Endpoint
+        @self.app.route("/api/youtube/search", methods=["GET"])
+        def youtube_search():
+            import requests
+
+            api_key = os.getenv("YOUTUBE_API_KEY")
+            if not api_key:
+                return flask.jsonify({"error": "Missing YOUTUBE_API_KEY"}), 500
+
+            title = (request.args.get("title") or "").strip()
+            if not title:
+                return flask.jsonify({"error": "Missing title"}), 400
+
+            q = f"{title} recipe"
+
+            url = "https://www.googleapis.com/youtube/v3/search"
+            params = {
+                "part": "snippet",
+                "q": q,
+                "type": "video",
+                "maxResults": 1,
+                "safeSearch": "strict",
+                "key": api_key,
+            }
+
+            r = requests.get(url, params=params, timeout=8)
+            if r.status_code != 200:
+                return flask.jsonify({"videoId": None}), 502
+
+            items = r.json().get("items", [])
+            if not items:
+                return flask.jsonify({"videoId": None})
+
+            video_id = items[0].get("id", {}).get("videoId")
+            return flask.jsonify({"videoId": video_id})
+
 
         @self.socketio.on("connect")
         def handle_connect():
