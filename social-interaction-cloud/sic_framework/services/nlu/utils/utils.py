@@ -16,6 +16,7 @@ def parse_arguments():
                         help="Path to the ontology JSON file")
     parser.add_argument("--train_data", type=str, default="./data/train.json", help="Path to load train data")
     parser.add_argument("--test_data", type=str, default="./data/test.json", help="Path to load test data")
+
     #adding the exclusion files
     parser.add_argument("--exclusion_data", type=str, default="./data/exclusion_examples.json", help="Path to load exclusion data")
     parser.add_argument("--exclusion_test_data", type=str, default="./data/exclusion_examples_test.json", help="Path to load exclusion test data")
