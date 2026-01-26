@@ -9,7 +9,7 @@ slotFill(dummyP, dummyI).
 %%% Pattern: a21featureRequest								%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% 1. Context: Confirm (User was looking at a specific recipe) -> Move BACK to Select
+% 1. Confirm (User was looking at a specific recipe) and then move back to Select
 pattern([a21featureRequest,
     [user, addFilter],
     [agent, removeConflicts(Params)],
@@ -20,7 +20,7 @@ pattern([a21featureRequest,
     getParamsPatternInitiatingIntent(user, addFilter, Params),
     not(recipesFiltered([])).
 
-% 2. Context: Confirm | No results
+% 2. Confirm and no results
 pattern([a21featureRequest,
     [user, addFilter],
     [agent, removeConflicts(Params)],
@@ -32,7 +32,7 @@ pattern([a21featureRequest,
     getParamsPatternInitiatingIntent(user, addFilter, Params),
     recipesFiltered([]).
 
-% 3. Context: Select (Already in list) -> STAY in Select (No loop)
+% 3. Select (Filters that are already in list) and then stay in Select (No loop)
 pattern([a21featureRequest,
     [user, addFilter],
     [agent, removeConflicts(Params)],
@@ -42,7 +42,7 @@ pattern([a21featureRequest,
     getParamsPatternInitiatingIntent(user, addFilter, Params),
     not(recipesFiltered([])).
 
-% 4. Context: Select | No results
+% 4. Select and no results
 pattern([a21featureRequest,
     [user, addFilter],
     [agent, removeConflicts(Params)],

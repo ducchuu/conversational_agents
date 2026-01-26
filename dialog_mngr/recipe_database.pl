@@ -51521,7 +51521,6 @@ ingredientAndQuantity('892', 'oregano').
 ingredientAndQuantity('892', 'marjoram').
 ingredientAndQuantity('892', '4 tbsp thick sour cream').
 
-getAllIngredients(UniqueIngredients) :- findall(Ingredients, ingredient(_, Ingredients), AllLists),flatten(AllLists, FlatList),sort(FlatList, UniqueIngredients).
 %%%% Recipe 893: %%%%
 
 
@@ -51535,3 +51534,7 @@ getAllIngredients(UniqueIngredients) :- findall(Ingredients, ingredient(_, Ingre
 
 
 %%%% Recipe 896: %%%%
+
+
+% added a predicate for retrieving all unique ingredients as a list in prolog, in order to see easier what ingredient types to apply for developing atoms
+getAllIngredients(UniqueIngredients) :- findall(Ingredients, ingredient(_, Ingredients), AllLists),flatten(AllLists, FlatList),sort(FlatList, UniqueIngredients).
