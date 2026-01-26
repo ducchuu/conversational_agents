@@ -5621,5 +5621,127 @@
         "slots": {
             "ingredientType": "dairy"
         }
-    }
+    },
+    
+{ "id": "gen-091", "text": "I only want vegan recipes.", "intent": "addFilter", "slots": { "tag": "vegan" } },
+{ "id": "gen-092", "text": "Show me vegetarian options.", "intent": "addFilter", "slots": { "tag": "vegetarian" } },
+{ "id": "gen-093", "text": "I need things that are gluten-free.", "intent": "addFilter", "slots": { "tag": "gluten-free" } },
+{ "id": "gen-094", "text": "Filter for dairy-free meals.", "intent": "addFilter", "slots": { "tag": "dairy-free" } },
+{ "id": "gen-095", "text": "Find me low-carb dishes.", "intent": "addFilter", "slots": { "tag": "low-carb" } },
+{ "id": "gen-096", "text": "I'm looking for high-protein food.", "intent": "addFilter", "slots": { "tag": "high-protein" } },
+{ "id": "gen-097", "text": "Search for keto ideas.", "intent": "addFilter", "slots": { "tag": "keto" } },
+{ "id": "gen-098", "text": "I want to eat paleo.", "intent": "addFilter", "slots": { "tag": "paleo" } },
+{ "id": "gen-099", "text": "Make the results spicy.", "intent": "addFilter", "slots": { "tag": "spicy" } },
+{ "id": "gen-100", "text": "Looking for something sweet.", "intent": "addFilter", "slots": { "tag": "sweet" } },
+{ "id": "gen-101", "text": "Give me some quick recipes.", "intent": "addFilter", "slots": { "tag": "quick" } },
+{ "id": "gen-102", "text": "I want to browse healthy options.", "intent": "addFilter", "slots": { "tag": "healthy" } },
+{ "id": "gen-103", "text": "Show me some comfort-food.", "intent": "addFilter", "slots": { "tag": "comfort-food" } },
+{ "id": "gen-104", "text": "Find budget-friendly dinners.", "intent": "addFilter", "slots": { "tag": "budget-friendly" } },
+{ "id": "gen-105", "text": "Exclude all meat please.", "intent": "addFilter", "slots": { "excludeIngredient": "meat" } },
+{ "id": "gen-106", "text": "Don't include any poultry.", "intent": "addFilter", "slots": { "excludeIngredient": "poultry" } },
+{ "id": "gen-107", "text": "Filter out the seafood.", "intent": "addFilter", "slots": { "excludeIngredient": "seafood" } },
+{ "id": "gen-108", "text": "I want recipes with no fish.", "intent": "addFilter", "slots": { "excludeIngredient": "fish" } },
+{ "id": "gen-109", "text": "Skip the shellfish.", "intent": "addFilter", "slots": { "excludeIngredient": "shellfish" } },
+{ "id": "gen-110", "text": "Make sure there is no dairy.", "intent": "addFilter", "slots": { "excludeIngredient": "dairy" } },
+{ "id": "gen-111", "text": "Omit the cheese.", "intent": "addFilter", "slots": { "excludeIngredient": "cheese" } },
+{ "id": "gen-112", "text": "No egg in my recipes.", "intent": "addFilter", "slots": { "excludeIngredient": "egg" } },
+{ "id": "gen-113", "text": "Don't use any vegetables.", "intent": "addFilter", "slots": { "excludeIngredient": "vegetable" } },
+{ "id": "gen-114", "text": "Remove fruit from the options.", "intent": "addFilter", "slots": { "excludeIngredient": "fruit" } },
+{ "id": "gen-115", "text": "I'm avoiding grain.", "intent": "addFilter", "slots": { "excludeIngredient": "grain" } },
+{ "id": "gen-116", "text": "Please exclude legumes.", "intent": "addFilter", "slots": { "excludeIngredient": "legume" } },
+{ "id": "gen-117", "text": "Filter for nut-free only.", "intent": "addFilter", "slots": { "excludeIngredient": "nut" } },
+{ "id": "gen-118", "text": "I don't want any seeds.", "intent": "addFilter", "slots": { "excludeIngredient": "seed" } },
+{ "id": "gen-119", "text": "No soy allowed.", "intent": "addFilter", "slots": { "excludeIngredient": "soy" } },
+{ "id": "gen-120", "text": "Keep it gluten-free for me.", "intent": "addFilter", "slots": { "excludeIngredient": "gluten" } },
+{ "id": "gen-121", "text": "Omit the spice.", "intent": "addFilter", "slots": { "excludeIngredient": "spice" } },
+{ "id": "gen-122", "text": "I'd like it without any herbs.", "intent": "addFilter", "slots": { "excludeIngredient": "herb" } },
+{ "id": "gen-123", "text": "Try to find something without oil.", "intent": "addFilter", "slots": { "excludeIngredient": "oil" } },
+{ "id": "gen-124", "text": "Cut out the fat.", "intent": "addFilter", "slots": { "excludeIngredient": "fat" } },
+{ "id": "gen-125", "text": "Don't use any sweeteners.", "intent": "addFilter", "slots": { "excludeIngredient": "sweetener" } },
+{ "id": "gen-126", "text": "I don't want any sauce.", "intent": "addFilter", "slots": { "excludeIngredient": "sauce" } },
+{ "id": "gen-127", "text": "Exclude condiments.", "intent": "addFilter", "slots": { "excludeIngredient": "condiment" } },
+{ "id": "gen-128", "text": "Can we do something vegan?", "intent": "addFilter", "slots": { "tag": "vegan" } },
+{ "id": "gen-129", "text": "Let's stick to vegetarian.", "intent": "addFilter", "slots": { "tag": "vegetarian" } },
+{ "id": "gen-130", "text": "Only show me keto stuff.", "intent": "addFilter", "slots": { "tag": "keto" } },
+{ "id": "gen-131", "text": "Without any meat.", "intent": "addFilter", "slots": { "excludeIngredient": "meat" } },
+{ "id": "gen-132", "text": "Without any poultry.", "intent": "addFilter", "slots": { "excludeIngredient": "poultry" } },
+{ "id": "gen-133", "text": "Without any seafood.", "intent": "addFilter", "slots": { "excludeIngredient": "seafood" } },
+{ "id": "gen-134", "text": "Without any fish.", "intent": "addFilter", "slots": { "excludeIngredient": "fish" } },
+{ "id": "gen-135", "text": "Without any shellfish.", "intent": "addFilter", "slots": { "excludeIngredient": "shellfish" } },
+{ "id": "gen-136", "text": "Without any dairy.", "intent": "addFilter", "slots": { "excludeIngredient": "dairy" } },
+{ "id": "gen-137", "text": "Without any cheese.", "intent": "addFilter", "slots": { "excludeIngredient": "cheese" } },
+{ "id": "gen-138", "text": "Without any egg.", "intent": "addFilter", "slots": { "excludeIngredient": "egg" } },
+{ "id": "gen-139", "text": "Without any vegetable.", "intent": "addFilter", "slots": { "excludeIngredient": "vegetable" } },
+{ "id": "gen-140", "text": "Without any fruit.", "intent": "addFilter", "slots": { "excludeIngredient": "fruit" } },
+{ "id": "gen-141", "text": "Without any grain.", "intent": "addFilter", "slots": { "excludeIngredient": "grain" } },
+{ "id": "gen-142", "text": "Without any legume.", "intent": "addFilter", "slots": { "excludeIngredient": "legume" } },
+{ "id": "gen-143", "text": "Without any nut.", "intent": "addFilter", "slots": { "excludeIngredient": "nut" } },
+{ "id": "gen-144", "text": "Without any seed.", "intent": "addFilter", "slots": { "excludeIngredient": "seed" } },
+{ "id": "gen-145", "text": "Without any soy.", "intent": "addFilter", "slots": { "excludeIngredient": "soy" } },
+{ "id": "gen-146", "text": "Without any gluten.", "intent": "addFilter", "slots": { "excludeIngredient": "gluten" } },
+{ "id": "gen-147", "text": "Without any spice.", "intent": "addFilter", "slots": { "excludeIngredient": "spice" } },
+{ "id": "gen-148", "text": "Without any herb.", "intent": "addFilter", "slots": { "excludeIngredient": "herb" } },
+{ "id": "gen-149", "text": "Without any oil.", "intent": "addFilter", "slots": { "excludeIngredient": "oil" } },
+{ "id": "gen-150", "text": "Without any fat.", "intent": "addFilter", "slots": { "excludeIngredient": "fat" } },
+{
+    "id": "exing001",
+    "text": "I don't want chicken in my food.",
+    "intent": "addFilter",
+    "slots": { "excludeIngredient": "chicken" }
+  },
+  {
+    "id": "exing002",
+    "text": "Please exclude beef from the recipe.",
+    "intent": "addFilter",
+    "slots": { "excludeIngredient": "beef" }
+  },
+  {
+    "id": "exing003",
+    "text": "No pork dishes please.",
+    "intent": "addFilter",
+    "slots": { "excludeIngredient": "pork" }
+  },
+  {
+    "id": "exing004",
+    "text": "I don't want shrimp in my meal.",
+    "intent": "addFilter",
+    "slots": { "excludeIngredient": "shrimp" }
+  },
+  {
+    "id": "exing005",
+    "text": "Exclude cheese from the recipe.",
+    "intent": "addFilter",
+    "slots": { "excludeIngredient": "cheese" }
+  },
+
+  {
+    "id": "exing006",
+    "text": "I want food without garlic.",
+    "intent": "addFilter",
+    "slots": { "excludeIngredient": "garlic" }
+  },
+  {
+    "id": "exing007",
+    "text": "No onions please.",
+    "intent": "addFilter",
+    "slots": { "excludeIngredient": "onion" }
+  },
+  {
+    "id": "exing008",
+    "text": "Avoid mushrooms in the dish.",
+    "intent": "addFilter",
+    "slots": { "excludeIngredient": "mushroom" }
+  },
+  {
+    "id": "exing009",
+    "text": "I don't like tomatoes.",
+    "intent": "addFilter",
+    "slots": { "excludeIngredient": "tomato" }
+  },
+  {
+    "id": "exing010",
+    "text": "Please remove butter.",
+    "intent": "addFilter",
+    "slots": { "excludeIngredient": "butter" }
+  }
 ]

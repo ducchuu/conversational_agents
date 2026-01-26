@@ -76,6 +76,7 @@ def main():
     ontology = load_ontology(ontology_path)
 
     fit_encoders(args.ontology_path)
+    #print(slot_label_encoder.classes_)
 
     intent_classes =  intent_label_encoder.classes_
     slot_classes =  slot_label_encoder.classes_
@@ -87,6 +88,16 @@ def main():
     print("Loading and preprocessing data...")
     train_data = load_data(args.train_data)
     test_data = load_data(args.test_data)
+
+    #adding the exclusion file to the training data and the exclusion test data to the test data
+    exclusion_train_data = load_data(args.exclusion_data)
+    train_data+=exclusion_train_data
+    
+    exclusion_test_data = load_data(args.exclusion_test_data)
+    test_data+=exclusion_test_data
+
+
+
 
     processed_train_data = preprocess_data(train_data, max_length=args.max_length)
     processed_test_data = preprocess_data(test_data, max_length=args.max_length)

@@ -11998,8 +11998,7 @@
             "turmeric.",
             "hate cheese",
             "Soy"
-        ]
-        ,
+        ],
         "excludeCuisine": [
             "southern-american",
             "cambodian",
@@ -12260,6 +12259,47 @@
             "Australia",
             "Romanian",
             "Filipino"
-        ]
+        ],
+        "tag": [
+            "vegan",
+            "vegetarian",
+            "gluten-free",
+            "dairy-free",
+            "low-carb",
+            "high-protein",
+            "keto",
+            "paleo",
+            "spicy",
+            "sweet",
+            "quick",
+            "healthy",
+            "comfort-food",
+            "budget-friendly"
+        ],
+        "ingredientType": [
+            "meat",
+            "poultry",
+            "seafood",
+            "fish",
+            "shellfish",
+            "dairy",
+            "cheese",
+            "egg",
+            "vegetable",
+            "fruit",
+            "grain",
+            "legume",
+            "nut",
+            "seed",
+            "soy",
+            "gluten",
+            "spice",
+            "herb",
+            "oil",
+            "fat",
+            "sweetener",
+            "sauce",
+            "condiment"
+            ]
     }
 }

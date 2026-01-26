@@ -16,6 +16,12 @@ def parse_arguments():
                         help="Path to the ontology JSON file")
     parser.add_argument("--train_data", type=str, default="./data/train.json", help="Path to load train data")
     parser.add_argument("--test_data", type=str, default="./data/test.json", help="Path to load test data")
+    #adding the exclusion files
+    parser.add_argument("--exclusion_data", type=str, default="./data/exclusion_examples.json", help="Path to load exclusion data")
+    parser.add_argument("--exclusion_test_data", type=str, default="./data/exclusion_examples_test.json", help="Path to load exclusion test data")
+
+
+
     parser.add_argument("--model_save_path", type=str, default="./checkpoints/model_checkpoint.pt",
                         help="Path to save/load model weights")
 
@@ -23,8 +29,8 @@ def parse_arguments():
     parser.add_argument("--evaluate", action="store_true", default=False, help="Evaluate the model on test data if this flag is set")
 
     parser.add_argument("--num_epochs", type=int, default=5, help="Number of training epochs")
-    parser.add_argument("--batch_size", type=int, default=32, help="Batch size for training")
-    parser.add_argument("--learning_rate", type=float, default=1e-4, help="Learning rate for the optimizer")
+    parser.add_argument("--batch_size", type=int, default=16, help="Batch size for training")
+    parser.add_argument("--learning_rate", type=float, default=2e-5, help="Learning rate for the optimizer")
     parser.add_argument("--max_length", type=int, default=16, help="Maximum sequence length for tokenization")
     parser.add_argument("--seed", type=int, default=42, help="Random seed for reproducibility")
 

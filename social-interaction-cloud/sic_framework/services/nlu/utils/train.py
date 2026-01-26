@@ -30,7 +30,7 @@ from sic_framework.services.nlu.utils.dataset import  NLURecipeDataset
 from sic_framework.services.nlu.utils.model import BERTNLUModel
 
 
-def train_model(model, dataset, num_epochs=5, batch_size=32, learning_rate=1e-4, device="cpu"):
+def train_model(model, dataset, num_epochs=5, batch_size=16, learning_rate=2e-5, device="cpu"):
     """
     Trains a BERT-based Natural Language Understanding (NLU) model for intent classification and slot filling.
 
