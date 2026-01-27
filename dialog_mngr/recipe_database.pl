@@ -51522,6 +51522,54 @@ ingredientAndQuantity('892', 'marjoram').
 ingredientAndQuantity('892', '4 tbsp thick sour cream').
 
 %%%% Recipe 893: %%%%
+%%%% Recipe 893: traditional Egyptian ful medames %%%%
+% added by Fady Ashraf Eshak Abdou ffa222
+
+recipeID('893').
+recipeName('893', 'traditional egyptian ful medames').
+picture('893', 'https://www.egiptoexclusivo.com/wp-content/uploads/2022/03/ful-medames-plato-tipico.jpg').
+time('893', 30).
+servings('893', 4).
+cuisine('893', 'egyptian').
+mealType('893', 'breakfast').
+
+step('893', 1, 'rinse the cooked fava beans under cold water and drain well.').
+step('893', 2, 'place the fava beans in a medium pot.').
+step('893', 3, 'add enough water to just cover the beans.').
+step('893', 4, 'heat the pot over medium heat until the beans are warmed through.').
+step('893', 5, 'add the minced garlic to the pot.').
+step('893', 6, 'add salt and ground cumin to taste.').
+step('893', 7, 'stir gently and let the beans simmer for about 10 minutes.').
+step('893', 8, 'lightly mash some of the beans using a spoon, leaving others whole.').
+step('893', 9, 'add the lemon juice and stir well.').
+step('893', 10, 'remove the pot from heat.').
+step('893', 11, 'drizzle olive oil over the beans.').
+step('893', 12, 'transfer the ful medames to a serving bowl.').
+step('893', 13, 'top with chopped parsley.').
+step('893', 14, 'optionally garnish with diced tomatoes and onions.').
+step('893', 15, 'serve warm with fresh Egyptian baladi bread.').
+
+ingredient('893', 'fava beans').
+ingredient('893', 'garlic').
+ingredient('893', 'lemon').
+ingredient('893', 'olive oil').
+ingredient('893', 'salt').
+ingredient('893', 'cumin').
+ingredient('893', 'parsley').
+ingredient('893', 'tomato').
+ingredient('893', 'onion').
+ingredient('893', 'bread').
+
+ingredientAndQuantity('893', '500g cooked fava beans').
+ingredientAndQuantity('893', '2 cloves garlic').
+ingredientAndQuantity('893', '1 lemon').
+ingredientAndQuantity('893', '3 tbsp olive oil').
+ingredientAndQuantity('893', 'salt').
+ingredientAndQuantity('893', '1 tsp ground cumin').
+ingredientAndQuantity('893', '2 tbsp chopped parsley').
+ingredientAndQuantity('893', '1 tomato').
+ingredientAndQuantity('893', '1 small onion').
+ingredientAndQuantity('893', 'baladi bread').
 
 
 
