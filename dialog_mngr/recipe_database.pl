@@ -51572,9 +51572,53 @@ ingredientAndQuantity('893', '1 small onion').
 ingredientAndQuantity('893', 'baladi bread').
 
 
+%%%% Recipe 894: Thai Cashew Chicken %%%%
+% added by Bennett Hampel vnu869
 
-%%%% Recipe 894: %%%%
-
+recipeID('894').
+recipeName('894', 'thai cashew chicken').
+picture('894', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTwwGjMiWLblZGAVv5zBU3u28XnPWnC4hGKOA&s
+').
+time('894', 35).
+servings('894', 4).
+cuisine('894', 'thai').
+mealType('894', 'dinner').
+step('894', 1, 'slice the chicken breast into bite-sized pieces.').
+step('894', 2, 'mix the soy sauce and oyster sauce in a small bowl and set aside.').
+step('894', 3, 'heat the oil in a wok or large pan over medium-high heat.').
+step('894', 4, 'add the dried chilies and stir-fry briefly until fragrant (do not burn).').
+step('894', 5, 'add the minced garlic and stir-fry for a few seconds.').
+step('894', 6, 'add the chicken and cook until lightly browned and nearly cooked through.').
+step('894', 7, 'add the onion and bell peppers and stir-fry for 2–3 minutes.').
+step('894', 8, 'pour in the sauce mixture and stir well to coat everything evenly.').
+step('894', 9, 'add the cashew nuts and toss gently.').
+step('894', 10, 'stir in the sugar and white pepper.').
+step('894', 11, 'cook for another 1–2 minutes until the sauce slightly thickens.').
+step('894', 12, 'taste and adjust seasoning if needed.').
+step('894', 13, 'remove from heat and serve immediately with steamed jasmine rice.').
+ingredient('894', 'chicken').
+ingredient('894', 'cashew nuts').
+ingredient('894', 'garlic').
+ingredient('894', 'dried chilies').
+ingredient('894', 'onion').
+ingredient('894', 'bell pepper').
+ingredient('894', 'soy sauce').
+ingredient('894', 'oyster sauce').
+ingredient('894', 'sugar').
+ingredient('894', 'white pepper').
+ingredient('894', 'oil').
+ingredientAndQuantity('894', '500g chicken breast').
+ingredientAndQuantity('894', '100g roasted unsalted cashew nuts').
+ingredientAndQuantity('894', '4 cloves garlic').
+ingredientAndQuantity('894', '6–8 dried red chilies').
+ingredientAndQuantity('894', '1 medium onion').
+ingredientAndQuantity('894', '1 red bell pepper').
+ingredientAndQuantity('894', '1 green bell pepper').
+ingredientAndQuantity('894', '2 tbsp soy sauce').
+ingredientAndQuantity('894', '1.5 tbsp oyster sauce').
+ingredientAndQuantity('894', '1 tsp sugar').
+ingredientAndQuantity('894', '1/2 tsp white pepper').
+ingredientAndQuantity('894', '2 tbsp vegetable oil').
 
 
 %%%% Recipe 895: %%%%
