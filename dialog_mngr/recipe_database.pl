@@ -51174,11 +51174,10 @@ ingredientAndQuantity('885', 'salt').
 ingredientAndQuantity('885', 'pepper'). 
 ingredientAndQuantity('885', 'olive oil'). 
 
- 
- 
- 
+
+
 %%%% Recipe 886: roasted pepper & chorizo orzo %%%% 
- 
+
 recipeID('886'). 
 recipeName('886', 'roasted pepper & chorizo orzo'). 
 picture('886', 'https://files.mob-cdn.co.uk/recipes/2020/16681698_262731800831099_1155458721093206876_n.jpg'). 
@@ -51589,11 +51588,11 @@ step('894', 3, 'heat the oil in a wok or large pan over medium-high heat.').
 step('894', 4, 'add the dried chilies and stir-fry briefly until fragrant (do not burn).').
 step('894', 5, 'add the minced garlic and stir-fry for a few seconds.').
 step('894', 6, 'add the chicken and cook until lightly browned and nearly cooked through.').
-step('894', 7, 'add the onion and bell peppers and stir-fry for 2–3 minutes.').
+step('894', 7, 'add the onion and bell peppers and stir-fry for 2 3 minutes.').
 step('894', 8, 'pour in the sauce mixture and stir well to coat everything evenly.').
 step('894', 9, 'add the cashew nuts and toss gently.').
 step('894', 10, 'stir in the sugar and white pepper.').
-step('894', 11, 'cook for another 1–2 minutes until the sauce slightly thickens.').
+step('894', 11, 'cook for another 1 to 2 minutes until the sauce slightly thickens.').
 step('894', 12, 'taste and adjust seasoning if needed.').
 step('894', 13, 'remove from heat and serve immediately with steamed jasmine rice.').
 ingredient('894', 'chicken').
@@ -51610,7 +51609,7 @@ ingredient('894', 'oil').
 ingredientAndQuantity('894', '500g chicken breast').
 ingredientAndQuantity('894', '100g roasted unsalted cashew nuts').
 ingredientAndQuantity('894', '4 cloves garlic').
-ingredientAndQuantity('894', '6–8 dried red chilies').
+ingredientAndQuantity('894', '6 to 8 dried red chilies').
 ingredientAndQuantity('894', '1 medium onion').
 ingredientAndQuantity('894', '1 red bell pepper').
 ingredientAndQuantity('894', '1 green bell pepper').
@@ -51631,7 +51630,7 @@ servings('895', 6).
 cuisine('895', 'indian').
 mealType('895', 'dessert').
 step('895', 1, 'mix the flour, cornstarch, yogurt, turmeric, and water to form a smooth batter.').
-step('895', 2, 'cover the batter and let it ferment for 8–10 hours until slightly sour.').
+step('895', 2, 'cover the batter and let it ferment for 8 to 10 hours until slightly sour.').
 step('895', 3, 'prepare the sugar syrup by boiling sugar and water until sticky.').
 step('895', 4, 'add cardamom powder and saffron to the syrup and keep it warm.').
 step('895', 5, 'heat ghee or oil in a wide pan over medium heat.').
@@ -51639,7 +51638,7 @@ step('895', 6, 'pour the batter into a piping bag or squeeze bottle.').
 step('895', 7, 'pipe spiral shapes into the hot oil.').
 step('895', 8, 'fry until crisp and golden on both sides.').
 step('895', 9, 'remove the jalebis and immediately soak them in warm sugar syrup.').
-step('895', 10, 'let them absorb syrup for 1–2 minutes.').
+step('895', 10, 'let them absorb syrup for 1 to 2 minutes.').
 step('895', 11, 'remove and serve hot or warm.').
 ingredient('895', 'all-purpose flour').
 ingredient('895', 'cornstarch').
