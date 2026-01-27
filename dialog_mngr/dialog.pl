@@ -94,6 +94,9 @@ removeEmpty([ Key = Value | Pairs ], [ Key = Value | PairsOut ]) :-
 updateMemory(NewParams, OldMemory, NewMemory) :-
 	memory(OldMemory),
 	updateWithNewParameters(NewParams, OldMemory, NewMemory).
+	
+enableShow(OldMemory, NewMemory) :-
+    updateMemory(['show'='true'], OldMemory, NewMemory).
 
 % updateWithNewParameters predicate
 % empty list of parameters does not change memory
@@ -141,6 +144,8 @@ doNotOverwriteThisKey(Key) :-
 	% totalSteps/1 is used to set the target total number of steps to perform when the repeat
 	% agenda instruction is executed.
 	totalSteps/1,
+	% lastSentRecipe/1 tracks the last recipe ID that was sent to the webserver to prevent duplicates.
+	lastSentRecipe/1,
 	% Predicates for monitoring end of (audio) events (used for related percept handling).
 	event/1, waitingForEvent/1.
 

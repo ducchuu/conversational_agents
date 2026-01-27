@@ -503,6 +503,27 @@ typeIngredient('jerk seasoning', 'spicy').
 typeIngredient('kimchi', 'spicy').
 typeIngredient('pepperoni slices', 'spicy').
 
+typeIngredient('chicken thighs', 'chicken').
+typeIngredient('chicken breast', 'chicken').
+typeIngredient('chicken wings', 'chicken').
+typeIngredient('chicken legs', 'chicken').
+typeIngredient('chicken drumsticks', 'chicken').
+typeIngredient('chicken carcass', 'chicken').
+typeIngredient('chicken stock', 'chicken').
+typeIngredient('chicken skin', 'chicken').
+
+typeIngredient('spaghetti', 'pasta').
+typeIngredient('linguine', 'pasta').
+typeIngredient('penne', 'pasta').
+typeIngredient('fusilli', 'pasta').
+typeIngredient('macaroni', 'pasta').
+
+
+typeIngredient('egg', 'eggs').
+typeIngredient('egg whites', 'eggs').
+typeIngredient('egg yolks', 'eggs').
+
+
 %%%
 % Add logic to conclude that if an ingredient is not non-vegetarian, it is vegetarian, etc.  
 %
@@ -538,6 +559,14 @@ typeIngredient(Ingredient, 'lactose-free') :-
 %
 % Instruction: Add two rules to verify that a recipe uses an ingredient (type). One rule
 %		for checking a plain ingredient, a second for checking an ingredient type.
+
+hasIngredient(RecipeID, Ingr) :-
+    ingredient(RecipeID, Ingr).
+
+
+hasIngredient(RecipeID, IngrType) :-
+    typeIngredient(SpecificIngr, IngrType),
+    ingredient(RecipeID, SpecificIngr).
 
 hasIngredient(RecipeID, Ingr) :-
     ingredient(RecipeID, Ingredients),
