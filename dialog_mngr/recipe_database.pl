@@ -51620,9 +51620,45 @@ ingredientAndQuantity('894', '1 tsp sugar').
 ingredientAndQuantity('894', '1/2 tsp white pepper').
 ingredientAndQuantity('894', '2 tbsp vegetable oil').
 
+%%%% Recipe 895: jalebi %%%%
+% added by Kabir DSouza qkx252 
 
-%%%% Recipe 895: %%%%
-
+recipeID('895').
+recipeName('895', 'jalebi').
+picture('895', 'https://swagathfoods.com.au/cdn/shop/articles/Screenshot_2023-10-09_at_2.15.42_AM.png?v=1758518839&width=1000').
+time('895', 60).
+servings('895', 6).
+cuisine('895', 'indian').
+mealType('895', 'dessert').
+step('895', 1, 'mix the flour, cornstarch, yogurt, turmeric, and water to form a smooth batter.').
+step('895', 2, 'cover the batter and let it ferment for 8–10 hours until slightly sour.').
+step('895', 3, 'prepare the sugar syrup by boiling sugar and water until sticky.').
+step('895', 4, 'add cardamom powder and saffron to the syrup and keep it warm.').
+step('895', 5, 'heat ghee or oil in a wide pan over medium heat.').
+step('895', 6, 'pour the batter into a piping bag or squeeze bottle.').
+step('895', 7, 'pipe spiral shapes into the hot oil.').
+step('895', 8, 'fry until crisp and golden on both sides.').
+step('895', 9, 'remove the jalebis and immediately soak them in warm sugar syrup.').
+step('895', 10, 'let them absorb syrup for 1–2 minutes.').
+step('895', 11, 'remove and serve hot or warm.').
+ingredient('895', 'all-purpose flour').
+ingredient('895', 'cornstarch').
+ingredient('895', 'yogurt').
+ingredient('895', 'turmeric').
+ingredient('895', 'sugar').
+ingredient('895', 'cardamom').
+ingredient('895', 'saffron').
+ingredient('895', 'ghee').
+ingredient('895', 'water').
+ingredientAndQuantity('895', '1 cup all-purpose flour').
+ingredientAndQuantity('895', '2 tbsp cornstarch').
+ingredientAndQuantity('895', '1/2 cup yogurt').
+ingredientAndQuantity('895', '1/4 tsp turmeric powder').
+ingredientAndQuantity('895', '2 cups sugar').
+ingredientAndQuantity('895', '1 cup water').
+ingredientAndQuantity('895', '1/2 tsp cardamom powder').
+ingredientAndQuantity('895', 'a few saffron strands').
+ingredientAndQuantity('895', 'ghee or oil for frying').
 
 
 %%%% Recipe 896: %%%%
