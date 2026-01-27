@@ -3,6 +3,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 :- dynamic recipeCounter/1.
 
+
 /**
  * currentRecipe(-RecipeID:atom)
  *
@@ -34,12 +35,19 @@ currentRecipe(RecipeID) :-
 % Project Assignment: Capability 6: Filter by Number of Ingredients & Recipe Steps
 %
 % Instruction: Add a definition for ingredients/2 here.
+
+ingredients(RecipeID, IngredientList) :-
+    findall(Ing, ingredientAndQuantity(RecipeID, Ing), IngredientList).
+ 
 	
 
 % Project Assignment: Capability 6: Filter by Number of Ingredients & Recipe Steps
 %
 % Instruction: Add a definition for nrOfIngredients(RecipeID, N) here.
-
+   
+nrOfIngredients(RecipeID, N) :-
+    ingredients(RecipeID, IngredientList),
+    length(IngredientList, N).
 
 /**
  * steps(+RecipeID:atom, -StepList:list)
@@ -52,10 +60,17 @@ currentRecipe(RecipeID) :-
 %
 % Instruction: Add a definition for steps/2 here.
 
+steps(RecipeID, StepList) :-
+    findall(StepDescription, step(RecipeID, _, StepDescription), StepList).
+
 
 % Project Assignment: Capability 6: Filter by Number of Ingredients & Recipe Steps
 %
 % Instruction: Add a definition for nrOfSteps(RecipeID, N) here.
+
+nrOfSteps(RecipeID, N) :-
+    steps(RecipeID, StepList),
+    length(StepList, N).
 
 
 /**
@@ -165,14 +180,14 @@ applyFilter('cuisine', Cuisine, RecipeIDsIn, RecipeIDsOut) :-
 applyFilter('mealType', Type, RecipeIDsIn, RecipeIDsOut) :-
     findall(R, (member(R, RecipeIDsIn), mealType(R, Type)), RecipeIDsOut).
 
+% Normalize ingredient value before filtering (removes prefixes like "with ", "containing ", etc.)
+% Uses normalize_ingredient_value from dialogflow.pl to handle values like "with eggs" -> "eggs"
 applyFilter('ingredient', Ingredient, RecipeIDsIn, RecipeIDsOut) :-
-    findall(R, (member(R, RecipeIDsIn), hasIngredient(R, Ingredient)), RecipeIDsOut).
+    normalize_ingredient_value(Ingredient, NormalizedIngredient),
+    findall(R, (member(R, RecipeIDsIn), hasIngredient(R, NormalizedIngredient)), RecipeIDsOut).
 
-applyFilter('ingredienttype', IngredientType, RecipeIDsIn, RecipeIDsOut) :-
-    findall(R, (member(R, RecipeIDsIn), hasIngredient(R, IngredientType)), RecipeIDsOut).
 
-applyFilter('dietaryrestriction', Diet, RecipeIDsIn, RecipeIDsOut) :-
-    findall(R, (member(R, RecipeIDsIn), diet(R, Diet)), RecipeIDsOut).
+
 
 
 %%% 
@@ -184,6 +199,9 @@ applyFilter('dietaryrestriction', Diet, RecipeIDsIn, RecipeIDsOut) :-
 % Instruction: Add a clause for 
 %		applyFilter('excludecuisine', Ingredient, RecipeIDsIn, RecipeIDsOut)
 
+applyFilter('excludecuisine', Cuisine, RecipeIDsIn, RecipeIDsOut) :- 
+    findall(RecipeID, (member(RecipeID, RecipeIDsIn), not(cuisine(RecipeID, Cuisine))), RecipeIDsOut).
+
 
 %%%
 % Apply filter checking that a recipe meets a dietary restriction such as vegetarian.
@@ -192,6 +210,9 @@ applyFilter('dietaryrestriction', Diet, RecipeIDsIn, RecipeIDsOut) :-
 %
 % Instruction: Add a clause for 
 %		applyFilter('dietaryrestriction', Restriction, RecipeIDsIn, RecipeIDsOut)
+
+applyFilter('dietaryrestriction', Diet, RecipeIDsIn, RecipeIDsOut) :-
+    findall(R, (member(R, RecipeIDsIn), diet(R, Diet)), RecipeIDsOut).
 
 
 %%% 
@@ -202,6 +223,9 @@ applyFilter('dietaryrestriction', Diet, RecipeIDsIn, RecipeIDsOut) :-
 %
 % Instruction: Add a clause for 
 %		applyFilter('excludedietaryrestriction', Ingredient, RecipeIDsIn, RecipeIDsOut)
+applyFilter('excludeingredient', Ingredient, RecipeIDsIn, RecipeIDsOut) :-
+    normalize_ingredient_value(Ingredient, NormalizedIngredient),
+    findall(R, (member(R, RecipeIDsIn), not(hasIngredient(R, NormalizedIngredient))), RecipeIDsOut).
 
 
 % Project Assignment: Capability 7: Filter on Dietary Restrictions
@@ -213,8 +237,8 @@ diet(RecipeID, 'spicy') :-
 
 diet(RecipeID, Restriction) :-
     Restriction \= 'spicy',
-    ingredient(RecipeID, Ingredients),
-    ingredientsMeetDiet(Ingredients, Restriction).
+    findall(Ing, ingredient(RecipeID, Ing), RawIngredients), 
+    ingredientsMeetDiet(RawIngredients, Restriction).
 
 
 
@@ -226,16 +250,29 @@ diet(RecipeID, Restriction) :-
 ingredientsMeetDiet([], _).
 
 ingredientsMeetDiet([Ingredient | Rest], Restriction) :-
-    typeIngredient(Ingredient, Restriction), % Defined in ingredient_hierarchies.pl
+    typeIngredient(Ingredient, Restriction),
     ingredientsMeetDiet(Rest, Restriction).
 
-
+    
 %%%
 % Apply filter to filter for easy recipes.
 % A recipe is easy when:
 % - they can be made within 45 minutes,
 % - have less than 18 steps, and
 % - less than 15 ingredients.
+
+applyFilter('fast', _, RecipeIDsIn, RecipeIDsOut) :-
+    applyFilter('duration', 30, RecipeIDsIn, RecipeIDsOut).
+    
+    
+applyFilter('easy', _, RecipeIDsIn, RecipeIDsOut) :-
+    applyFilter('duration', 45, RecipeIDsIn, R1),
+    applyFilter('nrOfSteps', 18, R1, R2),
+    applyFilter('nrOfIngredients', 15, R2, RecipeIDsOut).
+    
+    
+applyFilter('tag', Tag, RecipeIDsIn, RecipeIDsOut) :-
+    findall(R, (member(R, RecipeIDsIn), tag(R, Tag)), RecipeIDsOut).
 
 
 %%%
@@ -245,6 +282,10 @@ ingredientsMeetDiet([Ingredient | Rest], Restriction) :-
 %
 % Instruction: Add a clause for 
 %		applyFilter('ingredient', Ingredient, RecipeIDsIn, RecipeIDsOut)
+
+applyFilter('ingredient', Ingredient, RecipeIDsIn, RecipeIDsOut) :-
+    normalize_ingredient_value(Ingredient, NormalizedIngredient),
+    findall(R, (member(R, RecipeIDsIn), hasIngredient(R, NormalizedIngredient)), RecipeIDsOut).
 
 
 %%% 
@@ -256,8 +297,10 @@ ingredientsMeetDiet([Ingredient | Rest], Restriction) :-
 % Instruction: Add a clause for 
 %		applyFilter('excludeingredient', Ingredient, RecipeIDsIn, RecipeIDsOut)
 
-applyFilter('excludeingredienttype', IngredientType, RecipeIDsIn, RecipeIDsOut) :-
-    findall(R, (member(R, RecipeIDsIn), not(hasIngredient(R, IngredientType))), RecipeIDsOut).
+applyFilter('excludeingredient', Ingredient, RecipeIDsIn, RecipeIDsOut) :-
+    normalize_ingredient_value(Ingredient, NormalizedIngredient),
+    findall(R, (member(R, RecipeIDsIn), not(hasIngredient(R, NormalizedIngredient))), RecipeIDsOut).
+
 
 
 %%%
@@ -267,6 +310,9 @@ applyFilter('excludeingredienttype', IngredientType, RecipeIDsIn, RecipeIDsOut) 
 %
 % Instruction: Add a clause for 
 %		applyFilter('ingredienttype', IngredientType, RecipeIDsIn, RecipeIDsOut)
+
+applyFilter('ingredienttype', IngredientType, RecipeIDsIn, RecipeIDsOut) :-
+    findall(R, (member(R, RecipeIDsIn), hasIngredient(R, IngredientType)), RecipeIDsOut).
 
 
 %%% 
@@ -278,7 +324,16 @@ applyFilter('excludeingredienttype', IngredientType, RecipeIDsIn, RecipeIDsOut) 
 % Instruction: Add a clause for 
 %		applyFilter('excludeingredienttype', Ingredient, RecipeIDsIn, RecipeIDsOut)
 
+applyFilter('excludeingredienttype', IngredientType, RecipeIDsIn, RecipeIDsOut) :-
+    findall(R, (member(R, RecipeIDsIn), not(hasIngredient(R, IngredientType))), RecipeIDsOut).
+ 
+applyFilter('dietaryrestriction', Diet, RecipeIDsIn, RecipeIDsOut) :-
+    findall(R, (member(R, RecipeIDsIn), diet(R, Diet)), RecipeIDsOut).
+    
 
+applyFilter('excludedietaryrestriction', Diet, RecipeIDsIn, RecipeIDsOut) :-
+    findall(R, (member(R, RecipeIDsIn), not(diet(R, Diet))), RecipeIDsOut).
+    
 %%%
 % Apply a filter on meal type (e.g., breakfast).
 
@@ -290,6 +345,13 @@ applyFilter('excludeingredienttype', IngredientType, RecipeIDsIn, RecipeIDsOut) 
 %
 % Instruction: Add a clause for 
 %		applyFilter('nrOfIngredients', Value, RecipeIDsIn, RecipeIDsOut)
+
+applyFilter('nrOfIngredients', Value, RecipeIDsIn, RecipeIDsOut) :-
+    findall(R, (
+        member(R, RecipeIDsIn),
+        nrOfIngredients(R, N),
+        N =< Value
+    ), RecipeIDsOut).
 
 % You first may want to define a helper for counting the number of ingredients in a list of ingredients. Define this at the top of 
 % the file, where we defined ingredients/2. Then return here to define applyFilter('nrOfIngredients', Value, RecipeIDsIn, RecipeIDsOut).
@@ -305,6 +367,13 @@ applyFilter('excludeingredienttype', IngredientType, RecipeIDsIn, RecipeIDsOut) 
 % You may also want to define a helper for counting the number of steps in a list of steps using Again, define this at the top of 
 % the file. Then return here to define applyFilter('nrOfSteps', Value, RecipeIDsIn, RecipeIDsOut)
 
+applyFilter('nrOfSteps', Value, RecipeIDsIn, RecipeIDsOut) :-
+    findall(R, (
+        member(R, RecipeIDsIn),
+        nrOfSteps(R, N),
+        N =< Value
+    ), RecipeIDsOut).
+
 
 %%% 
 % Apply filter to filter recipes on maximum duration.
@@ -315,6 +384,13 @@ applyFilter('excludeingredienttype', IngredientType, RecipeIDsIn, RecipeIDsOut) 
 %		applyFilter('duration', MaxMinutes, RecipeIDsIn, RecipeIDsOut)
 
 
+applyFilter('duration', MaxMinutes, RecipeIDsIn, RecipeIDsOut) :-
+    findall(R, (
+        member(R, RecipeIDsIn),
+        time(R, Duration),
+        Duration =< MaxMinutes
+    ), RecipeIDsOut).
+    
 %%%
 % Apply filter to select recipes that can be made fast (meaning e.g. under 30 minutes).
 
@@ -327,10 +403,16 @@ applyFilter('excludeingredienttype', IngredientType, RecipeIDsIn, RecipeIDsOut) 
 % Instruction: Add a clause for 
 %		applyFilter('servings', Value, RecipeIDsIn, RecipeIDsOut)
 
+applyFilter('servings', Value, RecipeIDsIn, RecipeIDsOut) :-
+    findall(R, (
+        member(R, RecipeIDsIn),
+        servings(R, S),
+        S >= Value
+    ), RecipeIDsOut).
+
 
 %%%
 % Apply filter to filter recipes on their tags.
 % Example: the user wants to filter on "pizza" dishes (recipes that have the "pizza" tag).
 % Check out the tart/2 predicate in the recipe database file.
-
 

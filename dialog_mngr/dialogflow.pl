@@ -28,7 +28,7 @@ dual_parameter_name_pairs([
 	['shorttimekeyword', 'shorttimekeywordDel'],
 	['tag', 'tagDel'],
 	['excludedietaryrestriction', 'excludeDietaryRestrictionDel'],
-	['excludecuisine', 'exludeCuisineDel'],
+	['excludecuisine', 'excludeCuisineDel'],
 	['durationlonger', 'durationlongerDel'],
 	['nrOfIngredientsMore', 'moreIngredientNumberDel']
 ]).
@@ -287,13 +287,77 @@ simplify('nrOfIngredientsMore', Value, Nr) :- convert_to_int(Value, Nr), !.
 simplify('moreIngredientNumberDel', Value, Nr) :- convert_to_int(Value, Nr), !.
 simplify('durationlonger', Value, Nr) :- duration_to_min(Value, Nr), !.
 simplify('durationlongerDel', Value, Nr) :- duration_to_min(Value, Nr), !.
+% Normalize ingredient values: remove prefixes like "with ", "containing ", etc. and match against database
+
+simplify('ingredientDel', Value, Normalized) :- 
+	normalize_ingredient_value(Value, Normalized), !.
+simplify('excludeIngredientDel', Value, Normalized) :- 
+	normalize_ingredient_value(Value, Normalized), !.
+simplify('ingredientTypeDel', Value, Normalized) :- 
+	normalize_ingredient_value(Value, Normalized), !.
+simplify('excludeIngredientTypeDel', Value, Normalized) :- 
+	normalize_ingredient_value(Value, Normalized), !.
+	
+simplify('ingredient', Value, Normalized) :- 
+	normalize_ingredient_value(Value, Normalized), !.
+simplify('excludeingredient', Value, Normalized) :- 
+	normalize_ingredient_value(Value, Normalized), !.
 % CATCH-ALL: Pass everything else (lists, atoms) through unchanged.
 simplify(_, Value, Value).
 
+normalize_key('dietaryRestriction', 'dietaryrestriction').
+normalize_key('ingredientType', 'ingredienttype').
+normalize_key('excludeIngredient', 'excludeingredient').
+normalize_key('excludeIngredientType', 'excludeingredienttype').
+normalize_key('excludeDietaryRestriction', 'excludedietaryrestriction').
+normalize_key('excludeCuisine', 'excludecuisine').
+
+normalize_key(Key, Key).
+
+% Normalize ingredient value by removing common prefixes and matching against ingredient database
+normalize_ingredient_value(Value, Normalized) :-
+	% Step 1: Convert to string for processing (handles atoms, strings, lists)
+	convert_to_string(Value, ValueStr),
+	% Step 2: Remove common prefixes (this always succeeds)
+	remove_ingredient_prefix(ValueStr, CleanedStr),
+	% Step 3: Convert cleaned string to atom for database matching
+	atom_string(CleanedAtom, CleanedStr),
+	% Step 4: Try to find exact match in ingredient database (case-sensitive first)
+	(	ingredient(_, CleanedAtom)
+	->	Normalized = CleanedAtom
+	;	% Step 5: Try case-insensitive match - find first matching ingredient
+		downcase_atom(CleanedAtom, LowerCleaned),
+		find_ingredient_case_insensitive_match(LowerCleaned, MatchedIngredient)
+	->	Normalized = MatchedIngredient
+	;	% Step 6: If no match found, return cleaned atom (prefix removed, will be used as-is)
+		Normalized = CleanedAtom
+	).
+
+% Find ingredient with case-insensitive matching (returns first match)
+find_ingredient_case_insensitive_match(LowerCleaned, Ingredient) :-
+	ingredient(_, Ingredient),
+	downcase_atom(Ingredient, LowerIngredient),
+	LowerCleaned = LowerIngredient, !.
+
+% Remove common prefixes from ingredient strings
+remove_ingredient_prefix(Value, Cleaned) :-
+	% Check for common prefixes and remove them (in order of length to avoid partial matches)
+	(	sub_string(Value, 0, 11, _, "containing ") 
+	->	sub_string(Value, 11, _, 0, Cleaned)
+	;	sub_string(Value, 0, 10, _, "including ") 
+	->	sub_string(Value, 10, _, 0, Cleaned)
+	;	sub_string(Value, 0, 5, _, "with ") 
+	->	sub_string(Value, 5, _, 0, Cleaned)
+	;	sub_string(Value, 0, 4, _, "has ") 
+	->	sub_string(Value, 4, _, 0, Cleaned)
+	;	Cleaned = Value
+	).
+
 % Unravel entity list
 unravel([], []).
-unravel([ ParamName = Value | Entities], [ ParamName = SimplifiedValue | Unravelled]) :-
-	simplify(ParamName, Value, SimplifiedValue),
+unravel([ ParamName = Value | Entities], [ NormalizedKey = SimplifiedValue | Unravelled]) :-
+    normalize_key(ParamName, NormalizedKey),
+	simplify(NormalizedKey, Value, SimplifiedValue),
 	unravel(Entities, Unravelled).
 unravel([ ParamName = [] | Entities ], [ ParamName = '' | Unravelled]) :-
 	unravel(Entities, Unravelled).

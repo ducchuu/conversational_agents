@@ -343,6 +343,11 @@ module dialog_update {
 	then delete(currentPattern(CurrentId)) + insert(currentPattern(PatternId)) 
 		+ webinfo('pattern', PatternId).
 	
+	% Clear lastSentRecipe when returning to recipe selection (after disconfirmation)
+	% This allows the user to request a new recipe without duplicate prevention blocking it
+	if currentTopLevel(a50recipeSelect), lastSentRecipe(OldID)
+	then delete(lastSentRecipe(OldID)).
+	
 	% if the number of recipes that have selected has changed, let the webserver know.
 	if recipesFiltered(Recipes), length(Recipes, N), recipeCounter(M), not(N=M)
 		then delete(recipeCounter(M))+insert(recipeCounter(N))+webinfo('recipecounter', N).
@@ -357,14 +362,35 @@ module dialog_update {
 		recipes_to_json(Recipes, JSON)
 	then webinfo('recipes', JSON).
 	
+	% Send recipe when recipeChoiceReceipt intent occurs, but only if we haven't sent this recipe yet
+	% Case 1: No recipe has been sent yet
 	if Intent = recipeChoiceReceipt,
         currentRecipe(ID),
+        not(lastSentRecipe(_)),
         recipe_to_json(ID, JSON)
-    then webinfo('showRecipe', JSON).  
+    then insert(lastSentRecipe(ID)) + webinfo('showRecipe', JSON).
+	
+	% Case 2: A different recipe was sent before
+	if Intent = recipeChoiceReceipt,
+        currentRecipe(ID),
+        lastSentRecipe(OldID),
+        not(ID=OldID),
+        recipe_to_json(ID, JSON)
+    then delete(lastSentRecipe(OldID)) + insert(lastSentRecipe(ID)) + webinfo('showRecipe', JSON).  
 
-	% Also show recipe details after a recommendation is made.
+	% Also show recipe details after a recommendation is made, but only if we haven't sent this recipe yet
+	% Case 1: No recipe has been sent yet
 	if Intent = recommend,
         currentRecipe(ID),
+        not(lastSentRecipe(_)),
         recipe_to_json(ID, JSON)
-    then webinfo('showRecipe', JSON).  
+    then insert(lastSentRecipe(ID)) + webinfo('showRecipe', JSON).
+	
+	% Case 2: A different recipe was sent before
+	if Intent = recommend,
+        currentRecipe(ID),
+        lastSentRecipe(OldID),
+        not(ID=OldID),
+        recipe_to_json(ID, JSON)
+    then delete(lastSentRecipe(OldID)) + insert(lastSentRecipe(ID)) + webinfo('showRecipe', JSON).  
 }

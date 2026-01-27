@@ -76,10 +76,10 @@ def main():
     ontology = load_ontology(ontology_path)
 
     fit_encoders(args.ontology_path)
-    #print(slot_label_encoder.classes_)
-    #print("Epochs:", args.num_epochs)
-    #print("batch size:", args.batch_size)
-    #print("learning rate:", args.learning_rate)
+    print(slot_label_encoder.classes_)
+    print("Epochs:", args.num_epochs)
+    print("batch size:", args.batch_size)
+    print("learning rate:", args.learning_rate)
 
 
     intent_classes =  intent_label_encoder.classes_

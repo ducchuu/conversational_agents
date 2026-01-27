@@ -5,6 +5,7 @@ var socket = io();
 var user_turn = false;
 var recipecounter = -1;
 var currentPatternId = null;
+var forceShowRecipes = false; // When true, allow showing up to 100 recipes
 
 function $(id) {
   return document.getElementById(id);
@@ -235,8 +236,17 @@ socket.on("pattern", (pattern) => {
     sessionStorage.setItem("user_turn_saved", "true");
   }
   
-  if (pattern === "start" || pattern === "c10") {
+  // Clear recipe data when starting fresh or returning to recipe selection
+  if (pattern === "start" || pattern === "c10" || pattern === "a50recipeSelect") {
       sessionStorage.removeItem("currentRecipeData");
+      // Reset the force flag if we go back to selection or restart
+      forceShowRecipes = false;
+  }
+
+  // If the user said "No more filters" and we have <= 100 recipes, force the display
+  if (pattern === "a21noMoreFilters" && recipecounter <= 100) {
+      forceShowRecipes = true;
+      goToRecipeOverview(); // Redirect immediately to the grid view
   }
 
   switch(pattern) {
@@ -246,16 +256,25 @@ socket.on("pattern", (pattern) => {
     case "c10":
       window.location.href = "welcome.html";
       break;
+      
+    // Both standard selection and the "Show List" command should trigger the overview logic
     case "a50recipeSelect":
+    case "a21noMoreFilters": 
       goToRecipeOverview();
       break;
+      
     case "a50recipeConfirm":
       window.location.href = "recipe_confirmation.html";
       break;
+      
+    // Both the closing pattern and the actual termination signal go to the closing page
     case "c43":
+    case "terminated":
       window.location.href = "closing.html";
       break;
+      
     default:
+      // Fallback: If we don't know the pattern, assume conversation is over
       window.location.href = "closing.html";
   }
 });
@@ -265,7 +284,8 @@ function goToRecipeOverview() {
   var onOverview1 = window.location.pathname.indexOf("recipe_overview.html") !== -1;
   var hasCount = recipecounter > -1;
 
-  if (hasCount && recipecounter <= 15) {
+  // Go to grid view (overview2) if count is small OR if forced to show
+  if (hasCount && (recipecounter <= 15 || forceShowRecipes)) {
     if (!onOverview2) window.location.href = "recipe_overview2.html";
     return;
   }
@@ -298,6 +318,16 @@ socket.on("recipecounter", (number) => {
     goToRecipeOverview();
   }
   updateOverviewLayout();
+});
+
+// Listener for explicit 'show' flag if emitted by the backend
+socket.on("forceShow", (val) => {
+    // Check if the value is 'true' string or boolean true
+    if (val === 'true' || val === true) {
+        forceShowRecipes = true;
+        updateOverviewLayout();
+        goToRecipeOverview();
+    }
 });
 
 socket.on("filters", function (filterString) {
@@ -487,6 +517,58 @@ function renderRecipeCard(data) {
       steps.appendChild(li);
     });
   }
+
+  // Load YouTube video for the recipe
+  loadYouTubeVideo(data.title);
+}
+
+function loadYouTubeVideo(recipeTitle) {
+  var videoFrame = document.getElementById("recipeVideo");
+  var videoFallback = document.getElementById("videoFallback");
+  
+  if (!videoFrame) return;
+  
+  // Reset video frame
+  videoFrame.src = "";
+  if (videoFallback) {
+    videoFallback.style.display = "none";
+  }
+  
+  if (!recipeTitle || !recipeTitle.trim()) {
+    if (videoFallback) {
+      videoFallback.style.display = "block";
+    }
+    return;
+  }
+  
+  // Fetch YouTube video ID from the API
+  fetch("/api/youtube/search?title=" + encodeURIComponent(recipeTitle))
+    .then(function(response) {
+      if (!response.ok) {
+        throw new Error("YouTube API request failed");
+      }
+      return response.json();
+    })
+    .then(function(data) {
+      if (data.videoId) {
+        // Set the iframe src to the YouTube embed URL
+        videoFrame.src = "https://www.youtube.com/embed/" + data.videoId;
+        if (videoFallback) {
+          videoFallback.style.display = "none";
+        }
+      } else {
+        // No video found
+        if (videoFallback) {
+          videoFallback.style.display = "block";
+        }
+      }
+    })
+    .catch(function(error) {
+      console.error("Error loading YouTube video:", error);
+      if (videoFallback) {
+        videoFallback.style.display = "block";
+      }
+    });
 }
 
 function updateOverviewLayout() {
@@ -497,7 +579,8 @@ function updateOverviewLayout() {
 
   if (!container || !mainTitle) return; // Safety check if on wrong page
 
-  if (recipecounter > 15) {
+  // Only hide the container if count is > 15 AND we are NOT forcing it to show
+  if (recipecounter > 15 && !forceShowRecipes) {
     container.style.display = "none";
     mainTitle.textContent = "Refine your preferences";
     if (mainDesc) mainDesc.textContent = "There are still too many results (" + recipecounter + "). Please add more filters like ingredients, cuisine, or time.";
@@ -516,13 +599,22 @@ function updateOverviewLayout() {
 }
 
 document.addEventListener("DOMContentLoaded", function() {
-  var savedRecipe = sessionStorage.getItem("currentRecipeData");
+  // Only restore recipe data on the recipe confirmation page
+  var isConfirmationPage = window.location.pathname.indexOf("recipe_confirmation.html") !== -1;
   
-  if (savedRecipe) {
-    var data = tryParseJSON(savedRecipe);
-    if(data) {
-        console.log("Restoring recipe data...", data);
-        renderRecipeCard(data);
+  if (isConfirmationPage) {
+    var savedRecipe = sessionStorage.getItem("currentRecipeData");
+    
+    if (savedRecipe) {
+      var data = tryParseJSON(savedRecipe);
+      if(data) {
+          console.log("Restoring recipe data...", data);
+          renderRecipeCard(data);
+          // Load YouTube video when restoring saved recipe
+          if (data.title) {
+            loadYouTubeVideo(data.title);
+          }
+      }
     }
   }
 });
