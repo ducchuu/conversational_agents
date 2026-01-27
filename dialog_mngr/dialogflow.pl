@@ -305,6 +305,15 @@ simplify('excludeingredient', Value, Normalized) :-
 % CATCH-ALL: Pass everything else (lists, atoms) through unchanged.
 simplify(_, Value, Value).
 
+normalize_key('dietaryRestriction', 'dietaryrestriction').
+normalize_key('ingredientType', 'ingredienttype').
+normalize_key('excludeIngredient', 'excludeingredient').
+normalize_key('excludeIngredientType', 'excludeingredienttype').
+normalize_key('excludeDietaryRestriction', 'excludedietaryrestriction').
+normalize_key('excludeCuisine', 'excludecuisine').
+
+normalize_key(Key, Key).
+
 % Normalize ingredient value by removing common prefixes and matching against ingredient database
 normalize_ingredient_value(Value, Normalized) :-
 	% Step 1: Convert to string for processing (handles atoms, strings, lists)
@@ -346,8 +355,9 @@ remove_ingredient_prefix(Value, Cleaned) :-
 
 % Unravel entity list
 unravel([], []).
-unravel([ ParamName = Value | Entities], [ ParamName = SimplifiedValue | Unravelled]) :-
-	simplify(ParamName, Value, SimplifiedValue),
+unravel([ ParamName = Value | Entities], [ NormalizedKey = SimplifiedValue | Unravelled]) :-
+    normalize_key(ParamName, NormalizedKey),
+	simplify(NormalizedKey, Value, SimplifiedValue),
 	unravel(Entities, Unravelled).
 unravel([ ParamName = [] | Entities ], [ ParamName = '' | Unravelled]) :-
 	unravel(Entities, Unravelled).
