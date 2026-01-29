@@ -16,7 +16,7 @@ dual_parameter_name_pairs([
 	['cuisine', 'cuisineDel'],
 	['dietaryrestriction', 'dietaryRestrictionDel'],
 	['duration', 'durationDel'],
-	['easykeyword', 'easyKeyWordDel'],
+	['easy', 'easyDel'],
 	['excludeingredient', 'excludeIngredientDel'],
 	['excludeingredienttype', 'excludeIngredientTypeDel'],
 	['ingredient', 'ingredientDel'],
@@ -67,7 +67,7 @@ parameter_display_templates([
 	['cuisine', "~a cuisine"],
 	['dietaryrestriction', "~a"],
 	["duration", "Less than ~a minutes"],
-	['easykeyword', "~a recipes"],
+	['easy', "~a"],
 	['excludeingredient', "Without ~a"],
 	['excludeingredienttype', "Without ~a"],
 	['ingredient', "With ~a"],
@@ -125,7 +125,7 @@ parameter_text_templates([
 	['cuisine', "are of ~a cuisine"],
 	['dietaryrestriction', " have a ~a diet"],
 	['duration', " are within ~a minutes"],
-	['easykeyword', " are ~a dishes to prepare"],
+	['easy', " are ~a to prepare"],
 	['excludeingredient', " do not include ~a"],
 	['excludeingredienttype', " do not include ~a"],
 	['ingredient', " include ~a"],
@@ -275,6 +275,9 @@ same_param(nrOfIngredientsMore, nrOfIngredients).
 % ==============================================================================
 % SIMPLIFY (ROBUST VERSION)
 % ==============================================================================
+simplify('easy', _, 'easy').
+simplify('duration', 'fast', 30). 
+simplify('duration', 'quick', 30).
 simplify('duration', Value, Minutes) :- duration_to_min(Value, Minutes), !.
 simplify('durationDel', Value, Minutes) :- duration_to_min(Value, Minutes), !.
 simplify('nrOfIngredients', Value, Nr) :- convert_to_int(Value, Nr), !.
@@ -311,6 +314,8 @@ normalize_key('excludeIngredient', 'excludeingredient').
 normalize_key('excludeIngredientType', 'excludeingredienttype').
 normalize_key('excludeDietaryRestriction', 'excludedietaryrestriction').
 normalize_key('excludeCuisine', 'excludecuisine').
+normalize_key('easyKeyWord', 'easy').
+normalize_key('difficulty', 'easy').
 
 normalize_key(Key, Key).
 
@@ -355,13 +360,16 @@ remove_ingredient_prefix(Value, Cleaned) :-
 
 % Unravel entity list
 unravel([], []).
+unravel([ ParamName = [] | Entities ], [ ParamName = '' | Unravelled]) :-
+	unravel(Entities, Unravelled).
+
+unravel([ ParamName = [ Value ] | Entities ], Unravelled) :-
+	unravel([ ParamName = Value | Entities ], Unravelled).
+
+unravel([ ParamName = [ Value1, Value2 | Values ] | Entities ], Unravelled) :-
+	unravel([ ParamName = Value1, ParamName = [ Value2 | Values ] | Entities ], Unravelled).
+
 unravel([ ParamName = Value | Entities], [ NormalizedKey = SimplifiedValue | Unravelled]) :-
     normalize_key(ParamName, NormalizedKey),
 	simplify(NormalizedKey, Value, SimplifiedValue),
 	unravel(Entities, Unravelled).
-unravel([ ParamName = [] | Entities ], [ ParamName = '' | Unravelled]) :-
-	unravel(Entities, Unravelled).
-unravel([ ParamName = [ Value ] | Entities ], Unravelled) :-
-	unravel([ ParamName = Value | Entities ], Unravelled).
-unravel([ ParamName = [ Value1, Value2 | Values ] | Entities ], Unravelled) :-
-	unravel([ ParamName = Value1, ParamName = [ Value2 | Values ] | Entities ], Unravelled).

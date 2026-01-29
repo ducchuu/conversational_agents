@@ -95,8 +95,13 @@ def normalize_slots(slots):
 
     normalized_slots = {}
     for slot_type, slot_value in slots.items():
-        normalized_value = get_canonical_value(ontology, slot_type, slot_value)
-        normalized_slots[slot_type] = normalized_value
+        if isinstance(slot_value, list):
+            normalized_list = [get_canonical_value(ontology, slot_type, v) for v in slot_value]
+            normalized_slots[slot_type] = normalized_list
+        else:
+            normalized_value = get_canonical_value(ontology, slot_type, slot_value)
+            normalized_slots[slot_type] = normalized_value
+            
     return normalized_slots
 
 
@@ -111,32 +116,37 @@ def extract_slots_from_text(slots_array, inference_text):
     Returns:
         dict: Dictionary of slots and their corresponding values.
     """
-    words = inference_text.split()  # Split the inference text into words
+    words = inference_text.split()
     slots_dict = {}
     current_slot_type = None
     current_slot_value = []
 
+    def add_slot(s_type, s_value_list):
+        value_str = " ".join(s_value_list)
+        if s_type in slots_dict:
+            if isinstance(slots_dict[s_type], list):
+                slots_dict[s_type].append(value_str)
+            else:
+                slots_dict[s_type] = [slots_dict[s_type], value_str]
+        else:
+            slots_dict[s_type] = value_str
+
     for word, slot_tag in zip(words, slots_array):
         if slot_tag == "O":
-            # If current slot ends, save it
             if current_slot_type and current_slot_value:
-                slots_dict[current_slot_type] = " ".join(current_slot_value)
+                add_slot(current_slot_type, current_slot_value)
                 current_slot_type = None
                 current_slot_value = []
         elif slot_tag.startswith("B-"):
-            # Save the previous slot if it exists
             if current_slot_type and current_slot_value:
-                slots_dict[current_slot_type] = " ".join(current_slot_value)
-            # Start a new slot
+                add_slot(current_slot_type, current_slot_value)
             current_slot_type = slot_tag[2:]
             current_slot_value = [word]
         elif slot_tag.startswith("I-") and current_slot_type == slot_tag[2:]:
-            # Continue the current slot
             current_slot_value.append(word)
 
-    # Add the last slot if it exists
     if current_slot_type and current_slot_value:
-        slots_dict[current_slot_type] = " ".join(current_slot_value)
+        add_slot(current_slot_type, current_slot_value)
 
     return slots_dict
 

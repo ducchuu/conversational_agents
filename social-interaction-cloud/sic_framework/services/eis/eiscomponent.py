@@ -336,10 +336,16 @@ class EISComponent(SICComponent):
         self.logger.info("Sending event: ListeningStarted")
         self.redis_client.publish(self.marbel_channel, "event('ListeningStarted')")
 
-        # Prepare and perform Dialogflow request
         contexts = {"name": 1}  # Example context; adjust as needed
-        reply = self.dialogflow.request(
-            GetIntentRequest(self.conversation_id, contexts))
+        reply = None
+        for attempt in (1, 2):
+            reply = self.dialogflow.request(
+                GetIntentRequest(self.conversation_id, contexts))
+            transcript = reply.response.query_result.query_text
+            if transcript and isinstance(transcript, str) and transcript.strip():
+                break
+            if attempt == 1:
+                self.logger.warning("Empty or invalid transcript from Dialogflow on first attempt; retrying once.")
 
         # Send transcript to webserver (to enable displaying the transcript on a webpage)
         transcript = reply.response.query_result.query_text
@@ -366,21 +372,27 @@ class EISComponent(SICComponent):
             self.logger.info("Sending event: ListeningStarted")
             self.redis_client.publish(self.marbel_channel, "event('ListeningStarted')")
 
-            # Perform ASR transcription
-            if self.params.use_whisper:
-                self.logger.info("Requesting transcript from Whisper...")
-                transcript_response = self.whisper.request(GetTranscript(timeout=60, phrase_time_limit=60))
-                transcript = getattr(transcript_response, "transcript", None)
-            else:
-                self.logger.info("Requesting transcript from Google STT...")
-                transcript_response = self.google_stt.request(GetStatementRequest(), block=True)
-                response_obj = getattr(transcript_response, "response", None)
-                transcript = None
-                if response_obj and hasattr(response_obj, "alternatives") and response_obj.alternatives:
-                    transcript = response_obj.alternatives[0].transcript
+            transcript = None
+            for attempt in (1, 2):
+                # Perform ASR transcription
+                if self.params.use_whisper:
+                    self.logger.info("Requesting transcript from Whisper...")
+                    transcript_response = self.whisper.request(GetTranscript(timeout=60, phrase_time_limit=60))
+                    transcript = getattr(transcript_response, "transcript", None)
+                else:
+                    self.logger.info("Requesting transcript from Google STT...")
+                    transcript_response = self.google_stt.request(GetStatementRequest(), block=True)
+                    response_obj = getattr(transcript_response, "response", None)
+                    transcript = None
+                    if response_obj and hasattr(response_obj, "alternatives") and response_obj.alternatives:
+                        transcript = response_obj.alternatives[0].transcript
 
-            if transcript is None or not isinstance(transcript, str) or not transcript:
-                raise ValueError(f"Invalid transcript: expected a string, got {type(transcript).__name__}")
+                if transcript and isinstance(transcript, str) and transcript.strip():
+                    break
+                if attempt == 1:
+                    self.logger.warning("Empty or invalid transcript on first attempt; retrying once.")
+                else:
+                    raise ValueError(f"Invalid transcript after retry: expected a non-empty string, got {type(transcript).__name__ if transcript is not None else 'None'}")
 
             self.logger.info(f"Received transcript: {transcript}")
 
@@ -462,8 +474,12 @@ class EISComponent(SICComponent):
 
     def _handle_stop_listening_command(self):
         """Process 'stopListening' command to stop Dialogflow or related service."""
-        reply = self.dialogflow.send_message(
-            StopListeningMessage(self.conversation_id))
+
+        if hasattr(self, 'dialogflow') and self.dialogflow is not None:
+            reply = self.dialogflow.send_message(StopListeningMessage(self.conversation_id))
+        else:
+            print("Dialogflow not connected, skipping stop_listening message.")
+        
 
         # Inform MARBEL agent that Dialogflow stopped listening
         self.redis_client.publish(

@@ -22,7 +22,7 @@
 
   <div class="pca-shell" id="main">
     <header class="pca-topbar">
-      <nav class="navbar">
+      <nav class="navbar d-flex justify-content-between">
         <div class="pca-brand">
           <div class="pca-logo" aria-hidden="true">🍲</div>
           <div>
@@ -30,6 +30,10 @@
             <small>Thanks for cooking with me</small>
           </div>
         </div>
+
+        <button class="btn pca-mic pca-mic--sm" id="mic" type="button" aria-label="Microphone" disabled>
+          <img class="img-fluid" id="micimg" src="static/images/mic_out.png" alt="Microphone">
+        </button>
       </nav>
     </header>
 
@@ -51,6 +55,12 @@
         </div>
       </div>
     </main>
+
+    <footer class="pca-footer fixed-bottom">
+      <div class="container py-2">
+        <p class="lead text-center" style="font-size: 1rem;" id="transcript"></p>
+      </div>
+    </footer>
   </div>
 </body>
 </html>

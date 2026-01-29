@@ -261,16 +261,22 @@ pattern([a21removeKeyFromMemory,
 % Instruction:
 %	Add three variants for the recipe confirmation pattern a50recipeConfirm.
 % Two variants where user confirms they like the recipe by either a confirmation or
-% appreciation intent. 
+% appreciation intent. For appreciation, agent first says "You're welcome" (b42 style)
+% then inserts the closing sequence.
 
-pattern([a50recipeConfirm, [user, confirmation], [agent, insert(c43)] ]).
+pattern([a50recipeConfirm, [user, confirmation], [agent, insert(c43)]]) :- currentTopLevel(a50recipeConfirm).
 
-pattern([a50recipeConfirm, [user, appreciation], [agent, insert(c43)] ]).
+pattern([a50recipeConfirm, 
+    [user, appreciation], 
+    [agent, appreciationReceipt], 
+    [agent, insert(c43)] 
+]) :-
+    currentTopLevel(a50recipeConfirm).
 
 % Variant where user disconfirms, i.e. expresses they do not like the recipe. The
 % conversation should move back to the recipe selection stage (a50recipeSelect).
 
-pattern([a50recipeConfirm, [user, disconfirmation], [agent, insert(a50recipeSelect)] ]).
+pattern([a50recipeConfirm, [user, disconfirmation], [agent, insert(a50recipeSelect)]]) :- currentTopLevel(a50recipeConfirm).
 
 % Pattern a50recipeSelect: user asks for a recipe.
 % Variant where user requests a (random) recommendation.
@@ -356,6 +362,13 @@ pattern([b13, [user, Intent], [agent, contextMismatch(Intent)]]).
 % Instruction:
 % 	Add a pattern with pattern ID b42 here where the users expresses appreciation first
 %	and the agent let's the user know it received this appreciation well.
+pattern([b42, 
+    [user, appreciation], 
+    [agent, appreciationReceipt], 
+    [agent, insert(a50recipeSelect)]
+]) :-
+    currentTopLevel(a50recipeSelect).
+
 
 pattern([b42, [user, appreciation], [agent, appreciationReceipt]]).
 
