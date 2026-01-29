@@ -157,7 +157,7 @@ text(noRecipesLeft, "I added your request but I could not find a recipe that mat
 
 % Intent: pictureGranted
 
-text(pictureGranted, "OK. Here is a list of recipes that you can choose from.").
+text(pictureGranted, "Okay. Here is a list of recipes that you can choose from.").
 
 
 % Intent: pictureNotGranted

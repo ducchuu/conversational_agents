@@ -5,7 +5,7 @@ var socket = io();
 var user_turn = false;
 var recipecounter = -1;
 var currentPatternId = null;
-var forceShowRecipes = false; // When true, allow showing up to 100 recipes
+var forceShowRecipes = sessionStorage.getItem("forceShowRecipes") === "true"; // When true, allow showing up to 100 recipes
 
 function $(id) {
   return document.getElementById(id);
@@ -239,6 +239,7 @@ socket.on("pattern", (pattern) => {
   // Clear recipe data when starting fresh or returning to recipe selection
   if (pattern === "start" || pattern === "c10" || pattern === "a50recipeSelect") {
       sessionStorage.removeItem("currentRecipeData");
+      sessionStorage.removeItem("forceShowRecipes");
       // Reset the force flag if we go back to selection or restart
       forceShowRecipes = false;
   }
@@ -325,6 +326,7 @@ socket.on("forceShow", (val) => {
     // Check if the value is 'true' string or boolean true
     if (val === 'true' || val === true) {
         forceShowRecipes = true;
+        sessionStorage.setItem("forceShowRecipes", "true");
         updateOverviewLayout();
         goToRecipeOverview();
     }
@@ -384,6 +386,23 @@ socket.on("recipes", function (recipesString) {
   if (!grid || !tpl) return;
 
   var recipes = normalizeRecipes(recipesString);
+
+  // Keep recipe counter in sync when we receive the recipes list (fixes counter on recipe_overview2 after redirect)
+  if (recipes.length >= 0) {
+    recipecounter = recipes.length;
+    safeSetText("recipecounter", String(recipecounter));
+  }
+
+  // Backend only sends 16-100 recipes when user said "show list" (forceShow) – switch to overview2
+  if (recipes.length >= 16 && recipes.length <= 100) {
+    forceShowRecipes = true;
+    sessionStorage.setItem("forceShowRecipes", "true");
+    var onOverview1 = window.location.pathname.indexOf("recipe_overview.html") !== -1;
+    if (onOverview1) {
+      window.location.href = "recipe_overview2.html";
+      return;
+    }
+  }
 
   grid.innerHTML = "";
   

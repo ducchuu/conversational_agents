@@ -292,6 +292,16 @@ module dialog_update {
 			log_info("memory: ", NewMemory, Info)
 		then updateSession(agent, update(Params), [], '')
 			+ delete(memory(OldMemory)) + insert(memory(NewMemory)) + log(Info).
+
+		% Action: Set 'show' = 'true' in memory (for "Show recipes on demand")
+		% Also send forceShow so the frontend switches to recipe_overview2.html
+		if Intent = enableShow,
+			enableShow(OldMemory, NewMemory),
+			log_info("memory: ", NewMemory, Info)
+		then updateSession(agent, enableShow, [], '')
+			+ delete(memory(OldMemory)) + insert(memory(NewMemory))
+			+ webinfo('forceShow', true)
+			+ log(Info) + log("Memory updated: Show recipes enabled").
 			
 		if Intent = remove(ParamName),
 			updateMemory(Params, OldMemory, NewMemory),
@@ -357,8 +367,12 @@ module dialog_update {
 	% to send the recipe strings using webinfo
 	if filters_to_strings_or_empty(Strings) then webinfo('filters', Strings).
 
-	% Send recipes to the UI when the list is small enough to display.
-	if currentTopLevel(a50recipeSelect), recipesFiltered(Recipes), length(Recipes, N), N =< 15,
+	% Send recipes to the UI when count <= 15 OR user requested to show (show=true, count <= 100).
+	% Allow both a50recipeSelect and a21noMoreFilters (so recipes are sent right after "no more filters").
+	if (currentTopLevel(a50recipeSelect) ; currentTopLevel(a21noMoreFilters)),
+		recipesFiltered(Recipes), length(Recipes, N),
+		(N =< 15 ; memoryKeyValue('show', 'true')),
+		N =< 100,
 		recipes_to_json(Recipes, JSON)
 	then webinfo('recipes', JSON).
 	

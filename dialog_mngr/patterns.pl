@@ -157,7 +157,7 @@ pattern([a21featureRequest,
 % Instruction:
 %	Add a pattern with pattern ID a21noMoreFilters here.
 
-% when there are less than 15 recipes will go as a first predicate and it adds agent ackFilterEnd in order to finalize wiht less recipes
+% Variant 1: User is done, and count is <= 100. GRANT the request (enableShow + pictureGranted).
 pattern([a21noMoreFilters,
     [user, noMoreFilters],
     [agent, enableShow], 
@@ -176,7 +176,7 @@ pattern([a21noMoreFilters,
 % Instruction:
 %	Add a pattern with pattern ID a21noMoreFilters here.
 
-% It is for more than 15 recipes still after filtering, will return tooManyRecipesLeft and ask whether the user wants to add filters
+% Variant 2: User is done, but count > 100. DENY the request (pictureNotGranted).
 pattern([a21noMoreFilters,
     [user, noMoreFilters],
     [agent, pictureNotGranted]
