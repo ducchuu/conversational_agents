@@ -106,10 +106,10 @@ module dialog_update {
 		+ log("Mic clicked on Greeting: Trusting Framework auto-listen") 
 		+ delete(answer('mic')).
 
-	% This is needed, otherwise the agent was not listening after the greeting (c10 pattern)
+	% On inner pages EIS does not start on mic click; agent sends startListening once.
 	if answer('mic'), not(disabled('mic')), not(currentTopLevel(c10))
 	then insert(waitingForEvent('ListeningDone')) 
-		+ log("Mic clicked on inner page: Forcing startListening") 
+		+ log("Mic clicked on inner page: sending startListening")
 		+ startListening
 		+ delete(answer('mic')).
 	
@@ -119,10 +119,13 @@ module dialog_update {
 	then insert(intent(recipeRequest, [recipe=Button], 100, '', touch)) + log(Info)
 		+ delete(answer(Button)). % avoid processing it again below
 
-	% Treat all other non-empty buttons as if they are 'button' intents
+	% Treat all other non-empty buttons as if they are 'button' intents.
+	% Delete answer(Button) to avoid re-processing the same click every cycle (fixes
+	% Start button after restart and prevents duplicate intents).
 	if answer(Button), not(Button=[]), not(answer('mic')), not(recipeName(_, Button)),
 		log_info("intent: ", [button, [button=Button], 100, '', touch], Info)
-	then insert(intent(button, [button=Button], 100, '', touch)) + log(Info).
+	then insert(intent(button, [button=Button], 100, '', touch)) + log(Info)
+		+ delete(answer(Button)).
 
 
 	%%% Handling of recognized intents.
@@ -156,6 +159,15 @@ module dialog_update {
 		not(Params=[]), cleanParams(Params, [])
 	then delete(intent(Intent, Params, Conf, Txt, Source))
 		+ insert(intent('input.unknown', Params, Conf, Txt, Source)).
+
+	% Step 2.5: Rewrite addFilter params when transcript suggests exclusion (e.g. "no vegan"
+	% -> excludedietaryrestriction=vegan). So mealType/dietaryRestriction/tag become
+	% excludemealtype/excludedietaryrestriction/excludetag and the agent treats them as exclusions.
+	if intent(addFilter, Params, Conf, Txt, Source),
+		rewrite_params_for_exclusion(Params, Txt, ParamsRewritten),
+		ParamsRewritten \= Params
+	then delete(intent(addFilter, Params, Conf, Txt, Source))
+		+ insert(intent(addFilter, ParamsRewritten, Conf, Txt, Source)).
 
 	% Step 3: Pre-process parameters of intent.
 	% Unravel list values and remove empty parameters, i.e. parameters without a value.
@@ -311,12 +323,14 @@ module dialog_update {
 		
 		%%% Actions for managing the agenda
         % Handle instruction 'restart' (which reinitializes the agent's agenda and clears
-        % the agent's memory).
+        % the agent's memory). Re-insert waitingForEvent('start') so the Start button on
+        % start.html is responsive (same state as initial load).
         if Intent = restart, 
             agenda(Agenda), initialAgenda(InitAgenda), memory(Params)
         then updateSession(agent, restart, [], '')
             + delete(agenda(Agenda)) + insert(agenda(InitAgenda))
-            + delete(memory(Params)) + insert(memory([])). 
+            + delete(memory(Params)) + insert(memory([]))
+            + insert(waitingForEvent('start')) + log("waiting for: start (after restart)").
             %+ delete(session(List)) + insert(session(NewList)).
         
         % Empty the agent's memory    

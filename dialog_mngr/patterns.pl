@@ -423,16 +423,18 @@ pattern([c30, [user, checkCapability], [agent, describeCapability]]).
 
 %%% C4 Patterns: Closing
 % Pattern C4.3: Closing Farewell (Agent)
-% Example:
-%	A: goodbye.
-%	U: bye.
-% Instruction:
-% 	Add a pattern here where the agent initiates (i.e. starts) saying goodbye and then 
-%	the user says goodbye.
+% Variant 1: User chooses to RESTART (say "Start over" after farewell prompt)
+pattern([c43,
+    [agent, farewell],
+    [user, restart],
+    [agent, restart]
+]).
 
-pattern([c43, 
-    [agent, farewell], 
-    [user, farewell], 
+% Variant 2: User chooses to END (standard goodbye)
+% Example: A: goodbye. U: bye.
+pattern([c43,
+    [agent, farewell],
+    [user, farewell],
     [agent, terminate]
 ]).
 

@@ -29,6 +29,8 @@ dual_parameter_name_pairs([
 	['tag', 'tagDel'],
 	['excludedietaryrestriction', 'excludeDietaryRestrictionDel'],
 	['excludecuisine', 'excludeCuisineDel'],
+	['excludemealtype', 'excludeMealTypeDel'],
+	['excludetag', 'excludeTagDel'],
 	['durationlonger', 'durationlongerDel'],
 	['nrOfIngredientsMore', 'moreIngredientNumberDel']
 ]).
@@ -80,6 +82,8 @@ parameter_display_templates([
 	['tag', "~a"],
 	['excludedietaryrestriction', 'Not ~a'],
 	['excludecuisine', 'Not of ~a cuisine'],
+	['excludemealtype', 'Not ~a'],
+	['excludetag', 'Not ~a'],
 	['durationlonger', 'More than ~a minutes'],
 	['nrOfIngredientsMore', 'More than ~a ingredients']
 ]).
@@ -91,7 +95,7 @@ format_display_value(_, Value, FormattedValue) :-
 	not(atomic(Value)),
 	convert_to_string(Value, FormattedValue), !.
 format_display_value(Filter, Value, FormattedValue) :- 
-	member(Filter, [ 'cuisine', 'dietaryrestriction', 'mealType', 'tag', 'excludedietaryrestriction', 'excludecuisine' ]),
+	member(Filter, [ 'cuisine', 'dietaryrestriction', 'mealType', 'tag', 'excludedietaryrestriction', 'excludecuisine', 'excludemealtype', 'excludetag' ]),
 	to_upper_case(Value, FormattedValue), !.
 format_display_value(_, Value, Value).
 
@@ -138,6 +142,8 @@ parameter_text_templates([
 	['tag', " are all ~a dishes"],
 	['excludedietaryrestriction', 'do not have a ~a diet'],
 	['excludecuisine', 'are not of ~a cuisine'],
+	['excludemealtype', 'are not ~a recipes'],
+	['excludetag', 'are not ~a dishes'],
 	['durationlonger', 'take more than ~a minutes'],
 	['nrOfIngredientsMore', 'include more than ~a ingredients']
 ]).
@@ -269,6 +275,8 @@ same_param(excludeingredient, excludeingredienttype).
 same_param(excludeingredienttype, excludeingredient).
 same_param(excludedietaryrestriction, dietaryrestriction).
 same_param(excludecuisine, cuisine).
+same_param(excludemealtype, mealType).
+same_param(excludetag, tag).
 same_param(durationlonger, duration).
 same_param(nrOfIngredientsMore, nrOfIngredients).
 
@@ -286,6 +294,8 @@ simplify('nrSteps', Value, Nr) :- convert_to_int(Value, Nr), !.
 simplify('stepsDel', Value, Nr) :- convert_to_int(Value, Nr), !.
 simplify('servings', Value, Nr) :- convert_to_int(Value, Nr), !.
 simplify('tag', Value, String) :- convert_to_string(Value, String), !.
+simplify('excludemealtype', Value, String) :- convert_to_string(Value, String), !.
+simplify('excludetag', Value, String) :- convert_to_string(Value, String), !.
 simplify('nrOfIngredientsMore', Value, Nr) :- convert_to_int(Value, Nr), !.
 simplify('moreIngredientNumberDel', Value, Nr) :- convert_to_int(Value, Nr), !.
 simplify('durationlonger', Value, Nr) :- duration_to_min(Value, Nr), !.
@@ -314,10 +324,46 @@ normalize_key('excludeIngredient', 'excludeingredient').
 normalize_key('excludeIngredientType', 'excludeingredienttype').
 normalize_key('excludeDietaryRestriction', 'excludedietaryrestriction').
 normalize_key('excludeCuisine', 'excludecuisine').
+normalize_key('excludeMealType', 'excludemealtype').
+normalize_key('excludeTag', 'excludetag').
 normalize_key('easyKeyWord', 'easy').
 normalize_key('difficulty', 'easy').
 
 normalize_key(Key, Key).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Rewrite addFilter params when transcript suggests exclusion (e.g. "no vegan" -> exclude)
+%%% So NLU can send dietaryRestriction=vegan / mealType=breakfast / tag=X; we rewrite to
+%%% excludedietaryrestriction / excludemealtype / excludetag for correct filter behaviour.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+exclusion_phrase(Txt) :-
+	convert_to_string(Txt, Str),
+	string_lower(Str, Low),
+	(   sub_string(Low, 0, _, _, "no ")
+	;   sub_string(Low, _, _, _, " no ")
+	;   sub_string(Low, _, _, _, "without ")
+	;   sub_string(Low, _, _, _, "exclude ")
+	;   sub_string(Low, 0, _, _, "not ")
+	;   sub_string(Low, 0, _, _, "don't ")
+	).
+
+% Rewrite first matching include param to exclusion param (one rewrite per call).
+rewrite_params_for_exclusion(Params, Txt, ParamsRewritten) :-
+	exclusion_phrase(Txt),
+	rewrite_one_exclusion(Params, ParamsRewritten).
+rewrite_params_for_exclusion(Params, Txt, Params) :-
+	\+ exclusion_phrase(Txt).
+
+rewrite_one_exclusion(Params, ParamsRewritten) :-
+	select(dietaryRestriction=V, Params, Rest), !,
+	ParamsRewritten = [excludedietaryrestriction=V|Rest].
+rewrite_one_exclusion(Params, ParamsRewritten) :-
+	select(mealType=V, Params, Rest), !,
+	ParamsRewritten = [excludemealtype=V|Rest].
+rewrite_one_exclusion(Params, ParamsRewritten) :-
+	select(tag=V, Params, Rest), !,
+	ParamsRewritten = [excludetag=V|Rest].
+rewrite_one_exclusion(Params, Params).
 
 % Normalize ingredient value by removing common prefixes and matching against ingredient database
 normalize_ingredient_value(Value, Normalized) :-

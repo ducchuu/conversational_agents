@@ -503,14 +503,76 @@ typeIngredient('jerk seasoning', 'spicy').
 typeIngredient('kimchi', 'spicy').
 typeIngredient('pepperoni slices', 'spicy').
 
-typeIngredient('chicken thighs', 'chicken').
-typeIngredient('chicken breast', 'chicken').
-typeIngredient('chicken wings', 'chicken').
-typeIngredient('chicken legs', 'chicken').
 typeIngredient('chicken drumsticks', 'chicken').
-typeIngredient('chicken carcass', 'chicken').
+typeIngredient('chicken wings', 'chicken').
 typeIngredient('chicken stock', 'chicken').
+typeIngredient('chicken legs', 'chicken').
+typeIngredient('chicken thighs', 'chicken').
+typeIngredient('chicken carcass', 'chicken').
+typeIngredient('chicken leg with thigh', 'chicken').
+typeIngredient('chicken gyozas', 'chicken').
 typeIngredient('chicken skin', 'chicken').
+typeIngredient('chicken pate', 'chicken').
+typeIngredient('dark meat', 'chicken').
+typeIngredient('chicken breast', 'chicken').
+typeIngredient('chicken', 'chicken').
+typeIngredient('chicken breasts', 'chicken').
+typeIngredient('chicken thigh', 'chicken').
+typeIngredient('chicken tikka', 'chicken').
+
+typeIngredient('lean minced beef', 'beef').
+typeIngredient('beef brisket', 'beef').
+typeIngredient('stewing beef', 'beef').
+typeIngredient('beef stock', 'beef').
+typeIngredient('beef shank', 'beef').
+typeIngredient('beef steak', 'beef').
+typeIngredient('beef', 'beef').
+typeIngredient('beef mince', 'beef').
+typeIngredient('beef short ribs', 'beef').
+typeIngredient('sirloin strips', 'beef').
+typeIngredient('steak', 'beef').
+typeIngredient('minced meat', 'beef').
+
+typeIngredient('bacon', 'pork').
+typeIngredient('pork shoulder', 'pork').
+typeIngredient('pepperoni slices', 'pork').
+typeIngredient('pork', 'pork').
+typeIngredient('salami', 'pork').
+typeIngredient('streaky bacon', 'pork').
+typeIngredient('pork steaks', 'pork').
+typeIngredient('pork belly slices', 'pork').
+typeIngredient('pork ribs', 'pork').
+typeIngredient('pork belly', 'pork').
+typeIngredient('back bacon rashers', 'pork').
+typeIngredient('bacon lardons', 'pork').
+typeIngredient('pork sausages', 'pork').
+typeIngredient('minced pork', 'pork').
+typeIngredient('pork chops', 'pork').
+typeIngredient('pork mince', 'pork').
+typeIngredient('parma ham', 'pork').
+typeIngredient('pork belly strips', 'pork').
+typeIngredient('pork loin steaks', 'pork').
+typeIngredient('mortadella', 'pork').
+typeIngredient('sausage meat', 'pork').
+typeIngredient('chorizo', 'pork').
+typeIngredient('sausages', 'pork').
+typeIngredient('nduja', 'pork').
+
+typeIngredient('duck breasts', 'duck').
+typeIngredient('duck drumsticks', 'duck').
+typeIngredient('duck fat', 'duck').
+
+typeIngredient('turkey leftovers', 'turkey').
+typeIngredient('turkey', 'turkey').
+typeIngredient('turkey meat', 'turkey').
+
+typeIngredient('lamb chops', 'lamb').
+typeIngredient('lamb mince', 'lamb').
+typeIngredient('lamb shoulder', 'lamb').
+typeIngredient('lamb neck', 'lamb').
+typeIngredient('lamb', 'lamb').
+
+typeIngredient('crab meat', 'crab').
 
 typeIngredient('spaghetti', 'pasta').
 typeIngredient('linguine', 'pasta').
@@ -605,6 +667,10 @@ conflict(excludeingredienttype = Value, ingredienttype = Value).
 conflict(excludedietaryrestriction = Value, dietaryrestriction = Value).
 conflict(dietaryrestriction = Value, excludedietaryrestriction = Value).
 conflict(excludecuisine = Value, cuisine = Value).
+conflict(excludemealtype = Value, mealType = Value).
+conflict(mealType = Value, excludemealtype = Value).
+conflict(excludetag = Value, tag = Value).
+conflict(tag = Value, excludetag = Value).
 conflict(durationlonger = Value, duration = Value).
 conflict(nrOfIngredientsMore = Value, nrOfIngredients = Value).
 

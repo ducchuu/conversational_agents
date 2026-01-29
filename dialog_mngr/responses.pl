@@ -82,8 +82,8 @@ text(appreciationReceipt, "Happy to help.").
 
 text(contextMismatch(_), "I am not sure what that means in this context.").
 
-% Intent: farewell
-text(farewell, "Goodbye! Happy cooking.").
+% Intent: farewell (Last Topic Check: mention restart option)
+text(farewell, "Goodbye! Happy cooking. (Or say 'start over' if you want to find another recipe!)").
 text(farewell, "See you later!").
 text(farewell, "Bye bye.").
 
