@@ -311,6 +311,19 @@ simplify('ingredientTypeDel', Value, Normalized) :-
 simplify('excludeIngredientTypeDel', Value, Normalized) :- 
 	normalize_ingredient_value(Value, Normalized), !.
 	
+simplify('dietaryrestriction', Value, Normalized) :- 
+    normalize_dietary_value(Value, Normalized), !.
+
+normalize_dietary_value(Value, 'vegan') :-
+    convert_to_string(Value, Str),
+    string_lower(Str, Low),
+    sub_string(Low, _, _, _, "vegan"), !.
+normalize_dietary_value(Value, 'vegetarian') :-
+    convert_to_string(Value, Str),
+    string_lower(Str, Low),
+    sub_string(Low, _, _, _, "vegetarian"), !.
+normalize_dietary_value(Value, Value).
+	
 simplify('ingredient', Value, Normalized) :- 
 	normalize_ingredient_value(Value, Normalized), !.
 simplify('excludeingredient', Value, Normalized) :- 

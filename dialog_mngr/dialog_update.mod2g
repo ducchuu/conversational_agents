@@ -325,13 +325,35 @@ module dialog_update {
         % Handle instruction 'restart' (which reinitializes the agent's agenda and clears
         % the agent's memory). Re-insert waitingForEvent('start') so the Start button on
         % start.html is responsive (same state as initial load).
+        % Session must be [[start]] (not [[]]) so currentTopLevel(start) holds; otherwise
+        % currentTopLevel(terminated) applies and the Start button matches b13 (context mismatch).
+        if Intent = restart, userTurn then delete(userTurn).
+        if Intent = restart, talking then delete(talking).
+        if Intent = restart, waitingForEvent(E) then delete(waitingForEvent(E)).
+        if Intent = restart, lastSentRecipe(ID) then delete(lastSentRecipe(ID)).
+
+        % 2. Main Restart Execution
+        % This resets the agent state to the Start Page configuration.
         if Intent = restart, 
-            agenda(Agenda), initialAgenda(InitAgenda), memory(Params)
+            agenda(Agenda), initialAgenda(InitAgenda), InitAgenda = [start | RestAgenda],
+            memory(Params),
+            session(SessionList),
+            currentPattern(CurrentPat)
         then updateSession(agent, restart, [], '')
-            + delete(agenda(Agenda)) + insert(agenda(InitAgenda))
+            % Reset Agenda
+            + delete(agenda(Agenda)) + insert(agenda(RestAgenda))
+            % Reset Memory
             + delete(memory(Params)) + insert(memory([]))
-            + insert(waitingForEvent('start')) + log("waiting for: start (after restart)").
-            %+ delete(session(List)) + insert(session(NewList)).
+            % Reset Session to [[start]] (Initial state)
+            + delete(session(SessionList)) + insert(session([[start]])) 
+            % Reset Pattern Tracker
+            + delete(currentPattern(CurrentPat)) + insert(currentPattern(start))
+            % Enable the Start Button
+            + insert(waitingForEvent('start')) 
+            + log("SYSTEM: Full Restart Completed").
+            
+        if Intent = restart, lastSentRecipe(ID)
+        then delete(lastSentRecipe(ID)).
         
         % Empty the agent's memory    
         if Intent = clearMemory, 
@@ -360,7 +382,10 @@ module dialog_update {
 	% Agent coordinates turn taking
 	if expectedIntent(agent, _), userTurn
 		then delete(userTurn) + webinfo('set_turn', false).
-	if expectedIntent(user, _), not(userTurn)
+	% Only give turn to user (enable mic) after agent has finished speaking (TextDone);
+	% otherwise EIS has user_turn=false when mic is clicked and does not start listening
+	% (e.g. after restart on welcome/c10).
+	if expectedIntent(user, _), not(userTurn), not(waitingForEvent('TextDone'))
 		then insert(userTurn) + webinfo('set_turn', true).
 		
 	if currentTopLevel(PatternId), currentPattern(CurrentId), not(PatternId=CurrentId)
