@@ -183,3 +183,5 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 .idea/
 
+social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints/model_checkpoint.pt
+.vscode/settings.json

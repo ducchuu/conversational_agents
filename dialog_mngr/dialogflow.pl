@@ -16,7 +16,7 @@ dual_parameter_name_pairs([
 	['cuisine', 'cuisineDel'],
 	['dietaryrestriction', 'dietaryRestrictionDel'],
 	['duration', 'durationDel'],
-	['easykeyword', 'easyKeyWordDel'],
+	['easy', 'easyDel'],
 	['excludeingredient', 'excludeIngredientDel'],
 	['excludeingredienttype', 'excludeIngredientTypeDel'],
 	['ingredient', 'ingredientDel'],
@@ -29,9 +29,156 @@ dual_parameter_name_pairs([
 	['tag', 'tagDel'],
 	['excludedietaryrestriction', 'excludeDietaryRestrictionDel'],
 	['excludecuisine', 'excludeCuisineDel'],
+	['excludemealtype', 'excludeMealTypeDel'],
+	['excludetag', 'excludeTagDel'],
 	['durationlonger', 'durationlongerDel'],
 	['nrOfIngredientsMore', 'moreIngredientNumberDel']
 ]).
+
+
+dietary_keywords([
+    'vegetarian', 'vegan', 'lactose-free', 'pescatarian', 'gluten-free', 
+    'spicy', 'nut-free', 'halal', 'keto', 'paleo', 'healthy', 'soy-free', 
+    'sugar-free', 'plant-based', 'dairy-free', 'low-carb', 'high-protein'
+]).
+
+%
+meal_type_keywords([
+    'barbecue', 'breakfast', 'brunch', 'dessert', 'dinner', 'dinnerparty', 
+    'healthy', 'lunch', 'meal-prep', 'side', 'snack', 'appetizer', 
+    'main course', 'side dish', 'beverage', 'break'
+]).
+
+%
+cuisine_keywords([
+    'southern-american', 'cambodian', 'vietnamese', 'sri lankan', 'japanese', 
+    'indonesian', 'tunisian', 'spanish', 'persian', 'polish', 'ghanaian', 
+    'lebanese', 'portuguese', 'mexican', 'american', 'jamaican', 'cantonese', 
+    'german', 'scottish', 'italian', 'north african', 'turkish', 'asian', 
+    'east-asian', 'russian', 'taiwanese', 'swiss', 'peruvian', 'fijian', 
+    'middle-eastern', 'bengali', 'indian', 'pan-asian', 'mediterranean', 
+    'nigerian', 'greek', 'iranian', 'malaysian', 'caribbean', 'irish', 
+    'british-indian', 'hawaiian', 'west african', 'ukrainian', 'korean', 
+    'french', 'thai', 'scandinavian', 'english', 'swedish', 'british', 
+    'chinese', 'african', 'dutch', 'moroccan', 'pakistani', 'ethiopian', 
+    'filipino', 'belgian', 'austrian', 'romanian', 'colombian', 'brazilian', 
+    'argentinian', 'european'
+]).
+
+%
+ingredient_type_keywords([
+    'meat', 'poultry', 'seafood', 'fish', 'shellfish', 'dairy', 'cheese', 
+    'egg', 'vegetable', 'fruit', 'grain', 'legume', 'nut', 'seed', 'soy', 
+    'gluten', 'spice', 'herb', 'oil', 'fat', 'sweetener', 'sauce', 'condiment'
+]).
+
+%
+tag_keywords([
+    'vegan', 'vegetarian', 'gluten-free', 'dairy-free', 'low-carb', 
+    'high-protein', 'keto', 'paleo', 'spicy', 'sweet', 'quick', 
+    'healthy', 'comfort-food', 'budget-friendly'
+]).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% 2. NORMALIZATION HELPERS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Generic Normalizer: Checks if any keyword from the list exists in the input string
+normalize_from_ontology_list(Value, ListPredicate, Normalized) :-
+    convert_to_string(Value, Str),
+    string_lower(Str, LowStr),
+    call(ListPredicate, Keywords),
+    (   member(Keyword, Keywords),
+        sub_string(LowStr, _, _, _, Keyword)
+    ->  Normalized = Keyword
+    ;   Normalized = Value  % Fallback: keep original if no keyword matched
+    ).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% 3. SIMPLIFY (ROBUST VERSION)
+%%%    Logic to clean NLU output before it hits the database.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% --- A. Keywords and Numbers ---
+simplify('easy', _, 'easy').
+simplify('duration', 'fast', 30). 
+simplify('duration', 'quick', 30).
+simplify('duration', Value, Minutes) :- duration_to_min(Value, Minutes), !.
+simplify('durationDel', Value, Minutes) :- duration_to_min(Value, Minutes), !.
+simplify('nrOfIngredients', Value, Nr) :- convert_to_int(Value, Nr), !.
+simplify('ingredientNumberDel', Value, Nr) :- convert_to_int(Value, Nr), !.
+simplify('nrSteps', Value, Nr) :- convert_to_int(Value, Nr), !.
+simplify('stepsDel', Value, Nr) :- convert_to_int(Value, Nr), !.
+simplify('servings', Value, Nr) :- convert_to_int(Value, Nr), !.
+simplify('nrOfIngredientsMore', Value, Nr) :- convert_to_int(Value, Nr), !.
+simplify('moreIngredientNumberDel', Value, Nr) :- convert_to_int(Value, Nr), !.
+simplify('durationlonger', Value, Nr) :- duration_to_min(Value, Nr), !.
+simplify('durationlongerDel', Value, Nr) :- duration_to_min(Value, Nr), !.
+
+% --- B. DIETARY RESTRICTIONS (Include & Exclude) ---
+simplify('dietaryrestriction', Value, Normalized) :- 
+    normalize_from_ontology_list(Value, dietary_keywords, Normalized), !.
+simplify('excludedietaryrestriction', Value, Normalized) :- 
+    normalize_from_ontology_list(Value, dietary_keywords, Normalized), !.
+simplify('dietaryRestrictionDel', Value, Normalized) :- 
+    normalize_from_ontology_list(Value, dietary_keywords, Normalized), !.
+simplify('excludeDietaryRestrictionDel', Value, Normalized) :- 
+    normalize_from_ontology_list(Value, dietary_keywords, Normalized), !.
+
+% --- C. MEAL TYPES (Include & Exclude) ---
+simplify('mealType', Value, Normalized) :- 
+    normalize_from_ontology_list(Value, meal_type_keywords, Normalized), !.
+simplify('excludemealtype', Value, Normalized) :- 
+    normalize_from_ontology_list(Value, meal_type_keywords, Normalized), !.
+simplify('mealTypeDel', Value, Normalized) :- 
+    normalize_from_ontology_list(Value, meal_type_keywords, Normalized), !.
+simplify('excludeMealTypeDel', Value, Normalized) :- 
+    normalize_from_ontology_list(Value, meal_type_keywords, Normalized), !.
+
+% --- D. CUISINES (Include & Exclude) ---
+simplify('cuisine', Value, Normalized) :- 
+    normalize_from_ontology_list(Value, cuisine_keywords, Normalized), !.
+simplify('excludecuisine', Value, Normalized) :- 
+    normalize_from_ontology_list(Value, cuisine_keywords, Normalized), !.
+simplify('cuisineDel', Value, Normalized) :- 
+    normalize_from_ontology_list(Value, cuisine_keywords, Normalized), !.
+simplify('excludeCuisineDel', Value, Normalized) :- 
+    normalize_from_ontology_list(Value, cuisine_keywords, Normalized), !.
+
+% --- E. INGREDIENT TYPES (Include & Exclude) ---
+simplify('ingredienttype', Value, Normalized) :- 
+    normalize_from_ontology_list(Value, ingredient_type_keywords, Normalized), !.
+simplify('excludeingredienttype', Value, Normalized) :- 
+    normalize_from_ontology_list(Value, ingredient_type_keywords, Normalized), !.
+simplify('ingredientTypeDel', Value, Normalized) :- 
+    normalize_from_ontology_list(Value, ingredient_type_keywords, Normalized), !.
+simplify('excludeIngredientTypeDel', Value, Normalized) :- 
+    normalize_from_ontology_list(Value, ingredient_type_keywords, Normalized), !.
+
+% --- F. TAGS (Include & Exclude) ---
+simplify('tag', Value, Normalized) :- 
+    normalize_from_ontology_list(Value, tag_keywords, Normalized), !.
+simplify('excludetag', Value, Normalized) :- 
+    normalize_from_ontology_list(Value, tag_keywords, Normalized), !.
+simplify('tagDel', Value, Normalized) :- 
+    normalize_from_ontology_list(Value, tag_keywords, Normalized), !.
+simplify('excludeTagDel', Value, Normalized) :- 
+    normalize_from_ontology_list(Value, tag_keywords, Normalized), !.
+
+% --- G. INGREDIENTS (Specific Items) ---
+% Uses the existing database lookup logic
+simplify('ingredient', Value, Normalized) :- 
+	normalize_ingredient_value(Value, Normalized), !.
+simplify('excludeingredient', Value, Normalized) :- 
+	normalize_ingredient_value(Value, Normalized), !.
+simplify('ingredientDel', Value, Normalized) :- 
+	normalize_ingredient_value(Value, Normalized), !.
+simplify('excludeIngredientDel', Value, Normalized) :- 
+	normalize_ingredient_value(Value, Normalized), !.
+
+% --- H. CATCH-ALL (MUST BE LAST) ---
+% If no specific rule above matches, keep the value as is.
+simplify(_, Value, Value).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% Logic for handling and formatting filter parameters					%%%
@@ -67,7 +214,7 @@ parameter_display_templates([
 	['cuisine', "~a cuisine"],
 	['dietaryrestriction', "~a"],
 	["duration", "Less than ~a minutes"],
-	['easykeyword', "~a recipes"],
+	['easy', "~a"],
 	['excludeingredient', "Without ~a"],
 	['excludeingredienttype', "Without ~a"],
 	['ingredient', "With ~a"],
@@ -80,6 +227,8 @@ parameter_display_templates([
 	['tag', "~a"],
 	['excludedietaryrestriction', 'Not ~a'],
 	['excludecuisine', 'Not of ~a cuisine'],
+	['excludemealtype', 'Not ~a'],
+	['excludetag', 'Not ~a'],
 	['durationlonger', 'More than ~a minutes'],
 	['nrOfIngredientsMore', 'More than ~a ingredients']
 ]).
@@ -91,7 +240,7 @@ format_display_value(_, Value, FormattedValue) :-
 	not(atomic(Value)),
 	convert_to_string(Value, FormattedValue), !.
 format_display_value(Filter, Value, FormattedValue) :- 
-	member(Filter, [ 'cuisine', 'dietaryrestriction', 'mealType', 'tag', 'excludedietaryrestriction', 'excludecuisine' ]),
+	member(Filter, [ 'cuisine', 'dietaryrestriction', 'mealType', 'tag', 'excludedietaryrestriction', 'excludecuisine', 'excludemealtype', 'excludetag' ]),
 	to_upper_case(Value, FormattedValue), !.
 format_display_value(_, Value, Value).
 
@@ -125,7 +274,7 @@ parameter_text_templates([
 	['cuisine', "are of ~a cuisine"],
 	['dietaryrestriction', " have a ~a diet"],
 	['duration', " are within ~a minutes"],
-	['easykeyword', " are ~a dishes to prepare"],
+	['easy', " are ~a to prepare"],
 	['excludeingredient', " do not include ~a"],
 	['excludeingredienttype', " do not include ~a"],
 	['ingredient', " include ~a"],
@@ -138,6 +287,8 @@ parameter_text_templates([
 	['tag', " are all ~a dishes"],
 	['excludedietaryrestriction', 'do not have a ~a diet'],
 	['excludecuisine', 'are not of ~a cuisine'],
+	['excludemealtype', 'are not ~a recipes'],
+	['excludetag', 'are not ~a dishes'],
 	['durationlonger', 'take more than ~a minutes'],
 	['nrOfIngredientsMore', 'include more than ~a ingredients']
 ]).
@@ -269,41 +420,96 @@ same_param(excludeingredient, excludeingredienttype).
 same_param(excludeingredienttype, excludeingredient).
 same_param(excludedietaryrestriction, dietaryrestriction).
 same_param(excludecuisine, cuisine).
+same_param(excludemealtype, mealType).
+same_param(excludetag, tag).
 same_param(durationlonger, duration).
 same_param(nrOfIngredientsMore, nrOfIngredients).
 
-% ==============================================================================
-% SIMPLIFY (ROBUST VERSION)
-% ==============================================================================
-simplify('duration', Value, Minutes) :- duration_to_min(Value, Minutes), !.
-simplify('durationDel', Value, Minutes) :- duration_to_min(Value, Minutes), !.
-simplify('nrOfIngredients', Value, Nr) :- convert_to_int(Value, Nr), !.
-simplify('ingredientNumberDel', Value, Nr) :- convert_to_int(Value, Nr), !.
-simplify('nrSteps', Value, Nr) :- convert_to_int(Value, Nr), !.
-simplify('stepsDel', Value, Nr) :- convert_to_int(Value, Nr), !.
-simplify('servings', Value, Nr) :- convert_to_int(Value, Nr), !.
-simplify('tag', Value, String) :- convert_to_string(Value, String), !.
-simplify('nrOfIngredientsMore', Value, Nr) :- convert_to_int(Value, Nr), !.
-simplify('moreIngredientNumberDel', Value, Nr) :- convert_to_int(Value, Nr), !.
-simplify('durationlonger', Value, Nr) :- duration_to_min(Value, Nr), !.
-simplify('durationlongerDel', Value, Nr) :- duration_to_min(Value, Nr), !.
-% Normalize ingredient values: remove prefixes like "with ", "containing ", etc. and match against database
+normalize_key('dietaryRestriction', 'dietaryrestriction').
+normalize_key('ingredientType', 'ingredienttype').
+normalize_key('excludeIngredient', 'excludeingredient').
+normalize_key('excludeIngredientType', 'excludeingredienttype').
+normalize_key('excludeDietaryRestriction', 'excludedietaryrestriction').
+normalize_key('excludeCuisine', 'excludecuisine').
+normalize_key('excludeMealType', 'excludemealtype').
+normalize_key('excludeTag', 'excludetag').
+normalize_key('easyKeyWord', 'easy').
+normalize_key('difficulty', 'easy').
 
-simplify('ingredientDel', Value, Normalized) :- 
-	normalize_ingredient_value(Value, Normalized), !.
-simplify('excludeIngredientDel', Value, Normalized) :- 
-	normalize_ingredient_value(Value, Normalized), !.
-simplify('ingredientTypeDel', Value, Normalized) :- 
-	normalize_ingredient_value(Value, Normalized), !.
-simplify('excludeIngredientTypeDel', Value, Normalized) :- 
-	normalize_ingredient_value(Value, Normalized), !.
-	
-simplify('ingredient', Value, Normalized) :- 
-	normalize_ingredient_value(Value, Normalized), !.
-simplify('excludeingredient', Value, Normalized) :- 
-	normalize_ingredient_value(Value, Normalized), !.
-% CATCH-ALL: Pass everything else (lists, atoms) through unchanged.
-simplify(_, Value, Value).
+normalize_key(Key, Key).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% Rewrite addFilter params when transcript suggests exclusion (e.g. "no vegan" -> exclude)
+%%% So NLU can send dietaryRestriction=vegan / mealType=breakfast / tag=X; we rewrite to
+%%% excludedietaryrestriction / excludemealtype / excludetag for correct filter behaviour.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+exclusion_phrase(Txt) :-
+	convert_to_string(Txt, Str),
+	string_lower(Str, Low),
+	(   sub_string(Low, 0, _, _, "no ")
+	;   sub_string(Low, _, _, _, " no ")
+	;   sub_string(Low, _, _, _, "without ")
+	;   sub_string(Low, _, _, _, "exclude ")
+	;   sub_string(Low, 0, _, _, "not ")
+	;   sub_string(Low, 0, _, _, "don't ")
+	).
+
+% Rewrite first matching include param to exclusion param (one rewrite per call).
+rewrite_params_for_exclusion(Params, Txt, ParamsRewritten) :-
+	exclusion_phrase(Txt),
+	rewrite_one_exclusion(Params, ParamsRewritten).
+rewrite_params_for_exclusion(Params, Txt, Params) :-
+	\+ exclusion_phrase(Txt).
+
+rewrite_one_exclusion(Params, ParamsRewritten) :-
+	select(dietaryRestriction=V, Params, Rest), !,
+	ParamsRewritten = [excludedietaryrestriction=V|Rest].
+rewrite_one_exclusion(Params, ParamsRewritten) :-
+	select(mealType=V, Params, Rest), !,
+	ParamsRewritten = [excludemealtype=V|Rest].
+rewrite_one_exclusion(Params, ParamsRewritten) :-
+	select(tag=V, Params, Rest), !,
+	ParamsRewritten = [excludetag=V|Rest].
+rewrite_one_exclusion(Params, Params).
+
+% Normalize ingredient value by removing common prefixes and matching against ingredient database
+normalize_ingredient_value(Value, Normalized) :-
+	% Step 1: Convert to string for processing (handles atoms, strings, lists)
+	convert_to_string(Value, ValueStr),
+	% Step 2: Remove common prefixes (this always succeeds)
+	remove_ingredient_prefix(ValueStr, CleanedStr),
+	% Step 3: Convert cleaned string to atom for database matching
+	atom_string(CleanedAtom, CleanedStr),
+	% Step 4: Try to find exact match in ingredient database (case-sensitive first)
+	(	ingredient(_, CleanedAtom)
+	->	Normalized = CleanedAtom
+	;	% Step 5: Try case-insensitive match - find first matching ingredient
+		downcase_atom(CleanedAtom, LowerCleaned),
+		find_ingredient_case_insensitive_match(LowerCleaned, MatchedIngredient)
+	->	Normalized = MatchedIngredient
+	;	% Step 6: If no match found, return cleaned atom (prefix removed, will be used as-is)
+		Normalized = CleanedAtom
+	).
+
+% Find ingredient with case-insensitive matching (returns first match)
+find_ingredient_case_insensitive_match(LowerCleaned, Ingredient) :-
+	ingredient(_, Ingredient),
+	downcase_atom(Ingredient, LowerIngredient),
+	LowerCleaned = LowerIngredient, !.
+
+% Remove common prefixes from ingredient strings
+remove_ingredient_prefix(Value, Cleaned) :-
+	% Check for common prefixes and remove them (in order of length to avoid partial matches)
+	(	sub_string(Value, 0, 11, _, "containing ") 
+	->	sub_string(Value, 11, _, 0, Cleaned)
+	;	sub_string(Value, 0, 10, _, "including ") 
+	->	sub_string(Value, 10, _, 0, Cleaned)
+	;	sub_string(Value, 0, 5, _, "with ") 
+	->	sub_string(Value, 5, _, 0, Cleaned)
+	;	sub_string(Value, 0, 4, _, "has ") 
+	->	sub_string(Value, 4, _, 0, Cleaned)
+	;	Cleaned = Value
+	).
 
 normalize_key('dietaryRestriction', 'dietaryrestriction').
 normalize_key('ingredientType', 'ingredienttype').
@@ -355,13 +561,16 @@ remove_ingredient_prefix(Value, Cleaned) :-
 
 % Unravel entity list
 unravel([], []).
+unravel([ ParamName = [] | Entities ], [ ParamName = '' | Unravelled]) :-
+	unravel(Entities, Unravelled).
+
+unravel([ ParamName = [ Value ] | Entities ], Unravelled) :-
+	unravel([ ParamName = Value | Entities ], Unravelled).
+
+unravel([ ParamName = [ Value1, Value2 | Values ] | Entities ], Unravelled) :-
+	unravel([ ParamName = Value1, ParamName = [ Value2 | Values ] | Entities ], Unravelled).
+
 unravel([ ParamName = Value | Entities], [ NormalizedKey = SimplifiedValue | Unravelled]) :-
     normalize_key(ParamName, NormalizedKey),
 	simplify(NormalizedKey, Value, SimplifiedValue),
 	unravel(Entities, Unravelled).
-unravel([ ParamName = [] | Entities ], [ ParamName = '' | Unravelled]) :-
-	unravel(Entities, Unravelled).
-unravel([ ParamName = [ Value ] | Entities ], Unravelled) :-
-	unravel([ ParamName = Value | Entities ], Unravelled).
-unravel([ ParamName = [ Value1, Value2 | Values ] | Entities ], Unravelled) :-
-	unravel([ ParamName = Value1, ParamName = [ Value2 | Values ] | Entities ], Unravelled).

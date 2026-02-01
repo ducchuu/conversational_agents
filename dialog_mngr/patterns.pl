@@ -157,7 +157,7 @@ pattern([a21featureRequest,
 % Instruction:
 %	Add a pattern with pattern ID a21noMoreFilters here.
 
-% when there are less than 15 recipes will go as a first predicate and it adds agent ackFilterEnd in order to finalize wiht less recipes
+% Variant 1: User is done, and count is <= 100. GRANT the request (enableShow + pictureGranted).
 pattern([a21noMoreFilters,
     [user, noMoreFilters],
     [agent, enableShow], 
@@ -176,7 +176,7 @@ pattern([a21noMoreFilters,
 % Instruction:
 %	Add a pattern with pattern ID a21noMoreFilters here.
 
-% It is for more than 15 recipes still after filtering, will return tooManyRecipesLeft and ask whether the user wants to add filters
+% Variant 2: User is done, but count > 100. DENY the request (pictureNotGranted).
 pattern([a21noMoreFilters,
     [user, noMoreFilters],
     [agent, pictureNotGranted]
@@ -261,16 +261,32 @@ pattern([a21removeKeyFromMemory,
 % Instruction:
 %	Add three variants for the recipe confirmation pattern a50recipeConfirm.
 % Two variants where user confirms they like the recipe by either a confirmation or
-% appreciation intent. 
+% appreciation intent. For appreciation, agent first says "You're welcome" (b42 style)
+% then inserts the closing sequence.
 
-pattern([a50recipeConfirm, [user, confirmation], [agent, insert(c43)] ]).
+pattern([a50recipeConfirm, [user, confirmation], [agent, insert(c43)]]) :- currentTopLevel(a50recipeConfirm).
 
-pattern([a50recipeConfirm, [user, appreciation], [agent, insert(c43)] ]).
+pattern([a50recipeConfirm, 
+    [user, appreciation], 
+    [agent, appreciationReceipt], 
+    [agent, insert(c43)] 
+]) :-
+    currentTopLevel(a50recipeConfirm).
 
 % Variant where user disconfirms, i.e. expresses they do not like the recipe. The
 % conversation should move back to the recipe selection stage (a50recipeSelect).
 
-pattern([a50recipeConfirm, [user, disconfirmation], [agent, insert(a50recipeSelect)] ]).
+pattern([a50recipeConfirm, [user, disconfirmation], [agent, insert(a50recipeSelect)]]) :- currentTopLevel(a50recipeConfirm).
+
+% Pattern a50recipeSelect: user asks for a recipe.
+% Variant where user requests a (random) recommendation.
+% Example:
+% 	A: What recipe would you like to cook?
+%	U: Please, just recommend me something.
+%	A: What about ___*.
+% Instruction:
+%	Add a pattern with pattern ID a50recipeSelect here where the agent asks the user
+%	for input on what recipe to select and the user just asks for a recommendation. 
 
 % Pattern a50recipeSelect: user asks for a recipe.
 % Variant where user requests a (random) recommendation.
@@ -356,6 +372,13 @@ pattern([b13, [user, Intent], [agent, contextMismatch(Intent)]]).
 % Instruction:
 % 	Add a pattern with pattern ID b42 here where the users expresses appreciation first
 %	and the agent let's the user know it received this appreciation well.
+pattern([b42, 
+    [user, appreciation], 
+    [agent, appreciationReceipt], 
+    [agent, insert(a50recipeSelect)]
+]) :-
+    currentTopLevel(a50recipeSelect).
+
 
 pattern([b42, [user, appreciation], [agent, appreciationReceipt]]).
 
@@ -410,16 +433,18 @@ pattern([c30, [user, checkCapability], [agent, describeCapability]]).
 
 %%% C4 Patterns: Closing
 % Pattern C4.3: Closing Farewell (Agent)
-% Example:
-%	A: goodbye.
-%	U: bye.
-% Instruction:
-% 	Add a pattern here where the agent initiates (i.e. starts) saying goodbye and then 
-%	the user says goodbye.
+% Variant 1: User chooses to RESTART (say "Start over" after farewell prompt)
+pattern([c43,
+    [agent, farewell],
+    [user, restart],
+    [agent, restart]
+]).
 
-pattern([c43, 
-    [agent, farewell], 
-    [user, farewell], 
+% Variant 2: User chooses to END (standard goodbye)
+% Example: A: goodbye. U: bye.
+pattern([c43,
+    [agent, farewell],
+    [user, farewell],
     [agent, terminate]
 ]).
 

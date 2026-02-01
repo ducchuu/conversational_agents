@@ -106,10 +106,10 @@ module dialog_update {
 		+ log("Mic clicked on Greeting: Trusting Framework auto-listen") 
 		+ delete(answer('mic')).
 
-	% This is needed, otherwise the agent was not listening after the greeting (c10 pattern)
+	% On inner pages EIS does not start on mic click; agent sends startListening once.
 	if answer('mic'), not(disabled('mic')), not(currentTopLevel(c10))
 	then insert(waitingForEvent('ListeningDone')) 
-		+ log("Mic clicked on inner page: Forcing startListening") 
+		+ log("Mic clicked on inner page: sending startListening")
 		+ startListening
 		+ delete(answer('mic')).
 	
@@ -119,10 +119,13 @@ module dialog_update {
 	then insert(intent(recipeRequest, [recipe=Button], 100, '', touch)) + log(Info)
 		+ delete(answer(Button)). % avoid processing it again below
 
-	% Treat all other non-empty buttons as if they are 'button' intents
+	% Treat all other non-empty buttons as if they are 'button' intents.
+	% Delete answer(Button) to avoid re-processing the same click every cycle (fixes
+	% Start button after restart and prevents duplicate intents).
 	if answer(Button), not(Button=[]), not(answer('mic')), not(recipeName(_, Button)),
 		log_info("intent: ", [button, [button=Button], 100, '', touch], Info)
-	then insert(intent(button, [button=Button], 100, '', touch)) + log(Info).
+	then insert(intent(button, [button=Button], 100, '', touch)) + log(Info)
+		+ delete(answer(Button)).
 
 
 	%%% Handling of recognized intents.
@@ -156,6 +159,15 @@ module dialog_update {
 		not(Params=[]), cleanParams(Params, [])
 	then delete(intent(Intent, Params, Conf, Txt, Source))
 		+ insert(intent('input.unknown', Params, Conf, Txt, Source)).
+
+	% Step 2.5: Rewrite addFilter params when transcript suggests exclusion (e.g. "no vegan"
+	% -> excludedietaryrestriction=vegan). So mealType/dietaryRestriction/tag become
+	% excludemealtype/excludedietaryrestriction/excludetag and the agent treats them as exclusions.
+	if intent(addFilter, Params, Conf, Txt, Source),
+		rewrite_params_for_exclusion(Params, Txt, ParamsRewritten),
+		ParamsRewritten \= Params
+	then delete(intent(addFilter, Params, Conf, Txt, Source))
+		+ insert(intent(addFilter, ParamsRewritten, Conf, Txt, Source)).
 
 	% Step 3: Pre-process parameters of intent.
 	% Unravel list values and remove empty parameters, i.e. parameters without a value.
@@ -292,6 +304,16 @@ module dialog_update {
 			log_info("memory: ", NewMemory, Info)
 		then updateSession(agent, update(Params), [], '')
 			+ delete(memory(OldMemory)) + insert(memory(NewMemory)) + log(Info).
+
+		% Action: Set 'show' = 'true' in memory (for "Show recipes on demand")
+		% Also send forceShow so the frontend switches to recipe_overview2.html
+		if Intent = enableShow,
+			enableShow(OldMemory, NewMemory),
+			log_info("memory: ", NewMemory, Info)
+		then updateSession(agent, enableShow, [], '')
+			+ delete(memory(OldMemory)) + insert(memory(NewMemory))
+			+ webinfo('forceShow', true)
+			+ log(Info) + log("Memory updated: Show recipes enabled").
 			
 		if Intent = remove(ParamName),
 			updateMemory(Params, OldMemory, NewMemory),
@@ -301,13 +323,37 @@ module dialog_update {
 		
 		%%% Actions for managing the agenda
         % Handle instruction 'restart' (which reinitializes the agent's agenda and clears
-        % the agent's memory).
+        % the agent's memory). Re-insert waitingForEvent('start') so the Start button on
+        % start.html is responsive (same state as initial load).
+        % Session must be [[start]] (not [[]]) so currentTopLevel(start) holds; otherwise
+        % currentTopLevel(terminated) applies and the Start button matches b13 (context mismatch).
+        if Intent = restart, userTurn then delete(userTurn).
+        if Intent = restart, talking then delete(talking).
+        if Intent = restart, waitingForEvent(E) then delete(waitingForEvent(E)).
+        if Intent = restart, lastSentRecipe(ID) then delete(lastSentRecipe(ID)).
+
+        % 2. Main Restart Execution
+        % This resets the agent state to the Start Page configuration.
         if Intent = restart, 
-            agenda(Agenda), initialAgenda(InitAgenda), memory(Params)
+            agenda(Agenda), initialAgenda(InitAgenda), InitAgenda = [start | RestAgenda],
+            memory(Params),
+            session(SessionList),
+            currentPattern(CurrentPat)
         then updateSession(agent, restart, [], '')
-            + delete(agenda(Agenda)) + insert(agenda(InitAgenda))
-            + delete(memory(Params)) + insert(memory([])). 
-            %+ delete(session(List)) + insert(session(NewList)).
+            % Reset Agenda
+            + delete(agenda(Agenda)) + insert(agenda(RestAgenda))
+            % Reset Memory
+            + delete(memory(Params)) + insert(memory([]))
+            % Reset Session to [[start]] (Initial state)
+            + delete(session(SessionList)) + insert(session([[start]])) 
+            % Reset Pattern Tracker
+            + delete(currentPattern(CurrentPat)) + insert(currentPattern(start))
+            % Enable the Start Button
+            + insert(waitingForEvent('start')) 
+            + log("SYSTEM: Full Restart Completed").
+            
+        if Intent = restart, lastSentRecipe(ID)
+        then delete(lastSentRecipe(ID)).
         
         % Empty the agent's memory    
         if Intent = clearMemory, 
@@ -336,7 +382,10 @@ module dialog_update {
 	% Agent coordinates turn taking
 	if expectedIntent(agent, _), userTurn
 		then delete(userTurn) + webinfo('set_turn', false).
-	if expectedIntent(user, _), not(userTurn)
+	% Only give turn to user (enable mic) after agent has finished speaking (TextDone);
+	% otherwise EIS has user_turn=false when mic is clicked and does not start listening
+	% (e.g. after restart on welcome/c10).
+	if expectedIntent(user, _), not(userTurn), not(waitingForEvent('TextDone'))
 		then insert(userTurn) + webinfo('set_turn', true).
 		
 	if currentTopLevel(PatternId), currentPattern(CurrentId), not(PatternId=CurrentId)
@@ -357,8 +406,12 @@ module dialog_update {
 	% to send the recipe strings using webinfo
 	if filters_to_strings_or_empty(Strings) then webinfo('filters', Strings).
 
-	% Send recipes to the UI when the list is small enough to display.
-	if currentTopLevel(a50recipeSelect), recipesFiltered(Recipes), length(Recipes, N), N =< 15,
+	% Send recipes to the UI when count <= 15 OR user requested to show (show=true, count <= 100).
+	% Allow both a50recipeSelect and a21noMoreFilters (so recipes are sent right after "no more filters").
+	if (currentTopLevel(a50recipeSelect) ; currentTopLevel(a21noMoreFilters)),
+		recipesFiltered(Recipes), length(Recipes, N),
+		(N =< 15 ; memoryKeyValue('show', 'true')),
+		N =< 100,
 		recipes_to_json(Recipes, JSON)
 	then webinfo('recipes', JSON).
 	

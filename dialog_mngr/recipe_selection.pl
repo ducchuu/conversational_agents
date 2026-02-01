@@ -274,6 +274,18 @@ applyFilter('easy', _, RecipeIDsIn, RecipeIDsOut) :-
 applyFilter('tag', Tag, RecipeIDsIn, RecipeIDsOut) :-
     findall(R, (member(R, RecipeIDsIn), tag(R, Tag)), RecipeIDsOut).
 
+% Exclude recipes that have this meal type (e.g. "no breakfast").
+applyFilter('excludemealtype', Type, RecipeIDsIn, RecipeIDsOut) :-
+    findall(R, (member(R, RecipeIDsIn), not(mealType(R, Type))), RecipeIDsOut).
+
+% Exclude recipes that have this tag. When tag is 'breakfast', also exclude by mealType
+% since the recipe DB uses mealType for breakfast.
+applyFilter('excludetag', Tag, RecipeIDsIn, RecipeIDsOut) :-
+    findall(R, (member(R, RecipeIDsIn),
+                not(tag(R, Tag)),
+                (Tag = breakfast -> not(mealType(R, breakfast)) ; true)),
+            RecipeIDsOut).
+
 
 %%%
 % Apply filter checking that a recipe uses a specific ingredient (included in the ingredient list)
@@ -415,5 +427,4 @@ applyFilter('servings', Value, RecipeIDsIn, RecipeIDsOut) :-
 % Apply filter to filter recipes on their tags.
 % Example: the user wants to filter on "pizza" dishes (recipes that have the "pizza" tag).
 % Check out the tart/2 predicate in the recipe database file.
-
 
