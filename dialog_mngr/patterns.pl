@@ -288,6 +288,16 @@ pattern([a50recipeConfirm, [user, disconfirmation], [agent, insert(a50recipeSele
 %	Add a pattern with pattern ID a50recipeSelect here where the agent asks the user
 %	for input on what recipe to select and the user just asks for a recommendation. 
 
+% Pattern a50recipeSelect: user asks for a recipe.
+% Variant where user requests a (random) recommendation.
+% Example:
+% 	A: What recipe would you like to cook?
+%	U: Please, just recommend me something.
+%	A: What about ___*.
+% Instruction:
+%	Add a pattern with pattern ID a50recipeSelect here where the agent asks the user
+%	for input on what recipe to select and the user just asks for a recommendation. 
+
 pattern([a50recipeSelect,
     [agent, specifyGoal],
     [user, requestRecommendation],

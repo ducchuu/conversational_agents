@@ -113,6 +113,14 @@ text(paraphraseRequest, "Sorry, I didn't hear you clearly.").
 
 % Intent: selfIdentification (for self-identification of the agent)
 
+% Intent: paraphraseRequest
+
+text(paraphraseRequest, "What do you mean?").
+text(paraphraseRequest, "I'm sorry, I didn't catch that.").
+text(paraphraseRequest, "Could you say that again?").
+
+% Intent: selfIdentification (for self-identification of the agent)
+
 text(selfIdentification, Txt) :-
     agentName(Name),
     string_concat("My name is ", Name, Txt).
@@ -297,6 +305,24 @@ text(pictureNotGranted, "There are too many options to display just yet. What el
 
 % Intent: recipeChoiceReceipt (acknowledge user's choice of recipe)
 
+
+% Intent: noRecipesLeft
+
+text(noRecipesLeft, "I added your request but I could not find a recipe that matches all of your preferences combined.").
+
+
+% Intent: pictureGranted
+
+text(pictureGranted, "OK. Here is a list of recipes that you can choose from.").
+
+
+% Intent: pictureNotGranted
+
+text(pictureNotGranted, "Sorry, there are still too many recipes left to show them all. Please add more preferences.").
+
+
+% Intent: recipeChoiceReceipt (acknowledge user's choice of recipe)
+
 text(recipeChoiceReceipt, Txt) :-
     currentRecipe(RecipeID),
     recipeName(RecipeID, Name),
@@ -317,6 +343,9 @@ text(recipeChoiceReceipt, Txt) :-
     currentRecipe(RecipeID),
     recipeName(RecipeID, Name),
     string_concat(Name, ' will be fun to cook!', Txt).
+
+
+% Intent: recommend (a recipe)
 
 
 % Intent: recommend (a recipe)
@@ -383,6 +412,18 @@ text(a50recipeSelect, contextMismatch(Intent), Txt) :-
 
 % Intent: specifyGoal (asking a user about recipe features they are looking for)
 
+
+% Intent: recipeCheck
+
+text(a50recipeSelect, contextMismatch(Intent), Txt) :-
+    recipesFiltered(Recipes), length(Recipes, L), L>0,
+    convertIntent(Intent, IntentString),
+    string_concat("I'm not sure I got what you said. ", IntentString, Txt1),
+    string_concat(Txt1, ", but I was expecting you to add or remove recipe preferences.", Txt).
+
+
+% Intent: specifyGoal (asking a user about recipe features they are looking for)
+
 text(specifyGoal, "What recipe would you like to cook?").
 text(specifyGoal, "What would you like to cook today?").
 text(specifyGoal, "What kind of recipe are you looking for today?").
@@ -411,6 +452,34 @@ text(describeCapability, "I am a recipe assistant. I can find meals based on you
 text(describeCapability, "My job is to find you the perfect recipe based on ingredients or diet.").
 text(describeCapability, "Ask me for a recipe name, or tell me what ingredients you have.").
 text(describeCapability, "I can filter a database of recipes to help you decide what to cook.").
+
+
+%%% B1.2: Paraphrase Request (Fallback)
+% Responses when the agent does not recognize the user's speech at all.
+
+
+%%% B1.3: Out of Context Responses
+% Helper: Convert Intent to a human-readable string 
+
+convertIntent(appreciation, "You were expressing an appreciation").
+convertIntent(checkCapability, "You asked what I can do for you").
+convertIntent(greeting, "You were saying Hi").
+convertIntent(requestRecommendation, "You were asking me to pick a recipe for you").
+convertIntent(recipeRequest, "You were asking for a specific recipe").
+
+convertIntent(_, "You said something I recognized"). 
+
+
+
+% Intent: ackFilterEnd (User said No -> Show list)
+text(ackFilterEnd, "Okay! Have a look at the recipes I found for you.").
+
+% Intent: tooManyRecipesLeft (User said No -> List too long)
+text(tooManyRecipesLeft, "I still have quite a few recipes left. It might be easier if you add one more preference, like a main ingredient or cuisine.").
+
+%%% C3.0: Describe Capabilities
+% Response when the user asks "What can you do?".
+text(describeCapability, "I can help you select a meal to cook. You can ask for a specific recipe, or filter recipes by ingredients, cuisine, or diet.").
 
 
 %%% B1.2: Paraphrase Request (Fallback)

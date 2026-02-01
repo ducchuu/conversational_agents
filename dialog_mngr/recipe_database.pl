@@ -51174,11 +51174,10 @@ ingredientAndQuantity('885', 'salt').
 ingredientAndQuantity('885', 'pepper'). 
 ingredientAndQuantity('885', 'olive oil'). 
 
- 
- 
- 
+
+
 %%%% Recipe 886: roasted pepper & chorizo orzo %%%% 
- 
+
 recipeID('886'). 
 recipeName('886', 'roasted pepper & chorizo orzo'). 
 picture('886', 'https://files.mob-cdn.co.uk/recipes/2020/16681698_262731800831099_1155458721093206876_n.jpg'). 
@@ -51521,17 +51520,148 @@ ingredientAndQuantity('892', 'oregano').
 ingredientAndQuantity('892', 'marjoram').
 ingredientAndQuantity('892', '4 tbsp thick sour cream').
 
-getAllIngredients(UniqueIngredients) :- findall(Ingredients, ingredient(_, Ingredients), AllLists),flatten(AllLists, FlatList),sort(FlatList, UniqueIngredients).
 %%%% Recipe 893: %%%%
+%%%% Recipe 893: traditional Egyptian ful medames %%%%
+% added by Fady Ashraf Eshak Abdou ffa222
+
+recipeID('893').
+recipeName('893', 'traditional egyptian ful medames').
+picture('893', 'https://www.egiptoexclusivo.com/wp-content/uploads/2022/03/ful-medames-plato-tipico.jpg').
+time('893', 30).
+servings('893', 4).
+cuisine('893', 'egyptian').
+mealType('893', 'breakfast').
+
+step('893', 1, 'rinse the cooked fava beans under cold water and drain well.').
+step('893', 2, 'place the fava beans in a medium pot.').
+step('893', 3, 'add enough water to just cover the beans.').
+step('893', 4, 'heat the pot over medium heat until the beans are warmed through.').
+step('893', 5, 'add the minced garlic to the pot.').
+step('893', 6, 'add salt and ground cumin to taste.').
+step('893', 7, 'stir gently and let the beans simmer for about 10 minutes.').
+step('893', 8, 'lightly mash some of the beans using a spoon, leaving others whole.').
+step('893', 9, 'add the lemon juice and stir well.').
+step('893', 10, 'remove the pot from heat.').
+step('893', 11, 'drizzle olive oil over the beans.').
+step('893', 12, 'transfer the ful medames to a serving bowl.').
+step('893', 13, 'top with chopped parsley.').
+step('893', 14, 'optionally garnish with diced tomatoes and onions.').
+step('893', 15, 'serve warm with fresh Egyptian baladi bread.').
+
+ingredient('893', 'fava beans').
+ingredient('893', 'garlic').
+ingredient('893', 'lemon').
+ingredient('893', 'olive oil').
+ingredient('893', 'salt').
+ingredient('893', 'cumin').
+ingredient('893', 'parsley').
+ingredient('893', 'tomato').
+ingredient('893', 'onion').
+ingredient('893', 'bread').
+
+ingredientAndQuantity('893', '500g cooked fava beans').
+ingredientAndQuantity('893', '2 cloves garlic').
+ingredientAndQuantity('893', '1 lemon').
+ingredientAndQuantity('893', '3 tbsp olive oil').
+ingredientAndQuantity('893', 'salt').
+ingredientAndQuantity('893', '1 tsp ground cumin').
+ingredientAndQuantity('893', '2 tbsp chopped parsley').
+ingredientAndQuantity('893', '1 tomato').
+ingredientAndQuantity('893', '1 small onion').
+ingredientAndQuantity('893', 'baladi bread').
 
 
+%%%% Recipe 894: Thai Cashew Chicken %%%%
+% added by Bennett Hampel vnu869
 
-%%%% Recipe 894: %%%%
+recipeID('894').
+recipeName('894', 'thai cashew chicken').
+picture('894', 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTwwGjMiWLblZGAVv5zBU3u28XnPWnC4hGKOA&s
+').
+time('894', 35).
+servings('894', 4).
+cuisine('894', 'thai').
+mealType('894', 'dinner').
+step('894', 1, 'slice the chicken breast into bite-sized pieces.').
+step('894', 2, 'mix the soy sauce and oyster sauce in a small bowl and set aside.').
+step('894', 3, 'heat the oil in a wok or large pan over medium-high heat.').
+step('894', 4, 'add the dried chilies and stir-fry briefly until fragrant (do not burn).').
+step('894', 5, 'add the minced garlic and stir-fry for a few seconds.').
+step('894', 6, 'add the chicken and cook until lightly browned and nearly cooked through.').
+step('894', 7, 'add the onion and bell peppers and stir-fry for 2 3 minutes.').
+step('894', 8, 'pour in the sauce mixture and stir well to coat everything evenly.').
+step('894', 9, 'add the cashew nuts and toss gently.').
+step('894', 10, 'stir in the sugar and white pepper.').
+step('894', 11, 'cook for another 1 to 2 minutes until the sauce slightly thickens.').
+step('894', 12, 'taste and adjust seasoning if needed.').
+step('894', 13, 'remove from heat and serve immediately with steamed jasmine rice.').
+ingredient('894', 'chicken').
+ingredient('894', 'cashew nuts').
+ingredient('894', 'garlic').
+ingredient('894', 'dried chilies').
+ingredient('894', 'onion').
+ingredient('894', 'bell pepper').
+ingredient('894', 'soy sauce').
+ingredient('894', 'oyster sauce').
+ingredient('894', 'sugar').
+ingredient('894', 'white pepper').
+ingredient('894', 'oil').
+ingredientAndQuantity('894', '500g chicken breast').
+ingredientAndQuantity('894', '100g roasted unsalted cashew nuts').
+ingredientAndQuantity('894', '4 cloves garlic').
+ingredientAndQuantity('894', '6 to 8 dried red chilies').
+ingredientAndQuantity('894', '1 medium onion').
+ingredientAndQuantity('894', '1 red bell pepper').
+ingredientAndQuantity('894', '1 green bell pepper').
+ingredientAndQuantity('894', '2 tbsp soy sauce').
+ingredientAndQuantity('894', '1.5 tbsp oyster sauce').
+ingredientAndQuantity('894', '1 tsp sugar').
+ingredientAndQuantity('894', '1/2 tsp white pepper').
+ingredientAndQuantity('894', '2 tbsp vegetable oil').
 
+%%%% Recipe 895: jalebi %%%%
+% added by Kabir DSouza qkx252 
 
-
-%%%% Recipe 895: %%%%
-
+recipeID('895').
+recipeName('895', 'jalebi').
+picture('895', 'https://swagathfoods.com.au/cdn/shop/articles/Screenshot_2023-10-09_at_2.15.42_AM.png?v=1758518839&width=1000').
+time('895', 60).
+servings('895', 6).
+cuisine('895', 'indian').
+mealType('895', 'dessert').
+step('895', 1, 'mix the flour, cornstarch, yogurt, turmeric, and water to form a smooth batter.').
+step('895', 2, 'cover the batter and let it ferment for 8 to 10 hours until slightly sour.').
+step('895', 3, 'prepare the sugar syrup by boiling sugar and water until sticky.').
+step('895', 4, 'add cardamom powder and saffron to the syrup and keep it warm.').
+step('895', 5, 'heat ghee or oil in a wide pan over medium heat.').
+step('895', 6, 'pour the batter into a piping bag or squeeze bottle.').
+step('895', 7, 'pipe spiral shapes into the hot oil.').
+step('895', 8, 'fry until crisp and golden on both sides.').
+step('895', 9, 'remove the jalebis and immediately soak them in warm sugar syrup.').
+step('895', 10, 'let them absorb syrup for 1 to 2 minutes.').
+step('895', 11, 'remove and serve hot or warm.').
+ingredient('895', 'all-purpose flour').
+ingredient('895', 'cornstarch').
+ingredient('895', 'yogurt').
+ingredient('895', 'turmeric').
+ingredient('895', 'sugar').
+ingredient('895', 'cardamom').
+ingredient('895', 'saffron').
+ingredient('895', 'ghee').
+ingredient('895', 'water').
+ingredientAndQuantity('895', '1 cup all-purpose flour').
+ingredientAndQuantity('895', '2 tbsp cornstarch').
+ingredientAndQuantity('895', '1/2 cup yogurt').
+ingredientAndQuantity('895', '1/4 tsp turmeric powder').
+ingredientAndQuantity('895', '2 cups sugar').
+ingredientAndQuantity('895', '1 cup water').
+ingredientAndQuantity('895', '1/2 tsp cardamom powder').
+ingredientAndQuantity('895', 'a few saffron strands').
+ingredientAndQuantity('895', 'ghee or oil for frying').
 
 
 %%%% Recipe 896: %%%%
+
+
+% added a predicate for retrieving all unique ingredients as a list in prolog, in order to see easier what ingredient types to apply for developing atoms
+getAllIngredients(UniqueIngredients) :- findall(Ingredients, ingredient(_, Ingredients), AllLists),flatten(AllLists, FlatList),sort(FlatList, UniqueIngredients).
