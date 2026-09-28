@@ -26,12 +26,9 @@ def test_whisper_initialization(whisper_component):
 
 @pytest.fixture
 def gpt_component():
-    with patch('openai.OpenAI') as mock_openai, \
-         patch('sic_framework.core.sic_redis.SICRedis') as mock_redis_cls, \
-         patch('sic_framework.core.component_python2.SICComponent.__init__', return_value=None):
-        mock_redis_cls.return_value = MagicMock()
+    with patch('openai.OpenAI') as mock_openai:
         conf = GPTConf(openai_key="fake_sk_key")
-        comp = GPTComponent(conf=conf)
+        comp = GPTComponent.__new__(GPTComponent)
         comp.params = conf
         comp.client = mock_openai.return_value
         comp.logger = MagicMock()
@@ -40,4 +37,4 @@ def gpt_component():
 def test_gpt_initialization(gpt_component):
     """Test that the OpenAI GPT component initializes correctly."""
     assert gpt_component.client is not None
-    assert gpt_component.params.model == "gpt-3.5-turbo"
+    assert gpt_component.params.model == "gpt-4o-mini"

@@ -21,7 +21,7 @@ def stt_component():
 
 def test_google_stt_initialization(stt_component):
     """Test that the Google STT component initializes correctly."""
-    assert stt_component.params.language == "en-US"
+    assert stt_component.params.language_code == "en-US"
     assert stt_component.params.sample_rate_hertz == 44100
 
 @pytest.fixture
@@ -39,6 +39,6 @@ def tts_component():
 
 def test_google_tts_initialization(tts_component):
     """Test that the Google TTS component initializes correctly."""
-    assert tts_component.params.language == "en-US"
+    assert tts_component.params.language_code == "en-US"
     # Verify the google cloud client was mocked and set
     assert tts_component.client is not None
