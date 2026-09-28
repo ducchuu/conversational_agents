@@ -13,6 +13,9 @@ env:
 jobs:
   test-and-deploy:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./social-interaction-cloud
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
