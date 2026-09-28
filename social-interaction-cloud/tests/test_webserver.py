@@ -1,6 +1,9 @@
 import pytest
 from unittest.mock import patch, MagicMock
 
+# Import the module first so unittest.mock can find it
+import sic_framework.services.nlu.utils.dataset
+
 # Mock out heavy ML models (Whisper/BERT) and Prolog initialization
 # before importing the Flask app so it doesn't crash during testing
 with patch('torch.load'), \
