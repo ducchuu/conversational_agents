@@ -1,15 +1,16 @@
 import pytest
 from unittest.mock import patch, MagicMock
 
-# Patching SICComponent to avoid Redis connection attempts
-with patch('sic_framework.core.component_python2.SICComponent.__init__', return_value=None):
+# Patching SICComponent and SICRedis to avoid Redis connection attempts
+with patch('sic_framework.core.component_python2.SICComponent.__init__', return_value=None), \
+     patch('sic_framework.core.sic_redis.SICRedis.__init__', return_value=None):
     from sic_framework.services.google_stt.google_stt import GoogleSpeechToText, GoogleSpeechToTextConf
     from sic_framework.services.text2speech.text2speech_service import Text2Speech, Text2SpeechConf
 
 @pytest.fixture
 def stt_component():
     with patch('google.cloud.speech.SpeechClient'):
-        conf = GoogleSpeechToTextConf(keyfile_json={"fake": "key"}, sample_rate_hertz=44100, language="en-US")
+        conf = GoogleSpeechToTextConf(keyfile_json={"fake": "key", "project_id": "test_project"}, sample_rate_hertz=44100, language="en-US")
         comp = GoogleSpeechToText(conf=conf)
         comp.logger = MagicMock()
         return comp

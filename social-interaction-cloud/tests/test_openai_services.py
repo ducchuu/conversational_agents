@@ -1,8 +1,9 @@
 import pytest
 from unittest.mock import patch, MagicMock
 
-# Patching SICComponent to avoid Redis connection attempts
-with patch('sic_framework.core.component_python2.SICComponent.__init__', return_value=None):
+# Patching SICComponent and SICRedis to avoid Redis connection attempts
+with patch('sic_framework.core.component_python2.SICComponent.__init__', return_value=None), \
+     patch('sic_framework.core.sic_redis.SICRedis.__init__', return_value=None):
     from sic_framework.services.openai_whisper_speech_to_text.whisper_speech_to_text import SICWhisper
     from sic_framework.services.openai_gpt.gpt import GPTComponent, GPTConf
 
@@ -24,7 +25,7 @@ def test_whisper_initialization(whisper_component):
 @pytest.fixture
 def gpt_component():
     with patch('openai.OpenAI'):
-        conf = GPTConf(api_key="fake_sk_key")
+        conf = GPTConf(openai_key="fake_sk_key")
         comp = GPTComponent(conf=conf)
         comp.logger = MagicMock()
         return comp
