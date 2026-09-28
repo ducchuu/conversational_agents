@@ -166,4 +166,4 @@ def handle_audio_stream(audio_bytes):
 
 if __name__ == "__main__":
     # In production/Docker, you'd use gunicorn. For dev, we run SocketIO directly.
-    socketio.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)), debug=True)
+    socketio.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)), debug=False, allow_unsafe_werkzeug=True)

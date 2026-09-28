@@ -30,9 +30,14 @@ steps:
       - '--region'
       - 'us-central1'
       - '--allow-unauthenticated'
-      # Allocating 2GB of RAM for the PyTorch BERT model
+      # Allocating 4GB of RAM for PyTorch BERT + Whisper models
       - '--memory'
-      - '2Gi'
+      - '4Gi'
+      - '--cpu'
+      - '2'
+      - '--timeout'
+      - '600'
+      - '--no-cpu-throttling'
 
 images:
   - 'us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/social-agent-cloud:$COMMIT_SHA'
