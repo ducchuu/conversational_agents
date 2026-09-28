@@ -27,7 +27,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get update && sudo apt-get install -y swi-prolog portaudio19-dev
+          sudo apt-get update && sudo apt-get install -y swi-prolog portaudio19-dev ffmpeg
           pip install -e .
           pip install pyswip pytest pytest-asyncio flask flask-socketio google-cloud-speech google-cloud-texttospeech openai openai-whisper SpeechRecognition transformers torch scikit-learn
 

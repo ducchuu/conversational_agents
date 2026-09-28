@@ -150,15 +150,25 @@ def handle_audio_stream(audio_bytes):
             
             # 4. Assert the intent into Prolog
             asyncio.run(brain.process_intent(intent, slots))
+            
+            # TEMPORARY FALLBACK RESPONSE (since Prolog logic is missing)
+            if intent == "greeting":
+                emit("speech", "Hi! I'm CookingBroski. I'm here to help you find the perfect recipe. What are you in the mood for?")
+                emit("pattern", "c10")
+            else:
+                emit("speech", f"I understood your intent was {intent}. Let's look for some recipes.")
+                emit("pattern", "a50recipeSelect")
         else:
             logger.warning("NLU model missing, falling back to raw transcript assert.")
             brain.assert_fact(f"transcript('{transcript}')")
             
-        # 5. Get the next action (handled inside process_intent or queried directly)
-        # emit("pattern", "a50recipeSelect")
-        
+            # TEMPORARY FALLBACK RESPONSE
+            emit("speech", f"I heard you say: {transcript}. Let's check some recipes.")
+            emit("pattern", "a50recipeSelect")
+            
     except Exception as e:
         logger.error(f"Error processing audio stream: {e}")
+        emit("transcript", f"Error processing audio: {e}")
     finally:
         if os.path.exists(temp_audio_path):
             os.remove(temp_audio_path)
