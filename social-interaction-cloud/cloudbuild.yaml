@@ -7,7 +7,7 @@ steps:
       - |
         apt-get update && apt-get install -y swi-prolog build-essential portaudio19-dev
         pip install -e .
-        pip install pyswip pytest pytest-asyncio flask flask-socketio google-cloud-speech google-cloud-texttospeech openai openai-whisper SpeechRecognition
+        pip install pyswip pytest pytest-asyncio flask flask-socketio google-cloud-speech google-cloud-texttospeech openai openai-whisper SpeechRecognition transformers torch scikit-learn
         pytest tests/
 
   # 2. Build the Docker image
