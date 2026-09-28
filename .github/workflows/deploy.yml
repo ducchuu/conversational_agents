@@ -29,7 +29,7 @@ jobs:
         run: |
           sudo apt-get update && sudo apt-get install -y swi-prolog portaudio19-dev
           pip install -e .
-          pip install pyswip pytest pytest-asyncio flask flask-socketio google-cloud-speech google-cloud-texttospeech openai openai-whisper SpeechRecognition
+          pip install pyswip pytest pytest-asyncio flask flask-socketio google-cloud-speech google-cloud-texttospeech openai openai-whisper SpeechRecognition transformers torch
 
       - name: Run Unit Tests
         run: pytest tests/
