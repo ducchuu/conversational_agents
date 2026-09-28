@@ -1,0 +1,63 @@
+name: Deploy to Cloud Run
+
+on:
+  push:
+    branches:
+      - cloud
+
+env:
+  PROJECT_ID: cloud-agent-conversational
+  REGION: us-central1
+  SERVICE_NAME: social-agent-cloud
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update && sudo apt-get install -y swi-prolog portaudio19-dev
+          pip install -e .
+          pip install pyswip pytest pytest-asyncio flask flask-socketio google-cloud-speech google-cloud-texttospeech openai openai-whisper SpeechRecognition
+
+      - name: Run Unit Tests
+        run: pytest tests/
+
+      - name: Google Auth
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
+
+      - name: Build and Push Docker Image
+        run: |
+          IMAGE_NAME=${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/my-repo/${{ env.SERVICE_NAME }}:${{ github.sha }}
+          docker build -t $IMAGE_NAME .
+          docker push $IMAGE_NAME
+
+      - name: Deploy to Cloud Run
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.SERVICE_NAME }}
+          region: ${{ env.REGION }}
+          image: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/my-repo/${{ env.SERVICE_NAME }}:${{ github.sha }}
+          # We allocate 2Gi of memory here specifically to support your fine-tuned BERT NLU model!
+          flags: '--allow-unauthenticated --memory=2Gi'
+
+      - name: Output Cloud Run URL
+        run: echo "Deployed successfully to ${{ steps.deploy.outputs.url }}"

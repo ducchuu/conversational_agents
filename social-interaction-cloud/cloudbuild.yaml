@@ -1,0 +1,38 @@
+steps:
+  # 1. Run tests inside a Python container
+  - name: 'python:3.12-slim'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        apt-get update && apt-get install -y swi-prolog build-essential portaudio19-dev
+        pip install -e .
+        pip install pyswip pytest pytest-asyncio flask flask-socketio google-cloud-speech google-cloud-texttospeech openai openai-whisper SpeechRecognition
+        pytest tests/
+
+  # 2. Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/social-agent-cloud:$COMMIT_SHA', '.']
+
+  # 3. Push the Docker image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/social-agent-cloud:$COMMIT_SHA']
+
+  # 4. Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'social-agent-cloud'
+      - '--image'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/social-agent-cloud:$COMMIT_SHA'
+      - '--region'
+      - 'us-central1'
+      - '--allow-unauthenticated'
+      # Allocating 2GB of RAM for the PyTorch BERT model
+      - '--memory'
+      - '2Gi'
+
+images:
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/social-agent-cloud:$COMMIT_SHA'

@@ -195,15 +195,50 @@ for (var i = 0; i < elements.length; i++) {
 }
 
 var micButton = $("mic");
+let mediaRecorder;
+let audioChunks = [];
 
 if (micButton) {
-  micButton.addEventListener('click', function() {
-    if (user_turn) {
-      var micImg = $("micimg");
-      if(micImg) micImg.src = 'static/images/mic_on.png';
-      socket.emit('buttonClick', 'mic');
-    } else {
+  micButton.addEventListener('click', async function() {
+    if (!user_turn) {
       alert("It is not your turn.");
+      return;
+    }
+    
+    var micImg = $("micimg");
+
+    // If already recording, stop it
+    if (mediaRecorder && mediaRecorder.state === "recording") {
+      mediaRecorder.stop();
+      if(micImg) micImg.src = 'static/images/mic_out.png';
+      return;
+    }
+    
+    // Start recording
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+      audioChunks = [];
+      
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) audioChunks.push(event.data);
+      };
+      
+      mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        socket.emit('audio_stream', audioBlob);
+        
+        // Stop all tracks to release the microphone
+        stream.getTracks().forEach(track => track.stop());
+      };
+      
+      mediaRecorder.start();
+      if(micImg) micImg.src = 'static/images/mic_on.png';
+      socket.emit('event', 'ListeningStarted');
+      
+    } catch (err) {
+      console.error("Error accessing microphone:", err);
+      alert("Could not access the microphone. Please check your browser permissions.");
     }
   });
 }

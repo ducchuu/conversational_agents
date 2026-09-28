@@ -1,185 +1,169 @@
-import logging
 import os
-import threading
+import logging
+import asyncio
+from flask import Flask, render_template_string, render_template, request, jsonify
+from flask_socketio import SocketIO, emit
+from sic_framework.services.prolog.prolog_brain import PrologBrain
 
-import flask
-from flask import Flask, render_template_string, render_template, request
-from flask_socketio import SocketIO, emit, send
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-from sic_framework import SICComponentManager, SICService
-from sic_framework.core.component_python2 import SICComponent
-from sic_framework.core.connector import SICConnector
-from sic_framework.core.message_python2 import SICConfMessage, SICMessage
-from sic_framework.core.utils import is_sic_instance
-
+# Note: In a production app, you would load these keys from a .env file!
 os.environ["YOUTUBE_API_KEY"] = "AIzaSyBMlr2WN0DZDkDZuEXOBuYyQIT8nbkHvbA"
 
-class TranscriptMessage(SICMessage):
-    def __init__(self, transcript):
-        self.transcript = transcript
+# Initialize Flask and SocketIO
+app = Flask(__name__, template_folder='templates', static_folder='static')
+# cors_allowed_origins="*" is important for WebSockets in Cloud Run
+socketio = SocketIO(app, async_mode='threading', cors_allowed_origins="*")
 
+# Initialize our new Prolog Brain
+brain = PrologBrain()
 
-class WebInfoMessage(SICMessage):
-    def __init__(self, label, message):
-        self.label = label
-        self.message = message
+# Load the Prolog database (this path assumes you copy the recipe_database.pl into the docker container)
+# brain.load_knowledge_base("path/to/recipe_database.pl")
 
+@app.route("/")
+@app.route("/<string:page_name>", methods=['GET', 'POST'])
+def html_page(page_name="welcome.html"):
+    if not page_name.endswith(".html"):
+        return render_template_string("<h1>404 Not Found</h1>"), 404
+    try:
+        return render_template(page_name)
+    except Exception as e:
+        logger.error(f"Error rendering {page_name}: {e}")
+        return render_template_string("<h1>Template not found</h1>"), 404
 
-class HtmlMessage(SICMessage):
-    """Message for requesting the rendering of an HTML page"""
-    def __init__(self, text, html):
-        self.text = text
-        self.html = html
+@app.route("/api/youtube/search", methods=["GET"])
+def youtube_search():
+    import requests
+    api_key = os.getenv("YOUTUBE_API_KEY")
+    if not api_key:
+        return jsonify({"error": "Missing YOUTUBE_API_KEY"}), 500
 
+    title = (request.args.get("title") or "").strip()
+    if not title:
+        return jsonify({"error": "Missing title"}), 400
 
-class ButtonClicked(SICMessage):
-    def __init__(self, button):
-        self.button = button
+    url = "https://www.googleapis.com/youtube/v3/search"
+    params = {
+        "part": "snippet",
+        "q": f"{title} recipe",
+        "type": "video",
+        "maxResults": 1,
+        "safeSearch": "strict",
+        "key": api_key,
+    }
+    try:
+        r = requests.get(url, params=params, timeout=8)
+        items = r.json().get("items", [])
+        if not items:
+            return jsonify({"videoId": None})
+        return jsonify({"videoId": items[0].get("id", {}).get("videoId")})
+    except Exception:
+        return jsonify({"videoId": None}), 502
 
+@socketio.on("connect")
+def handle_connect():
+    logger.info(f"Client connected: {request.sid}")
+    # Tell the client it's their turn as soon as they connect
+    emit("set_turn", "true")
 
-class SetTurnMessage(SICMessage):
-    def __init__(self, user_turn):
-        self.user_turn = user_turn
+@socketio.on("disconnect")
+def handle_disconnect():
+    logger.info(f"Client disconnected: {request.sid}")
 
-class WebserverConf(SICConfMessage):
-    def __init__(self, host: str, port: int):
-        """
-        :param host         the hostname that a server listens on
-        :param port         the port to listen on
-        """
-        super(WebserverConf, self).__init__()
-        self.host = host
-        self.port = port
+@socketio.on("buttonClick")
+def handle_button_click(name):
+    logger.info(f"Button clicked: {name}")
+    # Here you can assert facts to prolog based on button clicks!
+    brain.assert_fact(f"button_clicked('{name}')")
+    
+import whisper
+import tempfile
+import torch
+from importlib.resources import files
+from sic_framework.services.nlu.utils.predict import predict
+from sic_framework.services.nlu.utils.model import BERTNLUModel
+from sic_framework.services.nlu.utils.dataset import fit_encoders, intent_label_encoder, slot_label_encoder
 
+# Load NLU Model and Encoders once at startup
+try:
+    logger.info("Loading BERT NLU Model...")
+    ontology_path = str(files("sic_framework.services.nlu.utils.data").joinpath("ontology.json"))
+    model_path = str(files("sic_framework.services.nlu.utils.checkpoints").joinpath("model_checkpoint.pt"))
+    
+    fit_encoders(ontology_path)
+    num_intents = len(intent_label_encoder.classes_)
+    num_slots = len(slot_label_encoder.classes_)
+    
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    nlu_model = BERTNLUModel(num_intents=num_intents, num_slots=num_slots).to(device)
+    nlu_model.load_state_dict(torch.load(model_path, weights_only=True, map_location=device))
+    logger.info("BERT NLU Model loaded successfully!")
+except Exception as e:
+    logger.error(f"Failed to load NLU model: {e}")
+    nlu_model = None
 
-class WebserverComponent(SICComponent):
+# Load Whisper STT model once at startup
+try:
+    logger.info("Loading Whisper base.en model...")
+    stt_model = whisper.load_model("base.en", device=device)
+    logger.info("Whisper loaded successfully!")
+except Exception as e:
+    logger.error(f"Failed to load Whisper: {e}")
+    stt_model = None
 
-    def __init__(self, *args, **kwargs):
+@socketio.on("audio_stream")
+def handle_audio_stream(audio_bytes):
+    """
+    Receives WebM/Wav audio bytes from the browser's microphone,
+    transcribes it using Whisper, predicts the intent using BERT, 
+    and asserts it to Prolog.
+    """
+    logger.info("Received audio stream from client. Processing...")
+    
+    if not stt_model:
+        emit("transcript", "Error: STT model not loaded.")
+        return
 
-        super(WebserverComponent, self).__init__(*args, **kwargs)
-        self.app = Flask(__name__)
-
-        # To enable logging of low level socket events add 'logger=True'
-        self.socketio = SocketIO(self.app)
-
-        thread = threading.Thread(target=self.start_web_app)
-        # app should be terminated automatically when the main thread exits
-        thread.daemon = True
-        thread.start()
-
-        self.logger.info("Looking for HTML templates in: "+os.path.join(self.app.root_path, "templates"))
-
-    def start_web_app(self):
-        """
-        start the web server
-        """
-        self.render_template_string_routes()
-        # maybe use ssl_context to run app over https, the key and cert files need to be passed by users
-        self.app.run(host=self.params.host, port=self.params.port)
-
-    @staticmethod
-    def get_conf():
-        return WebserverConf()
-
-    @staticmethod
-    def get_inputs():
-        return [HtmlMessage, SetTurnMessage, TranscriptMessage]
-
-    # when the HtmlMessage message arrives, feed it to self.input_text
-    def on_message(self, message):
-
-        if is_sic_instance(message, WebInfoMessage):
-            self.logger.info(f"Sending {message.label}:{message.message} info to webserver")
-            self.socketio.emit(message.label, message.message)
-
-        if is_sic_instance(message, HtmlMessage):
-            self.logger.info("Receiving HTML message: " + message.html)
-
-        if is_sic_instance(message, SetTurnMessage):
-            pass  # ignore for now
-            # if message.user_turn:
-            #    self.logger.info("Handing back turn to the user")
-            # else:
-            #    self.logger.info("It is the agent's turn to talk now.")
-            # self.socketio.emit("set_turn", message.user_turn)
-
-        if is_sic_instance(message, TranscriptMessage):
-            self.logger.debug(f"Receiving transcript: {message.transcript}-------")
-            self.socketio.emit("transcript", message.transcript)
-
-    def render_template_string_routes(self):
-        # render an html page (with bootstrap and a css file) once a client is connected
-        # handle both GET and POST just to make sure we do not get 405 response
-        @self.app.route("/<string:page_name>", methods=['GET', 'POST'])
-        def html_page(page_name):
-            if not page_name.endswith(".html"):
-                self.logger.info("Request to render non-html page: "+page_name)
-                return render_template_string("<h1>hello???</h1>")
-            self.logger.info("Rendering page: "+page_name)
-            web_url = f"http://localhost:{self.params.port}/{page_name}"
-            self.logger.info("Open the web page at " + web_url)
-            return render_template(page_name)
-
-        # YouTube visual enhancement API Endpoint
-        @self.app.route("/api/youtube/search", methods=["GET"])
-        def youtube_search():
-            import requests
-
-            api_key = os.getenv("YOUTUBE_API_KEY")
-            if not api_key:
-                return flask.jsonify({"error": "Missing YOUTUBE_API_KEY"}), 500
-
-            title = (request.args.get("title") or "").strip()
-            if not title:
-                return flask.jsonify({"error": "Missing title"}), 400
-
-            q = f"{title} recipe"
-
-            url = "https://www.googleapis.com/youtube/v3/search"
-            params = {
-                "part": "snippet",
-                "q": q,
-                "type": "video",
-                "maxResults": 1,
-                "safeSearch": "strict",
-                "key": api_key,
-            }
-
-            r = requests.get(url, params=params, timeout=8)
-            if r.status_code != 200:
-                return flask.jsonify({"videoId": None}), 502
-
-            items = r.json().get("items", [])
-            if not items:
-                return flask.jsonify({"videoId": None})
-
-            video_id = items[0].get("id", {}).get("videoId")
-            return flask.jsonify({"videoId": video_id})
-
-
-        @self.socketio.on("connect")
-        def handle_connect():
-            self.logger.info("Client connected")
-
-        @self.socketio.on("disconnect")
-        def handle_disconnect():
-            self.disconnected = True
-            self.logger.info("Client disconnected")
-
-        # register buttonClick event handler
-        @self.socketio.on("buttonClick")
-        def handle_flag(name):
-            self.logger.info("Received a button click named: " + name)
-            self.output_message(ButtonClicked(button=name))
-
-
-class Webserver(SICConnector):
-    component_class = WebserverComponent
-
-
-def main():
-    SICComponentManager([WebserverComponent])
+    # 1. Save audio temporarily to run through Whisper
+    with tempfile.NamedTemporaryFile(suffix=".webm", delete=False) as temp_audio:
+        temp_audio.write(audio_bytes)
+        temp_audio_path = temp_audio.name
+        
+    try:
+        # 2. Get the transcript
+        result = stt_model.transcribe(temp_audio_path, language="en")
+        transcript = result.get("text", "").strip()
+        logger.info(f"Whisper heard: {transcript}")
+        
+        # Send the transcript back to the browser so the user sees what they said
+        emit("transcript", transcript)
+        
+        if not transcript:
+            return
+            
+        # 3. Predict Intent using BERT NLU
+        if nlu_model:
+            intent, intent_conf, slots, slot_confs = predict(nlu_model, transcript, max_length=16, device=device)
+            logger.info(f"NLU Intent: {intent} ({intent_conf}), Slots: {slots}")
+            
+            # 4. Assert the intent into Prolog
+            asyncio.run(brain.process_intent(intent, slots))
+        else:
+            logger.warning("NLU model missing, falling back to raw transcript assert.")
+            brain.assert_fact(f"transcript('{transcript}')")
+            
+        # 5. Get the next action (handled inside process_intent or queried directly)
+        # emit("pattern", "a50recipeSelect")
+        
+    except Exception as e:
+        logger.error(f"Error processing audio stream: {e}")
+    finally:
+        if os.path.exists(temp_audio_path):
+            os.remove(temp_audio_path)
 
 
 if __name__ == "__main__":
-    main()
+    # In production/Docker, you'd use gunicorn. For dev, we run SocketIO directly.
+    socketio.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)), debug=True)
