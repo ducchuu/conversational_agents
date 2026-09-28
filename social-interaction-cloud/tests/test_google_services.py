@@ -9,9 +9,13 @@ with patch('sic_framework.core.component_python2.SICComponent.__init__', return_
 
 @pytest.fixture
 def stt_component():
-    with patch('google.cloud.speech.SpeechClient'):
+    with patch('google.cloud.speech.SpeechClient'), \
+         patch('sic_framework.core.sic_redis.SICRedis') as mock_redis_cls, \
+         patch('sic_framework.core.connector.SICConnector.__init__', return_value=None):
+        mock_redis_cls.return_value = MagicMock()
         conf = GoogleSpeechToTextConf(keyfile_json={"fake": "key", "project_id": "test_project"}, sample_rate_hertz=44100, language="en-US")
-        comp = GoogleSpeechToText(conf=conf)
+        comp = GoogleSpeechToText.__new__(GoogleSpeechToText)
+        comp.params = conf
         comp.logger = MagicMock()
         return comp
 
@@ -22,9 +26,14 @@ def test_google_stt_initialization(stt_component):
 
 @pytest.fixture
 def tts_component():
-    with patch('google.cloud.texttospeech.TextToSpeechClient'):
+    with patch('google.cloud.texttospeech.TextToSpeechClient') as mock_tts_client, \
+         patch('sic_framework.core.sic_redis.SICRedis') as mock_redis_cls, \
+         patch('sic_framework.core.connector.SICConnector.__init__', return_value=None):
+        mock_redis_cls.return_value = MagicMock()
         conf = Text2SpeechConf(keyfile={"fake": "key"})
-        comp = Text2Speech(conf=conf)
+        comp = Text2Speech.__new__(Text2Speech)
+        comp.params = conf
+        comp.client = mock_tts_client.return_value
         comp.logger = MagicMock()
         return comp
 
