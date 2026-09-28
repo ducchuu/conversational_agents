@@ -59,8 +59,8 @@ jobs:
           service: ${{ env.SERVICE_NAME }}
           region: ${{ env.REGION }}
           image: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/my-repo/${{ env.SERVICE_NAME }}:${{ github.sha }}
-          # We allocate 2Gi of memory here specifically to support your fine-tuned BERT NLU model!
-          flags: '--allow-unauthenticated --memory=2Gi'
+          # We allocate 4Gi of memory for PyTorch BERT + Whisper models
+          flags: '--allow-unauthenticated --memory=4Gi --cpu=2 --timeout=600 --no-cpu-throttling'
 
       - name: Output Cloud Run URL
         run: echo "Deployed successfully to ${{ steps.deploy.outputs.url }}"
