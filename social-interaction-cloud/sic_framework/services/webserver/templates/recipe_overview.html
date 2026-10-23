@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <title>CookingBroski — Recipe Selection</title>
 
@@ -37,62 +38,133 @@
       </nav>
     </header>
 
-    <main id="content" class="container py-4 py-md-5 flex-grow-1">
-      <div class="pca-card p-3 p-md-4">
-        <div class="pca-card-inner p-3 p-md-4">
-          
-          <div class="d-flex flex-wrap align-items-center justify-content-between mb-3">
-            <div>
-              <h2 class="pca-title mb-1" id="mainTitle">Looking for recipes...</h2>
-              <div class="pca-muted" id="mainDescription">
-                Checking our cookbook for you.
+    <main id="content" class="container-fluid px-3 px-xl-5 py-4 py-md-5 flex-grow-1">
+      <div class="row">
+
+        <!-- LEFT SIDEBAR: Interaction Guidelines (max 1/4 page width) -->
+        <aside class="col-12 col-md-5 col-lg-4 col-xl-3 mb-4 mb-md-0">
+          <div class="pca-guide-sidebar">
+            <div class="pca-guide-card">
+              <div class="pca-guide-header">
+                <span class="pca-guide-badge">💡 Interaction Guide</span>
+                <h3 class="pca-guide-title">What You Can Say</h3>
+                <p class="pca-guide-subtitle">Refine your search or explore options:</p>
+              </div>
+
+              <div class="pca-guide-section">
+                <div class="pca-guide-section-title">➕ Add Preferences</div>
+                <ul class="pca-guide-list">
+                  <li class="pca-guide-item"><span class="pca-guide-item-icon">💬</span>“With garlic and pasta.
+                    Something vegeterian.”</li>
+                  <li class="pca-guide-item"><span class="pca-guide-item-icon">💬</span>“Under 45 minutes”</li>
+                  <li class="pca-guide-item"><span class="pca-guide-item-icon">💬</span>“Italian cuisine”</li>
+                </ul>
+              </div>
+
+              <div class="pca-guide-section">
+                <div class="pca-guide-section-title">🚫 Exclude Ingredients</div>
+                <ul class="pca-guide-list">
+                  <li class="pca-guide-item"><span class="pca-guide-item-icon">💬</span>“Without onions”</li>
+                  <li class="pca-guide-item"><span class="pca-guide-item-icon">💬</span>“No dairy please”</li>
+                  <li class="pca-guide-item"><span class="pca-guide-item-icon">💬</span>“Exclude mushrooms”</li>
+                </ul>
+              </div>
+
+              <div class="pca-guide-section">
+                <div class="pca-guide-section-title">➖ Modify Filters</div>
+                <ul class="pca-guide-list">
+                  <li class="pca-guide-item"><span class="pca-guide-item-icon">💬</span>“Remove the chicken filter”</li>
+                  <li class="pca-guide-item"><span class="pca-guide-item-icon">💬</span>“Clear all filters”</li>
+                </ul>
+              </div>
+
+              <div class="pca-guide-section">
+                <div class="pca-guide-section-title">📖 View Recipes</div>
+                <ul class="pca-guide-list">
+                  <li class="pca-guide-item"><span class="pca-guide-item-icon">💬</span>“Show me the [Recipe Name]”</li>
+                  <li class="pca-guide-item"><span class="pca-guide-item-icon">💬</span>“Pick one for me”</li>
+                  <li class="pca-guide-item"><span class="pca-guide-item-icon">💬</span>“Recommend the best dish”</li>
+                </ul>
+              </div>
+
+              <div class="pca-guide-section">
+                <div class="pca-guide-section-title">🍳 Ask Cooking Advice</div>
+                <ul class="pca-guide-list">
+                  <li class="pca-guide-item"><span class="pca-guide-item-icon">💬</span>“What can I substitute for
+                    butter?”</li>
+                  <li class="pca-guide-item"><span class="pca-guide-item-icon">💬</span>“Can I make this vegetarian?”
+                  </li>
+                </ul>
+              </div>
+
+              <div class="pca-guide-tip">
+                <span>💡</span>
+                <span>Filters and recipe matches update live on the right as you speak!</span>
               </div>
             </div>
-            <span class="pca-chip pca-chip--info">
-              <span id="recipecounter">0</span> matches
-            </span>
           </div>
+        </aside>
 
-          <div class="pca-block mb-3">
-            <div class="d-flex align-items-center justify-content-between">
-              <div class="font-weight-bold">Filters applied</div>
-              <span class="pca-muted"><small>Updates live</small></span>
-            </div>
-            <div class="mt-3">
-              <div class="d-flex flex-wrap" id="addFiltersHere"></div>
-            </div>
-            
-            <template id="filterCardTemplate">
-              <span class="pca-chip mr-2 mb-2" id="filterText">Filter Name</span>
-            </template>
-          </div>
+        <!-- RIGHT MAIN: Filter Management & Recipes (remaining 3/4 width) -->
+        <section class="col-12 col-md-7 col-lg-8 col-xl-9">
+          <div class="pca-card p-3 p-md-4">
+            <div class="pca-card-inner p-3 p-md-4">
 
-          <div id="recipeResultsContainer" style="display:none;">
-            <hr class="pca-divider my-4">
-            <div class="pca-grid" id="recipesGrid"></div>
-            
-            <div id="recipesEmptyState" class="pca-muted" style="display:none;">
-              <div class="pca-block">
-                No recipes match all those filters. Try removing one!
+              <div class="d-flex flex-wrap align-items-center justify-content-between mb-3">
+                <div>
+                  <h2 class="pca-title mb-1" id="mainTitle">Looking for recipes...</h2>
+                  <div class="pca-muted" id="mainDescription">
+                    Checking our cookbook for you.
+                  </div>
+                </div>
+                <span class="pca-chip pca-chip--info">
+                  <span id="recipecounter">0</span> matches
+                </span>
               </div>
-            </div>
-          </div>
 
-          <template id="recipeCardTemplate">
-            <div class="pca-recipe" role="button" tabindex="0" data-recipe-id="">
-              <div class="pca-recipe-img" data-recipe-img=""></div>
-              <div class="pca-recipe-body">
-                <h5 class="pca-recipe-title" data-recipe-title="">Title</h5>
-                <p class="pca-recipe-desc" data-recipe-desc="">Description</p>
-                <div class="pca-recipe-meta" data-recipe-meta="">
-                  <span class="pca-chip">⏱ <span data-recipe-time="">—</span></span>
-                  <span class="pca-chip">🍽 <span data-recipe-servings="">—</span></span>
+              <div class="pca-block mb-3">
+                <div class="d-flex align-items-center justify-content-between">
+                  <div class="font-weight-bold">Filters applied</div>
+                  <span class="pca-muted"><small>Updates live</small></span>
+                </div>
+                <div class="mt-3">
+                  <div class="d-flex flex-wrap" id="addFiltersHere"></div>
+                </div>
+
+                <template id="filterCardTemplate">
+                  <span class="pca-chip mr-2 mb-2" id="filterText">Filter Name</span>
+                </template>
+              </div>
+
+              <div id="recipeResultsContainer" style="display:none;">
+                <hr class="pca-divider my-4">
+                <div class="pca-grid" id="recipesGrid"></div>
+
+                <div id="recipesEmptyState" class="pca-muted" style="display:none;">
+                  <div class="pca-block">
+                    No recipes match all those filters. Try removing one!
+                  </div>
                 </div>
               </div>
-            </div>
-          </template>
 
-        </div>
+              <template id="recipeCardTemplate">
+                <div class="pca-recipe" role="button" tabindex="0" data-recipe-id="">
+                  <div class="pca-recipe-img" data-recipe-img=""></div>
+                  <div class="pca-recipe-body">
+                    <h5 class="pca-recipe-title" data-recipe-title="">Title</h5>
+                    <p class="pca-recipe-desc" data-recipe-desc="">Description</p>
+                    <div class="pca-recipe-meta" data-recipe-meta="">
+                      <span class="pca-chip">⏱ <span data-recipe-time="">—</span></span>
+                      <span class="pca-chip">🍽 <span data-recipe-servings="">—</span></span>
+                    </div>
+                  </div>
+                </div>
+              </template>
+
+            </div>
+          </div>
+        </section>
+
       </div>
     </main>
 
@@ -103,4 +175,5 @@
     </footer>
   </div>
 </body>
+
 </html>

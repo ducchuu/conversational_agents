@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <title>CookingBroski — Confirm Recipe</title>
 
@@ -37,63 +38,123 @@
       </nav>
     </header>
 
-    <main class="container py-4 py-md-5 flex-grow-1">
-      <div class="pca-detail" id="recipeDetailCard">
-        <div class="pca-detail-media" id="recipeImage" role="img" aria-label="Recipe image"></div>
+    <main class="container-fluid px-3 px-xl-5 py-4 py-md-5 flex-grow-1">
+      <div class="row">
+        <aside class="col-12 col-md-5 col-lg-4 col-xl-3 mb-4 mb-md-0">
+          <div class="pca-guide-sidebar">
+            <div class="pca-guide-card">
+              <div class="pca-guide-header">
+                <span class="pca-guide-badge">💡 Interaction Guide</span>
+                <h3 class="pca-guide-title">What You Can Say</h3>
+                <p class="pca-guide-subtitle">Confirm, switch, or ask culinary questions:</p>
+              </div>
 
-        <div class="pca-detail-content">
-          <div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
-            <span class="pca-chip pca-chip--info">Selected recipe</span>
-            <div class="d-flex flex-wrap" style="gap:8px;">
-              <span class="pca-chip">⏱ <span id="recipeTime">—</span></span>
-              <span class="pca-chip">🍽 <span id="recipeServings">—</span></span>
+              <div class="pca-guide-section">
+                <div class="pca-guide-section-title">✅ Confirm & Cook</div>
+                <ul class="pca-guide-list">
+                  <li class="pca-guide-item"><span class="pca-guide-item-icon">💬</span>“Yes, let's cook this!”</li>
+                  <li class="pca-guide-item"><span class="pca-guide-item-icon">💬</span>“Looks delicious, confirm
+                    recipe”</li>
+                  <li class="pca-guide-item"><span class="pca-guide-item-icon">💬</span>“Sounds great, I'll make it”
+                  </li>
+                </ul>
+              </div>
+
+              <div class="pca-guide-section">
+                <div class="pca-guide-section-title">❌ Choose Another Dish</div>
+                <ul class="pca-guide-list">
+                  <li class="pca-guide-item"><span class="pca-guide-item-icon">💬</span>“No, show me another recipe”
+                  </li>
+                  <li class="pca-guide-item"><span class="pca-guide-item-icon">💬</span>“I don't like this one”</li>
+                  <li class="pca-guide-item"><span class="pca-guide-item-icon">💬</span>“Go back to the recipe list”
+                  </li>
+                </ul>
+              </div>
+
+              <div class="pca-guide-section">
+                <div class="pca-guide-section-title">🍳 Culinary & Substitutions</div>
+                <ul class="pca-guide-list">
+                  <li class="pca-guide-item"><span class="pca-guide-item-icon">💬</span>“What can I use instead of
+                    ginger?”</li>
+                  <li class="pca-guide-item"><span class="pca-guide-item-icon">💬</span>“Can I bake this instead of
+                    frying?”</li>
+                  <li class="pca-guide-item"><span class="pca-guide-item-icon">💬</span>“How long do leftovers last?”
+                  </li>
+                  <li class="pca-guide-item"><span class="pca-guide-item-icon">💬</span>“What side dish pairs with
+                    this?”</li>
+                </ul>
+              </div>
+
+              <div class="pca-guide-section">
+                <div class="pca-guide-section-title">🔄 Navigation</div>
+                <ul class="pca-guide-list">
+                  <li class="pca-guide-item"><span class="pca-guide-item-icon">💬</span>“Start over from scratch”</li>
+                  <li class="pca-guide-item"><span class="pca-guide-item-icon">💬</span>“Goodbye”</li>
+                </ul>
+              </div>
+
+              <div class="pca-guide-tip">
+                <span>💡</span>
+                <span>Ask any cooking or substitution question anytime — Claude AI will guide you!</span>
+              </div>
             </div>
           </div>
+        </aside>
+        <section class="col-12 col-md-7 col-lg-8 col-xl-9">
+          <div class="pca-detail" id="recipeDetailCard">
+            <div class="pca-detail-media" id="recipeImage" role="img" aria-label="Recipe image"></div>
 
-          <h2 class="pca-title mb-2" id="recipeTitle">Waiting for recipe…</h2>
-          <p class="pca-muted mb-3" id="recipeDescription">
-            When a recipe is selected, its details will appear here.
-          </p>
+            <div class="pca-detail-content">
+              <div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
+                <span class="pca-chip pca-chip--info">Selected recipe</span>
+                <div class="d-flex flex-wrap" style="gap:8px;">
+                  <span class="pca-chip">⏱ <span id="recipeTime">—</span></span>
+                  <span class="pca-chip">🍽 <span id="recipeServings">—</span></span>
+                </div>
+              </div>
 
-          <div class="pca-split">
-            <div class="pca-block">
-              <h5 class="mb-2">Ingredients</h5>
-              <ul class="mb-0" id="ingredientsList">
-                <li class="pca-muted">—</li>
-              </ul>
-            </div>
+              <h2 class="pca-title mb-2" id="recipeTitle">Waiting for recipe…</h2>
+              <p class="pca-muted mb-3" id="recipeDescription">
+                When a recipe is selected, its details will appear here.
+              </p>
 
-            <div class="pca-block">
-              <h5 class="mb-2">Instructions</h5>
-              <ol class="mb-0" id="instructionsList">
-                <li class="pca-muted">—</li>
-              </ol>
+              <div class="pca-split">
+                <div class="pca-block">
+                  <h5 class="mb-2">Ingredients</h5>
+                  <ul class="mb-0" id="ingredientsList">
+                    <li class="pca-muted">—</li>
+                  </ul>
+                </div>
+
+                <div class="pca-block">
+                  <h5 class="mb-2">Instructions</h5>
+                  <ol class="mb-0" id="instructionsList">
+                    <li class="pca-muted">—</li>
+                  </ol>
+                </div>
+              </div>
+
+              <section class="video-card">
+                <h3 class="section-title">Watch how to make it</h3>
+
+                <div class="video-frame">
+                  <iframe id="recipeVideo" title="Recipe video" src=""
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+                </div>
+
+                <p class="text-muted" id="videoFallback" style="display:none;">
+                  No video available for this recipe.
+                </p>
+              </section>
+
+              <div class="mt-3 pca-muted">
+                <small>Use the microphone to confirm (“yes”) or ask for another option (“no”).</small>
+              </div>
             </div>
           </div>
-          
-          <section class="video-card">
-            <h3 class="section-title">Watch how to make it</h3>
+        </section>
 
-            <div class="video-frame">
-              <iframe
-                id="recipeVideo"
-                title="Recipe video"
-                src=""
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowfullscreen
-                referrerpolicy="strict-origin-when-cross-origin"
-              ></iframe>
-            </div>
-
-            <p class="text-muted" id="videoFallback" style="display:none;">
-              No video available for this recipe.
-            </p>
-          </section>
-
-          <div class="mt-3 pca-muted">
-            <small>Use the microphone to confirm (“yes”) or ask for another option (“no”).</small>
-          </div>
-        </div>
       </div>
     </main>
 
@@ -104,4 +165,5 @@
     </footer>
   </div>
 </body>
+
 </html>

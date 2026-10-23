@@ -1,9 +1,8 @@
 import pytest
 from unittest.mock import patch, MagicMock
+import sic_framework  # noqa: F401  Ensures core stubs are registered
 
-# Patching SICComponent and redis to avoid actual Redis connection attempts
-with patch('sic_framework.core.component_python2.SICComponent.__init__', return_value=None), \
-     patch('redis.Redis'):
+with patch('sic_framework.core.component_python2.SICComponent.__init__', return_value=None):
     from sic_framework.services.google_stt.google_stt import GoogleSpeechToText, GoogleSpeechToTextConf
     from sic_framework.services.text2speech.text2speech_service import Text2Speech, Text2SpeechConf
 

@@ -1,40 +1,47 @@
-import pytest
-from unittest.mock import patch, MagicMock
+import os
+import sys
 
-# Patching SICComponent and redis to avoid actual Redis connection attempts
-with patch('sic_framework.core.component_python2.SICComponent.__init__', return_value=None), \
-     patch('redis.Redis'):
-    from sic_framework.services.openai_whisper_speech_to_text.whisper_speech_to_text import SICWhisper, WhisperComponent, WhisperConf
-    from sic_framework.services.openai_gpt.gpt import GPTComponent, GPTConf
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-@pytest.fixture
-def whisper_component():
-    # We mock whisper.load_model so it doesn't download massive gigabytes of AI models during CI testing!
-    with patch('whisper.load_model') as mock_model, \
-         patch('sic_framework.core.sic_redis.SICRedis') as mock_redis_cls, \
-         patch('sic_framework.core.connector.SICConnector.__init__', return_value=None):
-        mock_redis_cls.return_value = MagicMock()
-        mock_model.return_value = MagicMock()
-        comp = SICWhisper.__new__(SICWhisper)
-        comp.params = WhisperConf()
-        comp.logger = MagicMock()
-        return comp
+from dialog_mngr.agent_python.dialog_manager import DialogManager
+from sic_framework.services.nlu.fast_bert_nlu import FastBERTNLU, extract_slots_from_text
+from sic_framework.services.webserver.webserver_pca import NLUOutput, normalize_intent_name
 
-def test_whisper_initialization(whisper_component):
-    """Test that the Whisper STT component initializes with the default configuration."""
-    assert whisper_component.params.model == "base.en"
 
-@pytest.fixture
-def gpt_component():
-    with patch('openai.OpenAI') as mock_openai:
-        conf = GPTConf(openai_key="fake_sk_key")
-        comp = GPTComponent.__new__(GPTComponent)
-        comp.params = conf
-        comp.client = mock_openai.return_value
-        comp.logger = MagicMock()
-        return comp
+def test_fast_bert_nlu_initialization():
+    """Verify FastBERTNLU initializes and loads its ONNX/PyTorch backend."""
+    engine = FastBERTNLU()
+    assert engine.intent_label_encoder is not None
+    assert "cookingQuestion" in engine.intent_label_encoder.classes_
+    assert "helpRequest" in engine.intent_label_encoder.classes_
+    assert "outOfScope" in engine.intent_label_encoder.classes_
 
-def test_gpt_initialization(gpt_component):
-    """Test that the OpenAI GPT component initializes correctly."""
-    assert gpt_component.client is not None
-    assert gpt_component.params.model == "gpt-4o-mini"
+
+def test_nlu_output_normalization():
+    """Verify NLUOutput normalizes legacy snake_case intents to canonical camelCase."""
+    out1 = NLUOutput.model_validate({"intent": "cooking_question", "confidence": 0.95, "slots": {}})
+    out2 = NLUOutput.model_validate({"intent": "help_request", "confidence": 0.95, "slots": {}})
+    out3 = NLUOutput.model_validate({"intent": "out_of_scope", "confidence": 0.95, "slots": {}})
+    assert out1.intent == "cookingQuestion"
+    assert out2.intent == "helpRequest"
+    assert out3.intent == "outOfScope"
+    assert normalize_intent_name("request_recipe") == "recipeRequest"
+
+
+def test_subword_slot_extraction_alignment():
+    """Verify extract_slots_from_text aligns WordPiece ## continuation tokens accurately."""
+    subwords = ["i", "want", "casser", "##oles", "with", "broccoli"]
+    tags = ["O", "O", "B-recipe", "I-recipe", "O", "B-ingredient"]
+    slots = extract_slots_from_text(tags, "I want casseroles with broccoli", subword_tokens=subwords)
+    assert slots.get("recipe") == "casseroles"
+    assert slots.get("ingredient") == "broccoli"
+
+
+def test_dialog_manager_farewell_and_overview_fallbacks():
+    """Verify DialogManager never returns empty action list that would lock the client microphone."""
+    dm = DialogManager()
+    dm.state.state = "recipe_overview"
+    actions = dm._process_intent_sync("farewell", {})
+    assert dm.state.state == "closing"
+    assert any(a.get("type") == "generate_speech" for a in actions)
+

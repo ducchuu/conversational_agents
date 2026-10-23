@@ -156,29 +156,98 @@ if (sessionStorage.getItem("user_turn_saved") === "true") {
 }
 
 socket.off("speech");
+socket.off("speech_chunk");
 window.currentUtterance = null;
+var pendingNavigationUrl = null;
+var speechWatchdog = null;
+var speechTurnFinished = false;
+var speechTotalChars = 0;
+
+function handleSpeechFinished() {
+  if (speechTurnFinished) return;
+  speechTurnFinished = true;
+  if (speechWatchdog) {
+    clearTimeout(speechWatchdog);
+    speechWatchdog = null;
+  }
+  socket.emit('event', 'SpeechDone');
+  window.currentUtterance = null;
+
+  // Check if a page transition is pending after TTS finishes
+  if (pendingNavigationUrl && window.location.pathname.indexOf(pendingNavigationUrl) === -1) {
+      var target = pendingNavigationUrl;
+      pendingNavigationUrl = null;
+      window.location.href = target;
+  } else {
+      // Stay on page: hand turn to user
+      user_turn = true;
+      sessionStorage.setItem("user_turn_saved", "true");
+      var micImage = $("micimg");
+      if (micImage) {
+        micImage.src = 'static/images/mic_out.png';
+      }
+  }
+}
+
+function enqueueSpeechChunk(text, isFirst, isFinal) {
+  if (isFirst) {
+    if (window.speechSynthesis.paused) {
+      window.speechSynthesis.resume();
+    }
+    window.speechSynthesis.cancel();
+    if (speechWatchdog) {
+      clearTimeout(speechWatchdog);
+      speechWatchdog = null;
+    }
+    speechTurnFinished = false;
+    speechTotalChars = 0;
+  }
+
+  var cleanedText = (text && typeof text === "string") ? text.trim() : "";
+  if (!cleanedText) {
+    if (isFinal) {
+      if (window.currentUtterance && window.speechSynthesis.speaking) {
+        window.currentUtterance.onend = handleSpeechFinished;
+        window.currentUtterance.onerror = handleSpeechFinished;
+      } else {
+        handleSpeechFinished();
+      }
+    }
+    return;
+  }
+
+  var utterance = new SpeechSynthesisUtterance(cleanedText);
+  window.currentUtterance = utterance;
+  speechTotalChars += cleanedText.length;
+
+  // Defensive fallback watchdog: guards against Chromium SpeechSynthesis hang where neither onend nor onerror fires
+  // Estimated speech duration: ~15 characters per second + 2.0s grace period (minimum 4.0s)
+  if (speechWatchdog) {
+    clearTimeout(speechWatchdog);
+  }
+  var maxSpeechTimeoutMs = Math.max(4000, (speechTotalChars / 15) * 1000 + 2000);
+  speechWatchdog = setTimeout(function() {
+    console.warn("TTS onend/onerror timed out; executing watchdog fallback to unblock state machine.");
+    handleSpeechFinished();
+  }, maxSpeechTimeoutMs);
+
+  if (isFinal) {
+    utterance.onend = handleSpeechFinished;
+    utterance.onerror = handleSpeechFinished;
+  } else {
+    utterance.onerror = handleSpeechFinished;
+  }
+
+  window.speechSynthesis.speak(utterance);
+}
 
 socket.on("speech", (text) => {
-  if (window.speechSynthesis.paused) {
-    window.speechSynthesis.resume();
-  }
-  window.speechSynthesis.cancel();
+  enqueueSpeechChunk(text, true, true);
+});
 
-  window.currentUtterance = new SpeechSynthesisUtterance(text);
-
-  window.currentUtterance.onend = function(event) {
-    socket.emit('event', 'SpeechDone');
-  };
-
-  user_turn = true;
-  sessionStorage.setItem("user_turn_saved", "true");
-
-  var micImage = $("micimg");
-  if (micImage) {
-    micImage.src = 'static/images/mic_out.png';
-  }
-
-  window.speechSynthesis.speak(window.currentUtterance);
+socket.on("speech_chunk", (payload) => {
+  if (!payload || typeof payload !== "object") return;
+  enqueueSpeechChunk(payload.text || "", Boolean(payload.is_first), Boolean(payload.is_final));
 });
 
 var elements = document.getElementsByClassName("btn");
@@ -198,8 +267,103 @@ var micButton = $("mic");
 let mediaRecorder;
 let audioChunks = [];
 
+// --- Model Warmup Readiness Feedback ---
+// Background warmup binds the HTTP port in <1.5s, while heavier CTranslate2 & ONNX weights
+// load into RAM in the background (5-10s). We poll /api/ready to update the mic status.
+var isModelReady = false;
+
+function checkModelReadiness() {
+  fetch("/api/ready")
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (data && data.models_ready) {
+        isModelReady = true;
+        var warmNotice = $("warmupNotice");
+        if (warmNotice) warmNotice.remove();
+        var micBtn = $("mic");
+        if (micBtn) {
+          micBtn.style.filter = "none";
+          micBtn.title = "Click to speak";
+        }
+      } else {
+        isModelReady = false;
+        showWarmupNotice();
+        setTimeout(checkModelReadiness, 2000);
+      }
+    })
+    .catch(function() {
+      setTimeout(checkModelReadiness, 3000);
+    });
+}
+
+function showWarmupNotice() {
+  var micBtn = $("mic");
+  if (micBtn) {
+    micBtn.style.filter = "grayscale(60%) opacity(0.7)";
+    micBtn.title = "Preparing speech recognition models (5-10s)...";
+  }
+  if ($("warmupNotice")) return;
+  var notice = document.createElement("div");
+  notice.id = "warmupNotice";
+  notice.style.cssText = "position:fixed;bottom:20px;right:20px;background:rgba(44,62,80,0.92);color:#ecf0f1;padding:8px 16px;border-radius:20px;font-size:12px;z-index:9999;box-shadow:0 2px 8px rgba(0,0,0,0.2);display:flex;align-items:center;gap:8px;";
+  notice.innerHTML = "<span class='spinner-border spinner-border-sm' role='status' aria-hidden='true' style='width:12px;height:12px;'></span> Preparing speech recognition...";
+  document.body.appendChild(notice);
+}
+
+checkModelReadiness();
+
+// --- Inactivity Rule for Public Portfolio Demo ---
+// Disconnect Socket.IO after 7 minutes of no user interaction (speech or clicks).
+// Background heartbeat packets do NOT reset this timer.
+// Allows Cloud Run to scale to 0 instances and prevents billing leaks when tabs are left open.
+var INACTIVITY_TIMEOUT_MS = 7 * 60 * 1000; // 7 minutes
+var lastUserActivityTime = Date.now();
+
+function recordUserActivity() {
+  lastUserActivityTime = Date.now();
+  var banner = $("inactivityBanner");
+  if (banner) banner.remove();
+}
+
+document.addEventListener("click", recordUserActivity, true);
+document.addEventListener("keydown", recordUserActivity, true);
+
+setInterval(function() {
+  if (Date.now() - lastUserActivityTime > INACTIVITY_TIMEOUT_MS) {
+    if (socket && socket.connected) {
+      console.log("Disconnecting socket due to inactivity (7 minutes).");
+      socket.disconnect();
+      showInactivityBanner();
+    }
+  }
+}, 15000);
+
+function showInactivityBanner() {
+  if ($("inactivityBanner")) return;
+  var banner = document.createElement("div");
+  banner.id = "inactivityBanner";
+  banner.style.cssText = "position:fixed;top:0;left:0;right:0;background:#2c3e50;color:#fff;text-align:center;padding:12px 20px;z-index:999999;box-shadow:0 2px 10px rgba(0,0,0,0.3);font-size:14px;";
+  banner.innerHTML = "<span>Demo session paused after 7 minutes of inactivity to save server resources.</span> " +
+    "<button id='resumeInactivityBtn' style='margin-left:12px;padding:4px 14px;background:#27ae60;border:none;border-radius:4px;color:#fff;font-weight:bold;cursor:pointer;'>Resume Session</button>";
+  document.body.appendChild(banner);
+  var btn = document.getElementById("resumeInactivityBtn");
+  if (btn) {
+    btn.onclick = function() {
+      banner.remove();
+      recordUserActivity();
+      if (!socket.connected) {
+        socket.connect();
+      }
+    };
+  }
+}
+
 if (micButton) {
   micButton.addEventListener('click', async function() {
+    if (!isModelReady) {
+      alert("Speech recognition models are still initializing in the background (~5-10s). Please wait a moment...");
+      return;
+    }
     if (!user_turn) {
       alert("It is not your turn.");
       return;
@@ -259,76 +423,85 @@ socket.on('disconnect', function() {
   console.log('Disconnected from server.');
 });
 
+socket.on("session_busy", function(data) {
+  if (data && data.message && !$("sessionBusyBanner")) {
+    var banner = document.createElement("div");
+    banner.id = "sessionBusyBanner";
+    banner.style.cssText = "position:fixed;top:0;left:0;right:0;background:#e67e22;color:#fff;text-align:center;padding:10px 20px;z-index:999998;font-size:13px;box-shadow:0 2px 8px rgba(0,0,0,0.25);";
+    banner.innerHTML = "<span>" + data.message + "</span> <button id='dismissBusyBtn' style='margin-left:12px;padding:2px 10px;background:#34495e;border:none;border-radius:3px;color:#fff;cursor:pointer;'>Dismiss</button>";
+    document.body.appendChild(banner);
+    var btn = document.getElementById("dismissBusyBtn");
+    if (btn) btn.onclick = function() { banner.remove(); };
+  }
+});
+
 socket.on("transcript", (text) => {
   if ($("transcript")) safeSetHTML("transcript", text);
 });
 
 socket.on("pattern", (pattern) => {
   currentPatternId = pattern;
-  socket.emit('event', 'SpeechDone');
 
-  if (user_turn) {
-    sessionStorage.setItem("user_turn_saved", "true");
-  }
-  
-  // Clear recipe data when starting fresh or returning to recipe selection
   if (pattern === "start" || pattern === "c10" || pattern === "a50recipeSelect") {
       sessionStorage.removeItem("currentRecipeData");
       sessionStorage.removeItem("forceShowRecipes");
-      // Reset the force flag if we go back to selection or restart
       forceShowRecipes = false;
   }
 
   // If the user said "No more filters" and we have <= 100 recipes, force the display
   if (pattern === "a21noMoreFilters" && recipecounter <= 100) {
       forceShowRecipes = true;
-      goToRecipeOverview(); // Redirect immediately to the grid view
   }
 
+  // Determine target URL without navigating yet
   switch(pattern) {
     case "start":
-      window.location.href = "start.html";
+      pendingNavigationUrl = "start.html";
       break;
     case "c10":
-      window.location.href = "welcome.html";
+      pendingNavigationUrl = "welcome.html";
       break;
-      
-    // Both standard selection and the "Show List" command should trigger the overview logic
     case "a50recipeSelect":
     case "a21noMoreFilters": 
-      goToRecipeOverview();
+      pendingNavigationUrl = (recipecounter <= 20 || forceShowRecipes) ? "recipe_overview2.html" : "recipe_overview.html";
       break;
-      
     case "a50recipeConfirm":
-      window.location.href = "recipe_confirmation.html";
+      pendingNavigationUrl = "recipe_confirmation.html";
       break;
-      
-    // Both the closing pattern and the actual termination signal go to the closing page
     case "c43":
     case "terminated":
-      window.location.href = "closing.html";
+      pendingNavigationUrl = "closing.html";
       break;
-      
     default:
-      // Fallback: If we don't know the pattern, assume conversation is over
-      window.location.href = "closing.html";
+      pendingNavigationUrl = "closing.html";
+  }
+
+  // If there is no speech currently playing or queued, navigate immediately
+  if (!window.speechSynthesis.speaking && !window.currentUtterance) {
+      if (pendingNavigationUrl && window.location.pathname.indexOf(pendingNavigationUrl) === -1) {
+          var target = pendingNavigationUrl;
+          pendingNavigationUrl = null;
+          window.location.href = target;
+      }
   }
 });
 
 function goToRecipeOverview() {
-  var onOverview2 = window.location.pathname.indexOf("recipe_overview2.html") !== -1;
-  var onOverview1 = window.location.pathname.indexOf("recipe_overview.html") !== -1;
   var hasCount = recipecounter > -1;
+  var targetUrl = (hasCount && (recipecounter <= 20 || forceShowRecipes)) ? "recipe_overview2.html" : "recipe_overview.html";
 
-  // Go to grid view (overview2) if count is small OR if forced to show
-  if (hasCount && (recipecounter <= 15 || forceShowRecipes)) {
-    if (!onOverview2) window.location.href = "recipe_overview2.html";
+  // If already on the target page, nothing to do
+  if (window.location.pathname.indexOf(targetUrl) !== -1) {
     return;
   }
 
-  if (!onOverview1) {
-    window.location.href = "recipe_overview.html";
+  // If speech is playing or queued, defer navigation until TTS finishes
+  if (window.speechSynthesis.speaking || window.currentUtterance) {
+    pendingNavigationUrl = targetUrl;
+    return;
   }
+
+  window.location.href = targetUrl;
 }
 
 socket.on("set_turn", (whoseturn) => {
@@ -348,6 +521,7 @@ socket.on("set_turn", (whoseturn) => {
 
 socket.on("recipecounter", (number) => {
   recipecounter = parseInt(number, 10);
+  sessionStorage.setItem("currentRecipeCounter", String(recipecounter));
   safeSetText("recipecounter", String(recipecounter));
   
   if (currentPatternId === "a50recipeSelect") {
@@ -367,7 +541,7 @@ socket.on("forceShow", (val) => {
     }
 });
 
-socket.on("filters", function (filterString) {
+function renderFiltersList(filterString) {
   var target = $("addFiltersHere");
   var tpl = document.querySelector("#filterCardTemplate");
   
@@ -393,6 +567,13 @@ socket.on("filters", function (filterString) {
     if (node) node.textContent = f;
     target.appendChild(card);
   });
+}
+
+socket.on("filters", function (filterString) {
+  if (filterString) {
+    sessionStorage.setItem("currentFiltersString", String(filterString));
+  }
+  renderFiltersList(filterString);
 });
 
 socket.on("showRecipe", (jsonString) => {
@@ -413,7 +594,7 @@ socket.on("recipe_detail", function (recipeString) {
   }
 });
 
-socket.on("recipes", function (recipesString) {
+function renderRecipesList(recipesString) {
   var grid = $("recipesGrid");
   var empty = $("recipesEmptyState");
   var tpl = document.querySelector("#recipeCardTemplate");
@@ -422,29 +603,18 @@ socket.on("recipes", function (recipesString) {
 
   var recipes = normalizeRecipes(recipesString);
 
-  // Keep recipe counter in sync when we receive the recipes list (fixes counter on recipe_overview2 after redirect)
+  // Keep recipe counter in sync when we receive the recipes list
   if (recipes.length >= 0) {
     recipecounter = recipes.length;
+    sessionStorage.setItem("currentRecipeCounter", String(recipecounter));
     safeSetText("recipecounter", String(recipecounter));
-  }
-
-  // Backend only sends 16-100 recipes when user said "show list" (forceShow) – switch to overview2
-  if (recipes.length >= 16 && recipes.length <= 100) {
-    forceShowRecipes = true;
-    sessionStorage.setItem("forceShowRecipes", "true");
-    var onOverview1 = window.location.pathname.indexOf("recipe_overview.html") !== -1;
-    if (onOverview1) {
-      window.location.href = "recipe_overview2.html";
-      return;
-    }
   }
 
   grid.innerHTML = "";
   
-  // Logic: Only show empty state if we actually expected recipes (count <= 15) but got none
-  // The visibility of the container is handled by updateOverviewLayout()
+  // Logic: Only show empty state if we actually expected recipes (count <= 20) but got none
   if (empty) {
-      if (recipes.length === 0 && recipecounter <= 15 && recipecounter > -1) {
+      if (recipes.length === 0 && recipecounter <= 20 && recipecounter > -1) {
           empty.style.display = "block";
       } else {
           empty.style.display = "none";
@@ -489,45 +659,39 @@ socket.on("recipes", function (recipesString) {
 
     grid.appendChild(node);
   });
-});
+}
 
-socket.on("recipe_detail", function (recipeString) {
-  var recipe = normalizeSingleRecipe(recipeString);
-  if (!recipe) return;
-
-  safeSetText("recipeTitle", recipe.title);
-  safeSetText("recipeTime", recipe.time || "—");
-  safeSetText("recipeServings", recipe.servings || "—");
-  safeSetText("recipeDescription", recipe.description || "");
-
-  var img = $("recipeImage");
-  if (img && recipe.image) {
-    img.style.backgroundImage = "url('" + recipe.image.replace(/'/g, "%27") + "')";
+socket.on("recipes", function (recipesString) {
+  if (recipesString) {
+    sessionStorage.setItem("currentRecipesList", typeof recipesString === 'string' ? recipesString : JSON.stringify(recipesString));
   }
 
-  var ing = $("ingredientsList");
-  if (ing) {
-    ing.innerHTML = "";
-    var list = Array.isArray(recipe.ingredients) ? recipe.ingredients : parseSimpleListString(String(recipe.ingredients || ""));
-    if (!list.length) list = ["—"];
-    list.forEach(function (x) {
-      var li = document.createElement("li");
-      li.textContent = x;
-      ing.appendChild(li);
-    });
+  var recipes = normalizeRecipes(recipesString);
+
+  // Keep recipe counter in sync when we receive the recipes list
+  if (recipes.length >= 0) {
+    recipecounter = recipes.length;
+    sessionStorage.setItem("currentRecipeCounter", String(recipecounter));
+    safeSetText("recipecounter", String(recipecounter));
   }
 
-  var steps = $("instructionsList");
-  if (steps) {
-    steps.innerHTML = "";
-    var st = Array.isArray(recipe.instructions) ? recipe.instructions : parseSimpleListString(String(recipe.instructions || ""));
-    if (!st.length) st = ["—"];
-    st.forEach(function (x) {
-      var li = document.createElement("li");
-      li.textContent = x;
-      steps.appendChild(li);
-    });
+  // When 20 or fewer recipes are delivered and user is currently on recipe_overview.html, transition to recipe_overview2.html
+  if (recipes.length > 0 && recipes.length <= 20) {
+    forceShowRecipes = true;
+    sessionStorage.setItem("forceShowRecipes", "true");
+    var onOverview1 = window.location.pathname.indexOf("recipe_overview.html") !== -1;
+    if (onOverview1) {
+      if (window.speechSynthesis.speaking || window.currentUtterance) {
+        pendingNavigationUrl = "recipe_overview2.html";
+        return; // Do not flash cards on overview1 before transition
+      } else {
+        window.location.href = "recipe_overview2.html";
+        return;
+      }
+    }
   }
+
+  renderRecipesList(recipesString);
 });
 
 function renderRecipeCard(data) {
@@ -633,8 +797,8 @@ function updateOverviewLayout() {
 
   if (!container || !mainTitle) return; // Safety check if on wrong page
 
-  // Only hide the container if count is > 15 AND we are NOT forcing it to show
-  if (recipecounter > 15 && !forceShowRecipes) {
+  // Only hide the container if count is > 20 AND we are NOT forcing it to show
+  if (recipecounter > 20 && !forceShowRecipes) {
     container.style.display = "none";
     mainTitle.textContent = "Refine your preferences";
     if (mainDesc) mainDesc.textContent = "There are still too many results (" + recipecounter + "). Please add more filters like ingredients, cuisine, or time.";
@@ -653,6 +817,35 @@ function updateOverviewLayout() {
 }
 
 document.addEventListener("DOMContentLoaded", function() {
+  var isStartPage = window.location.pathname.indexOf("start.html") !== -1 || window.location.pathname === "/";
+  if (isStartPage) {
+    sessionStorage.clear();
+    socket.emit("client_start");
+  }
+
+  var isOverview1 = window.location.pathname.indexOf("recipe_overview.html") !== -1;
+  var isOverview2 = window.location.pathname.indexOf("recipe_overview2.html") !== -1;
+
+  if (isOverview1 || isOverview2) {
+    var savedCounter = sessionStorage.getItem("currentRecipeCounter");
+    if (savedCounter !== null) {
+      recipecounter = parseInt(savedCounter, 10);
+      safeSetText("recipecounter", String(recipecounter));
+    }
+    var savedFilters = sessionStorage.getItem("currentFiltersString");
+    if (savedFilters) {
+      renderFiltersList(savedFilters);
+    }
+    // Only restore grid cards directly on recipe_overview2.html
+    if (isOverview2) {
+      var savedRecipes = sessionStorage.getItem("currentRecipesList");
+      if (savedRecipes) {
+        renderRecipesList(savedRecipes);
+      }
+    }
+    updateOverviewLayout();
+  }
+
   // Only restore recipe data on the recipe confirmation page
   var isConfirmationPage = window.location.pathname.indexOf("recipe_confirmation.html") !== -1;
   
@@ -664,10 +857,6 @@ document.addEventListener("DOMContentLoaded", function() {
       if(data) {
           console.log("Restoring recipe data...", data);
           renderRecipeCard(data);
-          // Load YouTube video when restoring saved recipe
-          if (data.title) {
-            loadYouTubeVideo(data.title);
-          }
       }
     }
   }

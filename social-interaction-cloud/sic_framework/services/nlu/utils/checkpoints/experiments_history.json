@@ -1,0 +1,232 @@
+[
+  {
+    "timestamp": "2026-10-11 21:57:41",
+    "mode": "evaluation",
+    "test_samples": 2871,
+    "intent_accuracy": 0.9272,
+    "throughput_samples_sec": 21.3
+  },
+  {
+    "timestamp": "2026-10-21 13:30:38",
+    "mode": "training",
+    "epochs": 5,
+    "batch_size": 16,
+    "lr": 2e-05,
+    "intent_accuracy": 0.9317,
+    "training_time_sec": 715.2,
+    "model_files": {
+      "pytorch": "social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints/model_checkpoint.pt",
+      "onnx_fp32": "social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints/bert_nlu.onnx",
+      "onnx_int8": "social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints/bert_nlu_int8.onnx"
+    }
+  },
+  {
+    "timestamp": "2026-10-21 13:54:36",
+    "mode": "training",
+    "epochs": 5,
+    "batch_size": 16,
+    "lr": 2e-05,
+    "intent_accuracy": 0.9404,
+    "training_time_sec": 791.5,
+    "model_files": {
+      "pytorch": "social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints/model_checkpoint.pt",
+      "onnx_fp32": "social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints/bert_nlu.onnx",
+      "onnx_int8": "social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints/bert_nlu_int8.onnx"
+    }
+  },
+  {
+    "timestamp": "2026-10-21 15:47:01",
+    "mode": "evaluation",
+    "test_samples": 1946,
+    "intent_accuracy": 0.9404,
+    "throughput_samples_sec": 29.5
+  },
+  {
+    "timestamp": "2026-10-21 23:14:04",
+    "mode": "training",
+    "epochs": 5,
+    "batch_size": 16,
+    "lr": 2e-05,
+    "intent_accuracy": 0.9342,
+    "training_time_sec": 1693.4,
+    "model_files": {
+      "pytorch": "social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints/model_checkpoint.pt",
+      "onnx_fp32": "social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints/bert_nlu.onnx",
+      "onnx_int8": "social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints/bert_nlu_int8.onnx"
+    }
+  },
+  {
+    "timestamp": "2026-10-21 23:14:44",
+    "mode": "evaluation",
+    "backend": "onnx_int8",
+    "test_samples": 1946,
+    "intent_accuracy": 0.9337,
+    "slot_f1": 0.5523,
+    "throughput_samples_sec": 65.3
+  },
+  {
+    "timestamp": "2026-10-22 00:01:48",
+    "mode": "training",
+    "epochs": 5,
+    "batch_size": 16,
+    "lr": 2e-05,
+    "intent_accuracy": 0.9363,
+    "slot_f1": 0.8852,
+    "training_time_sec": 1679.1,
+    "model_files": {
+      "pytorch": "social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints/model_checkpoint.pt",
+      "onnx_fp32": "social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints/bert_nlu.onnx",
+      "onnx_int8": "social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints/bert_nlu_int8.onnx"
+    }
+  },
+  {
+    "timestamp": "2026-10-22 18:20:03",
+    "mode": "evaluation",
+    "backend": "onnx_int8",
+    "test_samples": 1946,
+    "intent_accuracy": 0.9306,
+    "slot_f1": 0.8714,
+    "throughput_samples_sec": 57.7,
+    "git_sha": "509f026",
+    "dataset_sha256": "161a40ac0060dcb471ca50ac79f29b231235727ba042f33ec02e572fcdac9514",
+    "dataset_files": [
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/exclusion_examples.json",
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/exclusion_examples_test.json",
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/ontology.json",
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/synonyms.json",
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/test.json",
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/train.json",
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/vocab.txt"
+    ],
+    "onnx_checkpoint": "social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints/bert_nlu_int8.onnx",
+    "onnx_sha256": "c82a9a1aac21cd8904432a2b0137533b2148c827e024a1a1a23240087acaf2ce"
+  },
+  {
+    "timestamp": "2026-10-23 10:21:36",
+    "mode": "training",
+    "epochs": 5,
+    "batch_size": 16,
+    "lr": 2e-05,
+    "intent_accuracy": 0.949,
+    "slot_f1": 0.8908,
+    "training_time_sec": 1660.9,
+    "model_files": {
+      "pytorch": "social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints/model_checkpoint.pt",
+      "onnx_fp32": "social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints/bert_nlu.onnx",
+      "onnx_int8": "social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints/bert_nlu_int8.onnx"
+    },
+    "git_sha": "509f026",
+    "dataset_sha256": "84d28fb9625150bf0c89522add0092d319f1ec1fcb80e7f8eb250de582e10335",
+    "dataset_files": [
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/exclusion_examples.json",
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/exclusion_examples_test.json",
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/ontology.json",
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/synonyms.json",
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/test.json",
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/train.json",
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/vocab.txt"
+    ],
+    "onnx_checkpoint": "social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints/bert_nlu_int8.onnx",
+    "onnx_sha256": "c828e9649c6c22b64ddfe53b3aa943947ac714a2c799408d0682825c51b80b91"
+  },
+  {
+    "timestamp": "2026-10-23 11:09:55",
+    "mode": "training",
+    "epochs": 5,
+    "batch_size": 16,
+    "lr": 2e-05,
+    "intent_accuracy": 0.9326,
+    "slot_f1": 0.8868,
+    "training_time_sec": 1548.3,
+    "model_files": {
+      "pytorch": "social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints/model_checkpoint.pt",
+      "onnx_fp32": "social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints/bert_nlu.onnx",
+      "onnx_int8": "social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints/bert_nlu_int8.onnx"
+    },
+    "git_sha": "509f026",
+    "dataset_sha256": "93570331952b2f1060fb3520ef13be339b9c92dae405b5ea7c826359e6b23f09",
+    "dataset_files": [
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/exclusion_examples.json",
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/exclusion_examples_test.json",
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/ontology.json",
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/synonyms.json",
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/test.json",
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/train.json",
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/vocab.txt"
+    ],
+    "onnx_checkpoint": "social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints/bert_nlu_int8.onnx",
+    "onnx_sha256": "cea0ed70899b876e403b4400c8065ce0eeb3d5d1492412b4a582282ef181f5ea"
+  },
+  {
+    "timestamp": "2026-10-23 11:10:44",
+    "mode": "evaluation",
+    "backend": "onnx_int8",
+    "test_samples": 1943,
+    "intent_accuracy": 0.9367,
+    "slot_f1": 0.8705,
+    "throughput_samples_sec": 81.2,
+    "git_sha": "509f026",
+    "dataset_sha256": "93570331952b2f1060fb3520ef13be339b9c92dae405b5ea7c826359e6b23f09",
+    "dataset_files": [
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/exclusion_examples.json",
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/exclusion_examples_test.json",
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/ontology.json",
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/synonyms.json",
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/test.json",
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/train.json",
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/vocab.txt"
+    ],
+    "onnx_checkpoint": "social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints/bert_nlu_int8.onnx",
+    "onnx_sha256": "cea0ed70899b876e403b4400c8065ce0eeb3d5d1492412b4a582282ef181f5ea"
+  },
+  {
+    "timestamp": "2026-10-23 11:18:56",
+    "mode": "evaluation",
+    "backend": "onnx_int8",
+    "test_samples": 1943,
+    "intent_accuracy": 0.9367,
+    "slot_f1": 0.8705,
+    "throughput_samples_sec": 77.0,
+    "git_sha": "509f026",
+    "dataset_sha256": "93570331952b2f1060fb3520ef13be339b9c92dae405b5ea7c826359e6b23f09",
+    "dataset_files": [
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/exclusion_examples.json",
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/exclusion_examples_test.json",
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/ontology.json",
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/synonyms.json",
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/test.json",
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/train.json",
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/vocab.txt"
+    ],
+    "onnx_checkpoint": "social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints/bert_nlu_int8.onnx",
+    "onnx_sha256": "cea0ed70899b876e403b4400c8065ce0eeb3d5d1492412b4a582282ef181f5ea"
+  },
+  {
+    "timestamp": "2026-10-23 18:03:50",
+    "mode": "training",
+    "epochs": 5,
+    "batch_size": 16,
+    "lr": 2e-05,
+    "intent_accuracy": 0.9429,
+    "slot_f1": 0.8887,
+    "training_time_sec": 1607.6,
+    "model_files": {
+      "pytorch": "social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints/model_checkpoint.pt",
+      "onnx_fp32": "social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints/bert_nlu.onnx",
+      "onnx_int8": "social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints/bert_nlu_int8.onnx"
+    },
+    "git_sha": "509f026",
+    "dataset_sha256": "07d1edf9b6c31481451dc0f8a26143aa1efb62b1a1a6c4d4847cd3148b10a0fb",
+    "dataset_files": [
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/exclusion_examples.json",
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/exclusion_examples_test.json",
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/ontology.json",
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/synonyms.json",
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/test.json",
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/train.json",
+      "social-interaction-cloud/sic_framework/services/nlu/utils/data/vocab.txt"
+    ],
+    "onnx_checkpoint": "social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints/bert_nlu_int8.onnx",
+    "onnx_sha256": "3a46801ba31529bbaa125f3412d02c4a9eb05c2e2100c69444e24f3d4adce8aa"
+  }
+]

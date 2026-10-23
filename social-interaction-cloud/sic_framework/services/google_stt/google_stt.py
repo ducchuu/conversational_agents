@@ -7,7 +7,7 @@ import threading
 from google.cloud.speech_v2 import SpeechClient
 from google.cloud.speech_v2.types import cloud_speech as cloud_speech_types
 
-from six.moves import queue
+import queue
 
 from sic_framework import SICComponentManager
 from sic_framework.core.service_python2 import SICService

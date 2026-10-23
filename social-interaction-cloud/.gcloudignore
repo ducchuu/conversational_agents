@@ -1,0 +1,10 @@
+.gcloudignore
+.git
+.gitignore
+.pytest_cache
+__pycache__/
+*.pyc
+.DS_Store
+
+sic_framework/services/nlu/utils/checkpoints/model_checkpoint.pt
+sic_framework/services/nlu/utils/checkpoints/bert_nlu.onnx

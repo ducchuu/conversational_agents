@@ -1,24 +1,35 @@
 steps:
-  # 1. Run tests inside a Python container
-  - name: 'python:3.12-slim'
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
-        apt-get update && apt-get install -y swi-prolog build-essential portaudio19-dev ffmpeg
-        pip install -e .
-        pip install pyswip pytest pytest-asyncio flask flask-socketio google-cloud-speech google-cloud-texttospeech openai openai-whisper SpeechRecognition transformers torch scikit-learn
-        pytest tests/
+        mkdir -p sic_framework/services/nlu/utils/checkpoints
+        if [ ! -f sic_framework/services/nlu/utils/checkpoints/bert_nlu.onnx ]; then
+          gcloud storage cp gs://${PROJECT_ID}-models/bert_nlu.onnx sic_framework/services/nlu/utils/checkpoints/bert_nlu.onnx || \
+          gcloud storage cp gs://cloud-agent-conversational-models/bert_nlu.onnx sic_framework/services/nlu/utils/checkpoints/bert_nlu.onnx || true
+        fi
+        if [ ! -f sic_framework/services/nlu/utils/checkpoints/bert_nlu.onnx ] && [ ! -f sic_framework/services/nlu/utils/checkpoints/bert_nlu_int8.onnx ]; then
+          gcloud storage cp gs://${PROJECT_ID}-models/bert_nlu_int8.onnx sic_framework/services/nlu/utils/checkpoints/bert_nlu_int8.onnx || \
+          gcloud storage cp gs://cloud-agent-conversational-models/bert_nlu_int8.onnx sic_framework/services/nlu/utils/checkpoints/bert_nlu_int8.onnx || \
+          gcloud storage cp gs://${PROJECT_ID}-models/model_checkpoint.pt sic_framework/services/nlu/utils/checkpoints/model_checkpoint.pt || true
+        fi
+        gcloud artifacts repositories create my-repo --repository-format=docker --location=us-central1 --description="Docker repository" 2>/dev/null || true
 
-  # 2. Build the Docker image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/social-agent-cloud:$COMMIT_SHA', '.']
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/social-agent-cloud:$BUILD_ID', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/social-agent-cloud:latest', '.']
 
-  # 3. Push the Docker image to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/social-agent-cloud:$COMMIT_SHA']
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        docker run --rm --entrypoint bash us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/social-agent-cloud:$BUILD_ID -c \
+          "pip install --user -q pytest pytest-asyncio google-cloud-speech google-cloud-texttospeech six && python -m pytest tests/"
 
-  # 4. Deploy to Cloud Run
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '--all-tags', 'us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/social-agent-cloud']
+
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
@@ -26,18 +37,41 @@ steps:
       - 'deploy'
       - 'social-agent-cloud'
       - '--image'
-      - 'us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/social-agent-cloud:$COMMIT_SHA'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/social-agent-cloud:$BUILD_ID'
       - '--region'
       - 'us-central1'
       - '--allow-unauthenticated'
-      # Allocating 4GB of RAM for PyTorch BERT + Whisper models
       - '--memory'
       - '4Gi'
       - '--cpu'
-      - '2'
+      - '4'
       - '--timeout'
-      - '600'
+      - '3600'
+      - '--min-instances'
+      - '0'
+      - '--max-instances'
+      - '1'
       - '--no-cpu-throttling'
+      - '--cpu-boost'
+      - '--set-secrets'
+      - 'ANTHROPIC_API_KEY=ANTHROPIC_API_KEY:latest,YOUTUBE_API_KEY=YOUTUBE_API_KEY:latest,ELEVENLABS_API_KEY=ELEVENLABS_API_KEY:latest,OPENAI_API_KEY=OPENAI_API_KEY:latest,LANGFUSE_SECRET_KEY=LANGFUSE_SECRET_KEY:latest,LANGFUSE_PUBLIC_KEY=LANGFUSE_PUBLIC_KEY:latest'
+      - '--set-env-vars'
+      - 'LANGFUSE_HOST=https://cloud.langfuse.com,LANGFUSE_BASE_URL=https://cloud.langfuse.com,ANTHROPIC_MODEL=claude-haiku-5-5,HF_HUB_OFFLINE=1,TRANSFORMERS_OFFLINE=1'
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "Pruning older container images in Artifact Registry (keeping 3 newest)..."
+        REPO_PATH="us-central1-docker.pkg.dev/${PROJECT_ID}/my-repo/social-agent-cloud"
+        gcloud artifacts docker images list "$$REPO_PATH" --sort-by=~CREATE_TIME --format="value(DIGEST)" | tail -n +4 | while read -r digest; do
+          if [ -n "$$digest" ]; then
+            echo "Deleting old image digest: $$digest"
+            gcloud artifacts docker images delete "$$REPO_PATH@$$digest" --delete-tags --quiet || true
+          fi
+        done
 
 images:
-  - 'us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/social-agent-cloud:$COMMIT_SHA'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/social-agent-cloud:$BUILD_ID'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/my-repo/social-agent-cloud:latest'

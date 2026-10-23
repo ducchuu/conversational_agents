@@ -1,201 +1,203 @@
 """
 dataset.py
 
-This module provides core functionality for preparing and managing run_data in a Natural Language Understanding (NLU) pipeline, specifically for intent classification and slot filling tasks. It includes ontology loading, label encoding, tokenization, and dataset preparation for PyTorch-based models.
-
-### Features:
-1. **Ontology Loading and Label Encoding**:
-   - Loads ontology run_data (intents and slots) from a JSON file.
-   - Encodes intents and slot labels into integers using sklearn's LabelEncoder, with support for BIO (Begin-Inside-Outside) tagging.
-
-2. **Data Loading and Preprocessing**:
-   - `load_data`: Loads examples from JSON files.
-   - `process_example`: Tokenizes text and generates BIO slot labels.
-   - `preprocess_data`: Converts raw run_data into a tokenized and padded format suitable for intent_slot_classification_model input.
-
-3. **NLURecipeDataset Class**:
-   - PyTorch Dataset class for batching and iterating over preprocessed run_data.
-   - Provides tensors for input IDs, attention masks, intent labels, and slot labels.
-
-### Components:
-- `tokenizer`: Pre-trained BERT tokenizer for text tokenization.
-- `intent_label_encoder`: Encodes intents into integer labels.
-- `slot_label_encoder`: Encodes slot labels into BIO-format integers.
-
-### Usage:
-- Use `fit_encoders()` to initialize label encoders based on the ontology JSON.
-- Use `preprocess_data()` to convert raw run_data into a format ready for training and evaluation.
-- Use `NLURecipeDataset` with a PyTorch DataLoader for batching during intent_slot_classification_model training.
-
-### Note:
-Requires an `ontology.json` file containing intents and slot types.
+Core data preparation, ontology encoding, tokenization, and PyTorch model/dataset definitions
+for the BERT Natural Language Understanding (NLU) intent classification and BIO slot-filling pipeline.
 """
 
 import json
-import torch
-from torch.utils.data import Dataset
-from transformers import BertTokenizer
-from sklearn.preprocessing import LabelEncoder
-import os
+import sys
+from pathlib import Path
 
-# Initialize BERT tokenizer and label encoders
-tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+# Ensure package root is in sys.path when executed directly or imported without pip -e
+_SIC_ROOT = Path(__file__).resolve().parents[4]
+if str(_SIC_ROOT) not in sys.path:
+    sys.path.insert(0, str(_SIC_ROOT))
+
+try:
+    from sklearn.preprocessing import LabelEncoder
+except ImportError:
+    class LabelEncoder:
+        """Lightweight, standalone LabelEncoder fallback when scikit-learn is not installed."""
+
+        def __init__(self):
+            self.classes_ = []
+
+        def fit(self, y):
+            self.classes_ = sorted(list(set(y)))
+            return self
+
+        def inverse_transform(self, indices):
+            return [self.classes_[int(i)] for i in indices]
+
+        def transform(self, labels):
+            lookup = {label: i for i, label in enumerate(self.classes_)}
+            return [lookup[label] for label in labels]
+
+try:
+    import torch
+    import torch.nn as nn
+    from torch.utils.data import Dataset
+except ImportError:
+    torch = None
+    nn = None
+    Dataset = object
+
+try:
+    from transformers import BertModel
+except Exception:
+    BertModel = None
+
+from sic_framework.services.nlu.utils.tokenization import UnifiedWordPieceTokenizer
+
+# Same WordPiece tokenizer (local vocab.txt) as FastBERTNLU serving -> zero train/serve skew.
+tokenizer = UnifiedWordPieceTokenizer()
+
 intent_label_encoder = LabelEncoder()
 slot_label_encoder = LabelEncoder()
 
 
-def load_ontology(ontology_path):
+class BERTNLUModel(nn.Module if nn is not None else object):
     """
-    Loads the ontology from a JSON file, including intents and slots.
-
-    Args:
-        ontology_path (str): Path to the ontology JSON file.
-
-    Returns:
-        dict: Dictionary containing intents and slot definitions.
+    Joint BERT model for intent classification ([CLS] pooled representation)
+    and token-level BIO slot tagging (sequence output).
     """
-    with open(ontology_path, 'r') as file:
-        ontology = json.load(file)
-    return ontology
+
+    def __init__(self, num_intents: int, num_slots: int):
+        super().__init__()
+        self.bert = BertModel.from_pretrained("bert-base-uncased")
+        hidden_size = self.bert.config.hidden_size
+        self.intent_classifier = nn.Linear(hidden_size, num_intents)
+        self.slot_classifier = nn.Linear(hidden_size, num_slots)
+
+    def forward(self, input_ids, attention_mask):
+        outputs = self.bert(input_ids, attention_mask)
+        intent_logits = self.intent_classifier(outputs.pooler_output)
+        slot_logits = self.slot_classifier(outputs.last_hidden_state)
+        return intent_logits, slot_logits
 
 
-def fit_encoders(ontology_path):
-    """
-    Fits intent and slot label encoders using the ontology run_data.
+def load_ontology(ontology_path: str) -> dict:
+    """Loads the ontology JSON file containing intents and slot definitions."""
+    with open(ontology_path, "r", encoding="utf-8") as file:
+        return json.load(file)
 
-    Args:
-        ontology_path (str): Path to the ontology JSON file.
-    """
+
+def fit_encoders(ontology_path: str) -> None:
+    """Fits intent and BIO-format slot label encoders from the ontology."""
     ontology = load_ontology(ontology_path)
     intents = ontology["intents"]
     slots = ontology["slots"]
 
-    # Fit encoders for intents and BIO-format slots
     intent_label_encoder.fit(intents)
-    all_slot_tags = ['O'] + [f'B-{slot}' for slot in slots.keys()] + [f'I-{slot}' for slot in slots.keys()]
+    all_slot_tags = (
+        ["O"]
+        + [f"B-{slot}" for slot in slots.keys()]
+        + [f"I-{slot}" for slot in slots.keys()]
+    )
     slot_label_encoder.fit(all_slot_tags)
 
 
-def process_example(example):
+def process_example(example: dict):
     """
-    Tokenizes text and generates BIO-format slot labels.
+    Tokenizes an example utterance and generates aligned BIO slot labels.
 
-    Args:
-        example (dict): Example containing 'text' and 'slots'.
-
-    Returns:
-        tuple:
-            - tokens (list): Tokenized text.
-            - intent (int): Encoded intent label.
-            - slot_labels (list): Encoded BIO-format slot labels.
+    Slot values may be a single string or a list of strings; every value is matched
+    independently and all non-overlapping subword spans are labelled B-<slot>/I-<slot>.
     """
-    tokens = tokenizer.tokenize(example['text'])
-    slots = ['O'] * len(tokens)
+    tokens = tokenizer.tokenize(example["text"])
+    slots = ["O"] * len(tokens)
+    known_tags = set(slot_label_encoder.classes_)
 
-    # Generate BIO tags for slots
-    for slot_type, slot_value in example['slots'].items():
-        slot_value_tokens = tokenizer.tokenize(slot_value)
-        for i in range(len(tokens) - len(slot_value_tokens) + 1):
-            if tokens[i:i + len(slot_value_tokens)] == slot_value_tokens:
-                slots[i] = f'B-{slot_type}'
-                for j in range(1, len(slot_value_tokens)):
-                    slots[i + j] = f'I-{slot_type}'
-                break
+    for slot_type, slot_value in example.get("slots", {}).items():
+        if slot_value is None:
+            continue
+        b_tag, i_tag = f"B-{slot_type}", f"I-{slot_type}"
+        if b_tag not in known_tags or i_tag not in known_tags:
+            continue
+
+        values = slot_value if isinstance(slot_value, (list, tuple)) else [slot_value]
+        for value in values:
+            value_str = str(value).strip()
+            if not value_str:
+                continue
+            value_tokens = tokenizer.tokenize(value_str)
+            span = len(value_tokens)
+            if span == 0:
+                continue
+            for i in range(len(tokens) - span + 1):
+                if tokens[i : i + span] == value_tokens and all(s == "O" for s in slots[i : i + span]):
+                    slots[i] = b_tag
+                    for j in range(1, span):
+                        slots[i + j] = i_tag
 
     intent = intent_label_encoder.transform([example["intent"]])[0]
     slot_labels = slot_label_encoder.transform(slots)
-
     return tokens, intent, slot_labels
 
 
-def load_data(file_path):
+def load_data(file_path: str) -> list:
+    """Loads annotated NLU examples from a JSON file."""
+    with open(file_path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+IGNORE_INDEX = -100
+
+
+def preprocess_data(data: list, max_length: int = 64) -> list:
     """
-    Loads dataset examples from a JSON file.
-
-    Args:
-        file_path (str): Path to the JSON file.
-
-    Returns:
-        list: List of examples, where each example is a dictionary with 'text' and 'slots'.
-    """
-    with open(file_path, 'r') as f:
-        data = json.load(f)
-    return data
-
-
-def preprocess_data(data, max_length=16):
-    """
-    Preprocesses run_data to tokenize text, encode intents and slots, and pad sequences.
-
-    Args:
-        data (list): List of examples with 'text' and 'slots'.
-        max_length (int): Maximum sequence length for padding.
-
-    Returns:
-        list: List of preprocessed examples, each containing:
-            - input_ids (torch.Tensor): Tokenized input IDs.
-            - attention_mask (torch.Tensor): Attention mask for padding.
-            - intent_label (torch.Tensor): Encoded intent label.
-            - slot_labels (torch.Tensor): Padded BIO slot labels.
+    Tokenizes text, encodes intents and BIO slots aligned with [CLS] at index 0,
+    and masks [CLS], [SEP], and [PAD] positions with IGNORE_INDEX (-100) so padding
+    never dilutes token-level slot gradients.
     """
     processed_data = []
+
     for example in data:
-        tokens, intent, slot_labels = process_example(example)
-        encoding = tokenizer(
-            example['text'],
-            return_tensors="pt",
-            padding="max_length",
-            truncation=True,
-            max_length=max_length
+        _, intent, slot_labels = process_example(example)
+        ids, mask, _tokens = tokenizer.encode_for_model(example["text"], max_length)
+        input_ids = torch.tensor(ids, dtype=torch.long)
+        attention_mask = torch.tensor(mask, dtype=torch.long)
+
+        valid_slots = list(slot_labels[: max_length - 2])
+        padded_slot_labels = (
+            [IGNORE_INDEX]
+            + valid_slots
+            + [IGNORE_INDEX] * (max_length - 1 - len(valid_slots))
         )
-        input_ids = encoding['input_ids'].squeeze()
-        attention_mask = encoding['attention_mask'].squeeze()
 
-        # Pad slot labels
-        padded_slot_labels = list(slot_labels) + [slot_label_encoder.transform(['O'])[0]] * (
-                max_length - len(slot_labels))
-        padded_slot_labels = padded_slot_labels[:max_length]
-
-        processed_data.append({
-            'input_ids': input_ids,
-            'attention_mask': attention_mask,
-            'intent_label': torch.tensor(intent),
-            'slot_labels': torch.tensor(padded_slot_labels)
-        })
+        processed_data.append(
+            {
+                "input_ids": input_ids,
+                "attention_mask": attention_mask,
+                "intent_label": torch.tensor(intent),
+                "slot_labels": torch.tensor(padded_slot_labels, dtype=torch.long),
+            }
+        )
     return processed_data
 
 
 class NLURecipeDataset(Dataset):
-    """
-    PyTorch Dataset for intent classification and slot filling tasks.
+    """PyTorch Dataset for joint intent classification and BIO slot filling."""
 
-    Args:
-        data (list): Preprocessed run_data examples.
-        ontology (dict): Ontology with intents and slots.
-        max_length (int): Maximum sequence length.
-
-    Returns:
-        dict: A dictionary containing:
-            - input_ids: Tokenized input IDs.
-            - attention_mask: Attention mask for padding.
-            - intent_label: Encoded intent label.
-            - slot_labels: Padded BIO slot labels.
-    """
-    def __init__(self, data, ontology, max_length=16):
+    def __init__(self, data: list, ontology: dict, max_length: int = 64):
         self.data = data
-        self.intent_classes = ontology['intents']
-        self.slot_classes = ['O'] + [f'B-{slot}' for slot in ontology['slots'].keys()] + \
-                            [f'I-{slot}' for slot in ontology['slots'].keys()]
+        self.intent_classes = ontology["intents"]
+        self.slot_classes = (
+            ["O"]
+            + [f"B-{slot}" for slot in ontology["slots"].keys()]
+            + [f"I-{slot}" for slot in ontology["slots"].keys()]
+        )
         self.max_length = max_length
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.data)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int) -> dict:
         example = self.data[idx]
         return {
-            'input_ids': example['input_ids'],
-            'attention_mask': example['attention_mask'],
-            'intent_label': example['intent_label'],
-            'slot_labels': example['slot_labels']
+            "input_ids": example["input_ids"],
+            "attention_mask": example["attention_mask"],
+            "intent_label": example["intent_label"],
+            "slot_labels": example["slot_labels"],
         }

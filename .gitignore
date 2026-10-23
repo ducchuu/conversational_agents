@@ -185,3 +185,7 @@ cython_debug/
 
 social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints/model_checkpoint.pt
 .vscode/settings.json
+
+*.pdf
+*.onnx
+nlu_audit_report.json

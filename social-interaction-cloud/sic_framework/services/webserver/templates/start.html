@@ -36,49 +36,40 @@
     <main class="container py-4 py-md-5 flex-grow-1 d-flex align-items-center">
       <div class="w-100">
         <div class="pca-card p-3 p-md-4 mx-auto" style="max-width: 920px;">
-          <div class="pca-card-inner p-3 p-md-4">
-            <div class="d-flex flex-wrap align-items-center justify-content-between mb-3">
-              <span class="pca-chip pca-chip--info">Start</span>
+          <div class="pca-card-inner p-3 p-md-4 text-center">
+            <div class="d-flex flex-wrap align-items-center justify-content-center mb-3">
+              <span class="pca-chip pca-chip--info mr-2">Start</span>
               <span class="pca-chip">🎤 Voice interaction</span>
             </div>
 
             <h1 class="pca-title mb-2">Welcome to <span style="color:var(--pca-accent);">CookingBroski</span></h1>
-            <p class="lead pca-muted mb-4" style="max-width: 62ch;">
-              Tell me what you feel like eating, and I’ll help you narrow down recipes that match your taste.
+            <p class="lead pca-muted mb-4" style="max-width: 62ch; margin-left:auto; margin-right:auto;">
+              Tell me what you feel like eating, and I'll help you narrow down recipes that match your taste.
             </p>
 
-            <div class="row">
-              <div class="col-lg-7">
-                <h4 class="mb-2">How it works</h4>
-                <p class="pca-muted mb-3">
-                  On the pages that follow, press the microphone when it is your turn to speak (when the agent is not talking).
-                </p>
+            <h4 class="mb-2">How it works</h4>
+            <p class="pca-muted mb-3" style="max-width: 60ch; margin-left:auto; margin-right:auto;">
+              On the pages that follow, press the microphone when it is your turn to speak (when the agent is not talking).
+            </p>
 
-                <div class="d-flex flex-wrap align-items-center">
-                  <span class="pca-chip mr-2 mb-2">
-                    <img class="img-fluid mr-2" style="width:1.1rem;" src="static/images/mic_out.png" alt="Mic off">
-                    Mic off
-                  </span>
-                  <span class="pca-chip mr-2 mb-2">
-                    <img class="img-fluid mr-2" style="width:1.1rem;" src="static/images/mic_on.png" alt="Mic on">
-                    Listening
-                  </span>
-                </div>
-              </div>
-
-              <div class="col-lg-5 mt-4 mt-lg-0">
-                <div class="pca-block">
-                  <h5 class="mb-2">Ready?</h5>
-                  <p class="pca-muted mb-3">Press Start to begin the conversation.</p>
-                  <button class="btn btn-lg btn-block pca-btn-primary" id="start" type="button">
-                    Start
-                  </button>
-                  <small class="d-block mt-2 pca-muted">
-                    Tip: You can say things like “vegetarian”, “under 30 minutes”, or “Italian”.
-                  </small>
-                </div>
-              </div>
+            <div class="d-flex flex-wrap align-items-center justify-content-center mb-4">
+              <span class="pca-chip mr-2 mb-2">
+                <img class="img-fluid mr-2" style="width:1.1rem;" src="static/images/mic_out.png" alt="Mic off">
+                Mic off
+              </span>
+              <span class="pca-chip mr-2 mb-2">
+                <img class="img-fluid mr-2" style="width:1.1rem;" src="static/images/mic_on.png" alt="Mic on">
+                Listening
+              </span>
             </div>
+
+            <button class="btn pca-btn-primary" id="start" type="button"
+                    style="font-size: 1.5rem; padding: 1rem 4rem; border-radius: 1rem; min-width: 260px;">
+              🍳 Start Cooking
+            </button>
+            <p class="pca-muted mt-3 mb-0">
+              <small>Tip: You can say things like "vegetarian", "under 30 minutes", or "Italian".</small>
+            </p>
 
           </div>
         </div>

@@ -12,7 +12,7 @@ import time
 import google
 from google.cloud import dialogflow
 from google.oauth2.service_account import Credentials
-from six.moves import queue
+import queue
 
 from sic_framework import SICComponentManager
 from sic_framework.core.component_python2 import SICComponent
