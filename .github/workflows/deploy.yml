@@ -1,4 +1,4 @@
-name: MLOps CI/CD — Verify, Quantize & Deploy to Cloud Run
+name: CI/CD pipeline with some MLOps implementation.
 
 on:
   push:
@@ -17,7 +17,7 @@ on:
 
 permissions:
   contents: read
-  id-token: write # required for Workload Identity Federation
+  id-token: write # for Workload Identity Federation GCP
 
 env:
   PROJECT_ID: cloud-agent-conversational
@@ -33,7 +33,6 @@ jobs:
       run:
         working-directory: ./social-interaction-cloud
     env:
-      # Cloud credentials are available on pushes and on PRs opened from this repository (not from forks).
       HAS_CLOUD_ACCESS: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}
 
     steps:
@@ -72,7 +71,7 @@ jobs:
           path: social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints/bert_nlu_int8.onnx
           key: ${{ runner.os }}-onnx-int8-v1-${{ hashFiles('social-interaction-cloud/sic_framework/services/nlu/utils/data/**', 'social-interaction-cloud/sic_framework/services/nlu/train_and_export.py', 'social-interaction-cloud/sic_framework/services/nlu/utils/dataset.py', 'social-interaction-cloud/sic_framework/services/nlu/utils/tokenization.py') }}
 
-      # Pushes always authenticate (image push + deploy need it); PRs only when the model must be pulled.
+      # always have to authenticate (image push + deploy need it)
       - name: Authenticate to Google Cloud (Workload Identity Federation)
         if: github.event_name == 'push' || (steps.cache-onnx.outputs.cache-hit != 'true' && env.HAS_CLOUD_ACCESS == 'true')
         uses: google-github-actions/auth@v2
@@ -137,7 +136,7 @@ jobs:
           service: ${{ env.SERVICE_NAME }}
           region: ${{ env.REGION }}
           image: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/my-repo/${{ env.SERVICE_NAME }}:${{ github.sha }}
-          # Secrets are mounted from Google Secret Manager (never plain-text env vars)
+          # i use google secret manager
           secrets: |
             ANTHROPIC_API_KEY=ANTHROPIC_API_KEY:latest
             YOUTUBE_API_KEY=YOUTUBE_API_KEY:latest
@@ -151,7 +150,6 @@ jobs:
             ANTHROPIC_MODEL=claude-haiku-5-5
             HF_HUB_OFFLINE=1
             TRANSFORMERS_OFFLINE=1
-          # --max-instances=1: pyswip global state + in-process Socket.IO sessions are not multi-instance safe
           flags: >-
             --allow-unauthenticated
             --memory=4Gi

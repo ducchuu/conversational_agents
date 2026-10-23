@@ -6,13 +6,8 @@ for the BERT Natural Language Understanding (NLU) intent classification and BIO 
 """
 
 import json
-import sys
-from pathlib import Path
 
-# Ensure package root is in sys.path when executed directly or imported without pip -e
-_SIC_ROOT = Path(__file__).resolve().parents[4]
-if str(_SIC_ROOT) not in sys.path:
-    sys.path.insert(0, str(_SIC_ROOT))
+from sic_framework.services.nlu.utils.tokenization import UnifiedWordPieceTokenizer
 
 try:
     from sklearn.preprocessing import LabelEncoder
@@ -47,8 +42,6 @@ try:
     from transformers import BertModel
 except Exception:
     BertModel = None
-
-from sic_framework.services.nlu.utils.tokenization import UnifiedWordPieceTokenizer
 
 # Same WordPiece tokenizer (local vocab.txt) as FastBERTNLU serving -> zero train/serve skew.
 tokenizer = UnifiedWordPieceTokenizer()
