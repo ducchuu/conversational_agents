@@ -155,8 +155,11 @@ STRICT_EQUIVALENCES = {
 # Semantic dual-intent utterances: asking for "another recipe" can act as rejecting the active
 # dish (disconfirmation) or requesting a new suggestion (requestRecommendation). Both intents
 # execute valid recipe-switch transitions in DialogManager.
+# Similarly, expressing ingredient preferences and dietary restrictions ("With garlic and pasta. Something vegeterian.")
+# acts either as positive filter specification (addFilter) or as a query for matching suggestions (requestRecommendation).
 DUAL_INTENT_UTTERANCES = {
     "Find another recipe": {"requestRecommendation", "disconfirmation"},
+    "With garlic and pasta. Something vegeterian.": {"addFilter", "requestRecommendation"},
 }
 
 

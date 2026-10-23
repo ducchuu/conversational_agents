@@ -396,7 +396,6 @@ def generate_agent_speech_llm(agent_intent, default_text, state_vars, prolog_exa
             with anthropic_client.messages.stream(
                 model=model_name,
                 max_tokens=90,
-                temperature=0.3,
                 system=system_blocks,
                 messages=[{"role": "user", "content": user_prompt}],
             ) as stream:
@@ -448,7 +447,6 @@ def generate_agent_speech_llm(agent_intent, default_text, state_vars, prolog_exa
             response = anthropic_client.messages.create(
                 model=CLAUDE_MODEL,
                 max_tokens=90,
-                temperature=0.3,
                 system=system_blocks,
                 messages=[{"role": "user", "content": user_prompt}],
             )
@@ -457,7 +455,6 @@ def generate_agent_speech_llm(agent_intent, default_text, state_vars, prolog_exa
                 response = anthropic_client.messages.create(
                     model="claude-haiku-4-5-20251001",
                     max_tokens=90,
-                    temperature=0.3,
                     system=system_blocks,
                     messages=[{"role": "user", "content": user_prompt}],
                 )

@@ -119,14 +119,22 @@ jobs:
         if: github.event_name == 'push'
         run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
 
+      - name: Set up Docker Buildx
+        if: github.event_name == 'push'
+        uses: docker/setup-buildx-action@v3
+
       - name: Build and Push Production Container Image
         if: github.event_name == 'push'
-        run: |
-          IMAGE_NAME=${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/my-repo/${{ env.SERVICE_NAME }}:${{ github.sha }}
-          LATEST_NAME=${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/my-repo/${{ env.SERVICE_NAME }}:latest
-          docker build -t $IMAGE_NAME -t $LATEST_NAME .
-          docker push $IMAGE_NAME
-          docker push $LATEST_NAME
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/my-repo/${{ env.SERVICE_NAME }}:${{ github.sha }}
+            ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/my-repo/${{ env.SERVICE_NAME }}:latest
+          cache-from: type=registry,ref=${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/my-repo/${{ env.SERVICE_NAME }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/my-repo/${{ env.SERVICE_NAME }}:buildcache,mode=max
+
 
       - name: Deploy Container to Google Cloud Run
         if: github.event_name == 'push'
@@ -189,3 +197,25 @@ jobs:
                 gcloud artifacts docker images delete "$REPO_PATH@$digest" --delete-tags --quiet || true
               fi
           done
+
+  deploy-homelab:
+    needs: [mlops-verify-and-deploy]
+    if: github.event_name == 'push'
+    runs-on: [self-hosted, linux]
+    steps:
+      - name: Pull Latest Image and Restart
+        working-directory: /home/mikolaj_admin/cookingbroski
+        run: |
+          docker compose -f docker-compose.homelab.yml pull cookingbroski
+          docker compose -f docker-compose.homelab.yml up -d --remove-orphans
+
+      - name: Wait for Local Model Readiness
+        run: |
+          for i in {1..30}; do
+            if docker exec cookingbroski-app python -c "import urllib.request; urllib.request.urlopen('http://localhost:8080/api/ready')" > /dev/null 2>&1; then
+              exit 0
+            fi
+            sleep 2
+          done
+          exit 1
+
