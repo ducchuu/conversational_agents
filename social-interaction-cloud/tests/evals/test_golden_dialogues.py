@@ -157,10 +157,13 @@ STRICT_EQUIVALENCES = {
 # execute valid recipe-switch transitions in DialogManager.
 # Similarly, expressing ingredient preferences, servings, or dietary restrictions
 # acts either as positive filter specification (addFilter) or as a query for matching suggestions (requestRecommendation).
+# Inquiries regarding shelf-life / storage ("How long do leftovers last?") semantically act either
+# as a domain cooking inquiry (cookingQuestion) or an advisory assistance prompt (helpRequest).
 DUAL_INTENT_UTTERANCES = {
     "Find another recipe": {"requestRecommendation", "disconfirmation"},
     "With garlic and pasta. Something vegetarian.": {"addFilter", "requestRecommendation"},
     "make something for 4 servings": {"addFilter", "requestRecommendation"},
+    "How long do leftovers last?": {"cookingQuestion", "helpRequest"},
 }
 
 
