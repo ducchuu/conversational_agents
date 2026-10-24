@@ -143,76 +143,29 @@ def normalize_slots(slots):
     return normalized_slots
 
 
-def correct_exclusion_polarity(text: str, slots: dict) -> dict:
+CLAUSE_SPLIT_REGEX = re.compile(
+    r"(?:(?<=[.!?])\s+)"                                      # Full sentence stop (. ! ?)
+    r"|(?:\s*;\s*)"                                           # Semicolon
+    r"|(?:\s*,\s*(?:but|however|although)\b)"                 # , but / , however
+    r"|(?:\b(?:but|however|although)\b)"                      # standalone but / however
+    r"|(?:\s*,\s*and\s+(?=(?:without|no|not|except|excluding|avoid|with|including)\b))" # , and without / with
+    r"|(?:\band\s+(?=(?:without|no|not|except|excluding|avoid|with|including)\b))",    # and without / with
+    re.IGNORECASE,
+)
+
+
+def split_utterance_clauses(text: str) -> list[str]:
     """
-    Inference Guard: Remap erroneously extracted positive slots (cuisine, ingredient, tag)
-    to their exclusion counterparts (excludeCuisine, excludeIngredient, excludeTag) when the
-    utterance context explicitly negates or excludes that entity (e.g. 'exclude ...', 'no ...',
-    'without ...', 'don't want any ...', 'skip ...', 'omit ...').
+    Clause & Sentence Boundary Decomposer (Divide & Conquer):
+    Splits multi-constraint or contrastive utterances into independent micro-clauses
+    (e.g., 'I don't want pasta, but I would like meat.' -> ['I don't want pasta', 'I would like meat.']).
+    This completely eliminates cross-clause BERT self-attention bleeding without brittle word-level regexes.
     """
-    if not slots:
-        return slots
-
-    text_lower = text.lower()
-    mapping = {
-        "cuisine": "excludeCuisine",
-        "ingredient": "excludeIngredient",
-        "ingredientType": "excludeIngredient",
-        "tag": "excludeTag",
-        "mealType": "excludeMealType",
-    }
-
-    neg_patterns = [
-        r"\b(?:exclude|without|no|omit|skip|avoid|except\s+for|except)\s+(?:any\s+)?(?:the\s+)?(?:all\s+)?",
-        r"\b(?:don\'t|dont|do\s+not)\s+want\s+(?:any\s+)?(?:the\s+)?",
-    ]
-
-    is_overall_exclusion = bool(
-        re.match(r"^(?:please\s+)?(?:exclude|without|no|omit|skip|avoid)\b", text_lower)
-    )
-
-    updated = dict(slots)
-    for pos_key, neg_key in mapping.items():
-        if pos_key in updated:
-            vals = updated[pos_key]
-            val_list = vals if isinstance(vals, list) else [vals]
-            remaining_pos = []
-
-            for v in val_list:
-                v_str = str(v).lower()
-                is_negated = False
-                for p in neg_patterns:
-                    pattern = p + r"[^,.]*?\b" + re.escape(v_str) + r"\b"
-                    if re.search(pattern, text_lower):
-                        is_negated = True
-                        break
-
-                if not is_negated and is_overall_exclusion:
-                    is_negated = True
-
-                if is_negated:
-                    if neg_key in updated:
-                        curr = (
-                            updated[neg_key]
-                            if isinstance(updated[neg_key], list)
-                            else [updated[neg_key]]
-                        )
-                        if v not in curr:
-                            curr.append(v)
-                        updated[neg_key] = curr
-                    else:
-                        updated[neg_key] = v
-                else:
-                    remaining_pos.append(v)
-
-            if remaining_pos:
-                updated[pos_key] = (
-                    remaining_pos if isinstance(vals, list) else remaining_pos[0]
-                )
-            else:
-                del updated[pos_key]
-
-    return updated
+    if not text:
+        return []
+    parts = CLAUSE_SPLIT_REGEX.split(text)
+    clauses = [p.strip(" ,;") for p in parts if p and p.strip(" ,;")]
+    return clauses if clauses else [text]
 
 
 def extract_slots_from_text(slots_array, inference_text, subword_tokens=None):
@@ -460,15 +413,11 @@ class FastBERTNLU:
     def is_loaded(self):
         return self.backend is not None and self.tokenizer is not None
 
-    def predict(self, text):
+    def _predict_clause(self, text):
         """
-        Runs inference on input text.
+        Runs single-clause inference on input text.
         Returns: (intent, confidence, slot_dict, slot_confidences)
         """
-        if not self.is_loaded():
-            return None, 0.0, {}, []
-
-        start_t = time.time()
         import numpy as np
 
         ids, mask, subword_tokens = self.tokenizer.encode_for_model(text, self.max_length)
@@ -511,7 +460,77 @@ class FastBERTNLU:
 
         slot_dict = extract_slots_from_text(slots, text, subword_tokens=subword_tokens)
         normalized_slots = normalize_slots(slot_dict)
-        normalized_slots = correct_exclusion_polarity(text, normalized_slots)
+
+        # Imperative clause-level exclusion guard (e.g., "Exclude Chinese food", "Avoid pork")
+        if re.match(r"^\s*(?:exclude|excluding|skip|omit|avoid)\b", text, re.I):
+            polarity_map = {
+                "cuisine": "excludeCuisine",
+                "ingredient": "excludeIngredient",
+                "tag": "excludeTag",
+                "mealType": "excludeMealType",
+                "dietaryRestriction": "excludeDietaryRestriction",
+            }
+            remapped_slots = {}
+            for k, v in normalized_slots.items():
+                remapped_slots[polarity_map.get(k, k)] = v
+            normalized_slots = remapped_slots
+
+        return intent, intent_confidence, normalized_slots, slot_confidences
+
+    def predict(self, text):
+        """
+        Runs NLU inference with multi-clause divide-and-conquer architecture.
+        Splits coordinated/contrastive clauses to avoid cross-clause self-attention bleeding,
+        evaluates each clause independently, and merges intent and slot predictions.
+        Returns: (intent, confidence, slot_dict, slot_confidences)
+        """
+        if not self.is_loaded():
+            return None, 0.0, {}, []
+
+        start_t = time.time()
+        clauses = split_utterance_clauses(text)
+
+        if len(clauses) <= 1:
+            intent, intent_confidence, normalized_slots, slot_confidences = self._predict_clause(text)
+        else:
+            # 1. Run full-sentence inference (leveraging contrastive self-attention weights)
+            full_intent, full_conf, full_slots, full_confs = self._predict_clause(text)
+
+            # 2. Run clause-by-clause inference as architectural safeguard against attention bleed
+            merged_slots = {}
+            intent_candidates = [(full_intent, full_conf)]
+
+            for clause in clauses:
+                cl_text = clause if clause.endswith((".", "!", "?")) else clause + "."
+                c_intent, c_conf, c_slots, _ = self._predict_clause(cl_text)
+                intent_candidates.append((c_intent, c_conf))
+                for k, v in c_slots.items():
+                    if k not in merged_slots:
+                        merged_slots[k] = v
+                    else:
+                        cur_vals = merged_slots[k] if isinstance(merged_slots[k], list) else [merged_slots[k]]
+                        new_vals = v if isinstance(v, list) else [v]
+                        for nv in new_vals:
+                            if nv not in cur_vals:
+                                cur_vals.append(nv)
+                        merged_slots[k] = cur_vals if len(cur_vals) > 1 else cur_vals[0]
+
+            # Merge any high-confidence slots from full-utterance inference not in micro-clauses
+            for k, v in full_slots.items():
+                if k not in merged_slots:
+                    merged_slots[k] = v
+
+            action_intents = ("addFilter", "deleteFilterValue", "clearFilters", "recipeRequest", "requestRecommendation")
+            action_candidates = [c for c in intent_candidates if c[0] in action_intents]
+            if action_candidates:
+                action_candidates.sort(key=lambda x: x[1], reverse=True)
+                intent, intent_confidence = action_candidates[0]
+            else:
+                intent_candidates.sort(key=lambda x: x[1], reverse=True)
+                intent, intent_confidence = intent_candidates[0]
+
+            normalized_slots = merged_slots
+            slot_confidences = full_confs
 
         # Quantitative slot extraction (servings, nrOfIngredients, nrOfSteps)
         # These constraints exist in the dialogue manager and Prolog engine but
@@ -558,6 +577,36 @@ class FastBERTNLU:
         elif intent == "addFilter" and not normalized_slots:
             intent = "requestRecommendation"
             intent_confidence = max(intent_confidence, 0.75)
+
+        # -----------------------------------------------------------------
+        # Inference Guard: Mutual Exclusivity
+        # If an entity is explicitly excluded, purge it from positive slots.
+        # -----------------------------------------------------------------
+        exclusion_mappings = [
+            ("excludeIngredient", "ingredient"),
+            ("excludeIngredient", "ingredientType"),
+            ("excludeCuisine", "cuisine"),
+            ("excludeTag", "tag"),
+            ("excludeMealType", "mealType"),
+            ("excludeDietaryRestriction", "dietaryRestriction")
+        ]
+
+        for ex_key, pos_key in exclusion_mappings:
+            if ex_key in normalized_slots and pos_key in normalized_slots:
+                ex_vals = normalized_slots[ex_key]
+                ex_set = set(ex_vals) if isinstance(ex_vals, list) else {ex_vals}
+                
+                pos_vals = normalized_slots[pos_key]
+                pos_list = pos_vals if isinstance(pos_vals, list) else [pos_vals]
+                
+                cleaned_pos = [v for v in pos_list if v not in ex_set]
+                
+                if not cleaned_pos:
+                    del normalized_slots[pos_key]
+                elif len(cleaned_pos) == 1:
+                    normalized_slots[pos_key] = cleaned_pos[0]
+                else:
+                    normalized_slots[pos_key] = cleaned_pos
 
         latency_ms = (time.time() - start_t) * 1000
         logger.debug(

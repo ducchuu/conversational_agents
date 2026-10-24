@@ -58,7 +58,10 @@ class BERTNLUModel(nn.Module if nn is not None else object):
 
     def __init__(self, num_intents: int, num_slots: int):
         super().__init__()
-        self.bert = BertModel.from_pretrained("bert-base-uncased")
+        try:
+            self.bert = BertModel.from_pretrained("bert-base-uncased", local_files_only=True)
+        except Exception:
+            self.bert = BertModel.from_pretrained("bert-base-uncased")
         hidden_size = self.bert.config.hidden_size
         self.intent_classifier = nn.Linear(hidden_size, num_intents)
         self.slot_classifier = nn.Linear(hidden_size, num_slots)

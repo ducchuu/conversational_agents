@@ -626,7 +626,7 @@ def infer_fallback_intent(transcript: str) -> tuple[str, dict]:
         return "disconfirmation", {}
     if any(fare in lower_trans for fare in ["bye", "goodbye", "see you", "thanks bye"]):
         return "farewell", {}
-    if any(res in lower_trans for res in ["restart", "start over", "reset"]):
+    if any(res in lower_trans for res in ["restart", "start over", "reset", "search again", "from scratch", "from the beginning"]):
         return "restart", {}
     if any(rec in lower_trans for rec in ["recommend", "pick one", "choose for me", "pick a recipe", "suggest", "surprise me", "best dish"]):
         return "requestRecommendation", {}

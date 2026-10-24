@@ -44,13 +44,13 @@ The current server-side design includes shared in-process state and mutable Prol
 
 ## Why retain Prolog?
 
-Keeping the existing knowledge base avoids rewriting the recipe rules while making constraint filtering explicit. The extension replaces the legacy bridge with direct Python integration rather than replacing every part of the original application.
+Keeping the existing knowledge base avoids rewriting the recipe rules while making constraint filtering explicit. My cloud deployment project focuses more on Cloud deployment, Python, CI/CD implementation and MLOps, therefore keeping the prolog knowledge base gives a nice baseline, instead of creating a new format of database, and spending lots of time on datasets The extension replaces the legacy bridge with direct Python integration rather than replacing every part of the original application.
 
 The documented database contains 895 recipes. Other ontology counts may differ because the NLU vocabulary and the recipe fact store are different assets; they should not be treated as interchangeable counts.
 
 ## Why local quantized NLU plus a remote fallback?
 
-The local model supports a bounded cooking-domain schema without requiring a remote request for every interpretation. Quantization reduces the deployed artifact size and allows CPU inference. The LLM broadens support for open-ended language at the cost of external dependencies, variable latency, and provider charges.
+The local model supports a bounded cooking-domain schema without requiring a remote request for every interpretation. Also it let's me practice NLP skills and ML model deployments into a production-like environment. The LLM broadens support for open-ended user's questions at the cost of external dependencies, variable latency, and provider charges.
 
 Local NLU timing is not end-to-end conversation timing. Transcription, filtering, fallback calls, transport, and browser speech each contribute separately.
 

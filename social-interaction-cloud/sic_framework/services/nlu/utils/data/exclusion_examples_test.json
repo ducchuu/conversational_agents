@@ -3524,5 +3524,257 @@
     "slots": {
       "excludeMealType": "brunch"
     }
+  },
+  {
+    "id": "contrast-test-ing-b6db32ce",
+    "text": "I love beans, however I cannot eat rice.",
+    "intent": "addFilter",
+    "slots": {
+      "excludeIngredient": "rice",
+      "ingredient": "beans"
+    }
+  },
+  {
+    "id": "contrast-test-ing-d4f61f62",
+    "text": "I would like beef, but I don't want bell pepper.",
+    "intent": "addFilter",
+    "slots": {
+      "excludeIngredient": "bell pepper",
+      "ingredient": "beef"
+    }
+  },
+  {
+    "id": "contrast-test-ing-e0944d50",
+    "text": "Skip the chicken and give me something with tomato.",
+    "intent": "addFilter",
+    "slots": {
+      "excludeIngredient": "chicken",
+      "ingredient": "tomato"
+    }
+  },
+  {
+    "id": "contrast-test-ing-9197f22d",
+    "text": "I do not want cheese, but I want beans.",
+    "intent": "addFilter",
+    "slots": {
+      "excludeIngredient": "cheese",
+      "ingredient": "beans"
+    }
+  },
+  {
+    "id": "contrast-test-ing-94b4283b",
+    "text": "Can I get a dish without cheese that has tofu?",
+    "intent": "addFilter",
+    "slots": {
+      "excludeIngredient": "cheese",
+      "ingredient": "tofu"
+    }
+  },
+  {
+    "id": "contrast-test-ing-b36981a4",
+    "text": "I can't eat tofu, so let's do rice instead.",
+    "intent": "addFilter",
+    "slots": {
+      "excludeIngredient": "tofu",
+      "ingredient": "rice"
+    }
+  },
+  {
+    "id": "contrast-test-ing-33d79801",
+    "text": "Avoid pasta, I am in the mood for tomato.",
+    "intent": "addFilter",
+    "slots": {
+      "excludeIngredient": "pasta",
+      "ingredient": "tomato"
+    }
+  },
+  {
+    "id": "contrast-test-ing-d359cbe5",
+    "text": "I hate onions, but I love pork.",
+    "intent": "addFilter",
+    "slots": {
+      "excludeIngredient": "onions",
+      "ingredient": "pork"
+    }
+  },
+  {
+    "id": "contrast-test-ing-b82cf8da",
+    "text": "Something that has salmon, but avoid rice.",
+    "intent": "addFilter",
+    "slots": {
+      "excludeIngredient": "rice",
+      "ingredient": "salmon"
+    }
+  },
+  {
+    "id": "contrast-test-ing-7c50e2b3",
+    "text": "I love beef, however I cannot eat fish.",
+    "intent": "addFilter",
+    "slots": {
+      "excludeIngredient": "fish",
+      "ingredient": "beef"
+    }
+  },
+  {
+    "id": "contrast-test-ing-a958a481",
+    "text": "I do not want potatoes, but I want pasta.",
+    "intent": "addFilter",
+    "slots": {
+      "excludeIngredient": "potatoes",
+      "ingredient": "pasta"
+    }
+  },
+  {
+    "id": "contrast-test-ing-7bd6fdc4",
+    "text": "Can I get a dish without garlic that has chicken?",
+    "intent": "addFilter",
+    "slots": {
+      "excludeIngredient": "garlic",
+      "ingredient": "chicken"
+    }
+  },
+  {
+    "id": "contrast-test-ing-ad1a71b6",
+    "text": "I want something with cheese and without tofu.",
+    "intent": "addFilter",
+    "slots": {
+      "excludeIngredient": "tofu",
+      "ingredient": "cheese"
+    }
+  },
+  {
+    "id": "contrast-test-ing-35217b19",
+    "text": "Something that has onions, but avoid meat.",
+    "intent": "addFilter",
+    "slots": {
+      "excludeIngredient": "meat",
+      "ingredient": "onions"
+    }
+  },
+  {
+    "id": "contrast-test-ing-cb831985",
+    "text": "I hate chicken, but I love eggs.",
+    "intent": "addFilter",
+    "slots": {
+      "excludeIngredient": "chicken",
+      "ingredient": "eggs"
+    }
+  },
+  {
+    "id": "contrast-test-ing-6509cc74",
+    "text": "No tomato please, I'd prefer garlic.",
+    "intent": "addFilter",
+    "slots": {
+      "excludeIngredient": "tomato",
+      "ingredient": "garlic"
+    }
+  },
+  {
+    "id": "contrast-test-ing-7cfd540f",
+    "text": "I don't want meat, but I would like tomato.",
+    "intent": "addFilter",
+    "slots": {
+      "excludeIngredient": "meat",
+      "ingredient": "tomato"
+    }
+  },
+  {
+    "id": "contrast-test-ing-a9fbc8cb",
+    "text": "Skip the spinach and give me something with mushrooms.",
+    "intent": "addFilter",
+    "slots": {
+      "excludeIngredient": "spinach",
+      "ingredient": "mushrooms"
+    }
+  },
+  {
+    "id": "contrast-test-ing-e3212931",
+    "text": "I would like bell pepper, but I don't want garlic.",
+    "intent": "addFilter",
+    "slots": {
+      "excludeIngredient": "garlic",
+      "ingredient": "bell pepper"
+    }
+  },
+  {
+    "id": "contrast-test-ing-448fcb25",
+    "text": "I do not want potatoes, but I want chicken.",
+    "intent": "addFilter",
+    "slots": {
+      "excludeIngredient": "potatoes",
+      "ingredient": "chicken"
+    }
+  },
+  {
+    "id": "contrast-test-cui-08250a06",
+    "text": "Something without French food, but with Greek cuisine.",
+    "intent": "addFilter",
+    "slots": {
+      "excludeCuisine": "French",
+      "cuisine": "Greek"
+    }
+  },
+  {
+    "id": "contrast-test-cui-443837c5",
+    "text": "I do not want French food, but I want Mexican cuisine.",
+    "intent": "addFilter",
+    "slots": {
+      "excludeCuisine": "French",
+      "cuisine": "Mexican"
+    }
+  },
+  {
+    "id": "contrast-test-cui-14ec271f",
+    "text": "Hold the Thai food, but make sure it has French cuisine.",
+    "intent": "addFilter",
+    "slots": {
+      "excludeCuisine": "Thai",
+      "cuisine": "French"
+    }
+  },
+  {
+    "id": "contrast-test-cui-b700eab0",
+    "text": "Something that has Italian cuisine, but avoid Spanish food.",
+    "intent": "addFilter",
+    "slots": {
+      "excludeCuisine": "Spanish",
+      "cuisine": "Italian"
+    }
+  },
+  {
+    "id": "contrast-test-cui-1a859fa4",
+    "text": "Something that has Korean cuisine, but avoid Italian food.",
+    "intent": "addFilter",
+    "slots": {
+      "excludeCuisine": "Italian",
+      "cuisine": "Korean"
+    }
+  },
+  {
+    "id": "contrast-test-cui-a0e1ef5e",
+    "text": "I can't eat Mexican food, so let's do Korean cuisine instead.",
+    "intent": "addFilter",
+    "slots": {
+      "excludeCuisine": "Mexican",
+      "cuisine": "Korean"
+    }
+  },
+  {
+    "id": "contrast-test-cui-6efc6427",
+    "text": "I love Korean cuisine, however I cannot eat Mexican food.",
+    "intent": "addFilter",
+    "slots": {
+      "excludeCuisine": "Mexican",
+      "cuisine": "Korean"
+    }
+  },
+  {
+    "id": "contrast-test-cui-8c39e622",
+    "text": "I'm in the mood for Chinese cuisine, just skip the Japanese food.",
+    "intent": "addFilter",
+    "slots": {
+      "excludeCuisine": "Japanese",
+      "cuisine": "Chinese"
+    }
   }
 ]

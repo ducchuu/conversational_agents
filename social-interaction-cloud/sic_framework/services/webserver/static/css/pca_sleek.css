@@ -121,17 +121,17 @@ body {
 
 
 .video-card {
-  margin-top: 18px;
-  padding: 14px;
-  border-radius: 18px;
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: rgba(255, 255, 255, 0.05);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
 }
 
 .video-card .section-title {
-  margin: 0 0 10px;
-  font-size: 14px;
+  margin: 0 0 8px;
+  font-size: 0.88rem;
   font-weight: 600;
   letter-spacing: 0.2px;
   color: rgba(255, 255, 255, 0.9);
@@ -141,7 +141,7 @@ body {
   position: relative;
   width: 100%;
   padding-top: 56.25%;
-  border-radius: 14px;
+  border-radius: 12px;
   overflow: hidden;
   background: rgba(0, 0, 0, 0.25);
   border: 1px solid rgba(255, 255, 255, 0.10);
@@ -156,29 +156,33 @@ body {
 }
 
 .video-card .text-muted {
-  margin-top: 10px;
-  font-size: 13px;
+  margin-top: 8px;
+  font-size: 0.8rem;
   color: rgba(255, 255, 255, 0.6);
 }
 
 .pca-title {
-  letter-spacing: -.4px;
+  font-size: 1.55rem;
+  font-weight: 700;
+  letter-spacing: -.3px;
+  line-height: 1.25;
 }
 
 .pca-muted {
   color: var(--pca-muted);
+  font-size: 0.92rem;
 }
 
 .pca-chip {
   display: inline-flex;
   align-items: center;
-  gap: .4rem;
-  padding: .4rem .65rem;
+  gap: .35rem;
+  padding: .3rem .6rem;
   border-radius: 999px;
   border: 1px solid var(--pca-border);
   background: rgba(255, 255, 255, .05);
   color: rgba(255, 255, 255, .88);
-  font-size: .85rem;
+  font-size: .82rem;
 }
 
 .pca-chip--info {
@@ -271,7 +275,7 @@ body {
 }
 
 .pca-recipe-img {
-  height: 150px;
+  height: 135px;
   background:
     radial-gradient(circle at 20% 20%, rgba(255, 255, 255, .12), transparent 45%),
     linear-gradient(135deg, rgba(124, 92, 255, .22), rgba(46, 233, 166, .12));
@@ -280,26 +284,32 @@ body {
 }
 
 .pca-recipe-body {
-  padding: 14px 14px 16px;
+  padding: 12px 14px 14px;
 }
 
 .pca-recipe-title {
-  margin: 0 0 6px;
+  margin: 0 0 4px;
+  font-size: 1.05rem;
   font-weight: 700;
   letter-spacing: -.2px;
 }
 
 .pca-recipe-desc {
-  margin: 0 0 10px;
+  margin: 0 0 8px;
   color: var(--pca-muted);
-  font-size: .9rem;
-  line-height: 1.4;
+  font-size: .84rem;
+  line-height: 1.35;
 }
 
 .pca-recipe-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
+}
+
+.pca-recipe-meta .pca-chip {
+  font-size: .78rem;
+  padding: .25rem .55rem;
 }
 
 .pca-detail {
@@ -307,14 +317,14 @@ body {
   grid-template-columns: 360px 1fr;
   gap: 0;
   overflow: hidden;
-  border-radius: 26px;
+  border-radius: 22px;
   border: 1px solid var(--pca-border);
   background: rgba(255, 255, 255, .06);
   box-shadow: var(--pca-shadow);
 }
 
 .pca-detail-media {
-  min-height: 320px;
+  min-height: 280px;
   background:
     radial-gradient(circle at 20% 20%, rgba(255, 255, 255, .12), transparent 45%),
     linear-gradient(135deg, rgba(255, 92, 122, .16), rgba(124, 92, 255, .22), rgba(46, 233, 166, .10));
@@ -323,20 +333,44 @@ body {
 }
 
 .pca-detail-content {
-  padding: 18px;
+  padding: 16px 18px;
+}
+
+.pca-detail-content #recipeTitle {
+  font-size: 1.55rem;
+  font-weight: 700;
+}
+
+.pca-detail-content #recipeDescription {
+  font-size: .92rem;
+  line-height: 1.4;
 }
 
 .pca-split {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px;
+  gap: 12px;
 }
 
 .pca-block {
   border: 1px solid rgba(255, 255, 255, .14);
   background: rgba(255, 255, 255, .04);
-  border-radius: 16px;
-  padding: 12px;
+  border-radius: 14px;
+  padding: 10px 12px;
+}
+
+.pca-block h5 {
+  font-size: .95rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: var(--pca-accent2);
+}
+
+.pca-block ul,
+.pca-block ol {
+  font-size: .86rem;
+  line-height: 1.4;
+  padding-left: 20px;
 }
 
 .pca-footer {
@@ -354,16 +388,16 @@ body {
 
 .pca-guide-sidebar {
   position: sticky;
-  top: 156px;
-  max-height: calc(100vh - 220px);
+  top: 130px;
+  max-height: calc(100vh - 180px);
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
-  padding-bottom: 16px;
+  padding-bottom: 8px;
 }
 
 .pca-guide-sidebar::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
 }
 
 .pca-guide-sidebar::-webkit-scrollbar-track {
@@ -382,51 +416,51 @@ body {
 .pca-guide-card {
   border: 1px solid var(--pca-border);
   background: rgba(255, 255, 255, 0.05);
-  border-radius: calc(var(--pca-radius) + 4px);
+  border-radius: 16px;
   box-shadow: var(--pca-shadow2);
   backdrop-filter: blur(12px);
-  padding: 20px;
+  padding: 13px 15px;
 }
 
 .pca-guide-header {
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-  padding-bottom: 14px;
-  margin-bottom: 16px;
+  padding-bottom: 7px;
+  margin-bottom: 8px;
 }
 
 .pca-guide-badge {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 5px 14px;
+  gap: 5px;
+  padding: 2px 8px;
   border-radius: 999px;
-  font-size: 1.05rem;
+  font-size: 0.74rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
+  letter-spacing: 0.5px;
   border: 1px solid rgba(124, 92, 255, 0.5);
   background: rgba(124, 92, 255, 0.2);
   color: #c4b5fd;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .pca-guide-title {
-  font-size: 1.5rem;
+  font-size: 1.1rem;
   font-weight: 700;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.2px;
   color: var(--pca-text);
-  margin: 0 0 6px;
+  margin: 0 0 2px;
 }
 
 .pca-guide-subtitle {
-  font-size: 1.15rem;
+  font-size: 0.8rem;
   color: var(--pca-muted);
   margin: 0;
-  line-height: 1.4;
+  line-height: 1.3;
 }
 
 .pca-guide-section {
-  margin-bottom: 16px;
+  margin-bottom: 8px;
 }
 
 .pca-guide-section:last-of-type {
@@ -434,15 +468,15 @@ body {
 }
 
 .pca-guide-section-title {
-  font-size: 1.1rem;
+  font-size: 0.78rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.4px;
   color: var(--pca-accent2);
-  margin-bottom: 8px;
+  margin-bottom: 4px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 5px;
 }
 
 .pca-guide-list {
@@ -451,26 +485,26 @@ body {
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 3px;
 }
 
 .pca-guide-item {
-  font-size: 1.22rem;
-  padding: 9px 14px;
-  border-radius: 12px;
+  font-size: 0.82rem;
+  padding: 4px 8px;
+  border-radius: 7px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.08);
   color: rgba(255, 255, 255, 0.92);
-  line-height: 1.4;
+  line-height: 1.3;
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: 5px;
   transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease;
 }
 
 .pca-guide-item-icon {
   flex-shrink: 0;
-  font-size: 1.2rem;
+  font-size: 0.82rem;
   margin-top: 1px;
   opacity: 0.85;
 }
@@ -483,17 +517,17 @@ body {
 }
 
 .pca-guide-tip {
-  margin-top: 16px;
-  padding: 14px;
-  border-radius: 14px;
+  margin-top: 8px;
+  padding: 7px 9px;
+  border-radius: 9px;
   border: 1px solid rgba(46, 233, 166, 0.25);
   background: rgba(46, 233, 166, 0.08);
-  font-size: 1.12rem;
-  line-height: 1.45;
+  font-size: 0.78rem;
+  line-height: 1.3;
   color: rgba(255, 255, 255, 0.88);
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: 6px;
 }
 
 /* 1080p Locked Layout: Sidebar stays sticky and navigation/typography maintain desktop proportions */

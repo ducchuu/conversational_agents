@@ -228,7 +228,7 @@ GOLDEN_SLOT_CASES = [
     # Website Guide: recipe_overview2.html
     ("Some dishes that you cook under 20 minutes", "addFilter", {"duration": "20"}, set()),
     ("I want something vegetarian", "addFilter", {"dietaryRestriction": "vegetarian"}, {"excludeDietaryRestriction"}),
-    ("Without dairy", "addFilter", {"dietaryRestriction": "lactose-free"}, {"ingredient", "ingredientType"}),
+    ("Without dairy", "addFilter", {("dietaryRestriction", "excludeIngredient"): ("lactose-free", "dairy")}, {"ingredient", "ingredientType"}),
 
     # Core standard filter additions & exclusions
     ("I want something with chicken", "addFilter", {"ingredient": "chicken"}, {"excludeIngredient"}),
@@ -244,6 +244,9 @@ GOLDEN_SLOT_CASES = [
     ("Exclude Chinese food", "addFilter", {"excludeCuisine": "chinese"}, {"cuisine"}),
     ("No soup please", "addFilter", {("excludeTag", "excludeIngredient"): "soup"}, {"tag"}),
     ("I want an Italian dish with garlic and without cheese", "addFilter", {"cuisine": "italian", "ingredient": "garlic", "excludeIngredient": "cheese"}, {"excludeCuisine"}),
+    ("Something without pasta, but with rice.", "addFilter", {"excludeIngredient": "pasta", "ingredient": "rice"}, set()),
+    ("I don't want pasta, but I would like meat.", "addFilter", {"excludeIngredient": "pasta", "ingredient": "meat"}, set()),
+    ("I want chicken, but I don't want tomato", "addFilter", {"ingredient": "chicken", "excludeIngredient": "tomato"}, set()),
 ]
 
 @pytest.mark.parametrize("utterance,expected_intent,expected_slots,forbidden_slot_keys", GOLDEN_SLOT_CASES)

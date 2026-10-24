@@ -401,6 +401,7 @@ def main():
     parser.add_argument("--max_length", type=int, default=64, help="Max sequence length (default: 64)")
     parser.add_argument("--seed", type=int, default=42, help="Random seed (default: 42)")
     parser.add_argument("--eval_only", action="store_true", help="Skip training and run evaluation on the test dataset")
+    parser.add_argument("--int8", action="store_true", help="Evaluate the quantized INT8 model instead of the default FP32 model")
     parser.add_argument("--inference", type=str, default=None, help="Run single-utterance prediction and print intent & slots")
     parser.add_argument("--quantize_only", action="store_true", help="Quantize existing ONNX model to INT8 without retraining")
     parser.add_argument("--min_intent_acc", type=float, default=None, help="CI/CD Quality Gate: Minimum intent accuracy (0.0-1.0)")
@@ -487,10 +488,20 @@ def main():
         eval_model = None
         eval_backend = None
 
-        if onnx_int8_output_path.exists() or onnx_output_path.exists():
+        if getattr(args, "int8", False) and onnx_int8_output_path.exists():
+            target_onnx = onnx_int8_output_path
+            eval_backend = "onnx_int8"
+        elif onnx_output_path.exists():
+            target_onnx = onnx_output_path
+            eval_backend = "onnx_fp32"
+        elif onnx_int8_output_path.exists():
+            target_onnx = onnx_int8_output_path
+            eval_backend = "onnx_int8"
+        else:
+            target_onnx = None
+
+        if target_onnx is not None:
             import onnxruntime as ort
-            target_onnx = onnx_int8_output_path if onnx_int8_output_path.exists() else onnx_output_path
-            eval_backend = "onnx_int8" if target_onnx == onnx_int8_output_path else "onnx_fp32"
             logger.info(f"Loading ONNX checkpoint [{eval_backend}] from {target_onnx} for evaluation...")
             onnx_session = ort.InferenceSession(str(target_onnx), providers=["CPUExecutionProvider"])
         elif pt_output_path.exists():
