@@ -1,73 +1,68 @@
-# Limitations, data handling, and next steps
+# Limitations and data handling
 
-[Back to README](../README.md)
+[Documentation index](documentation.md) · [README](../README.md)
 
 ## Intended use
 
-CookingBroski is a portfolio prototype demonstrating conversational interaction, hybrid NLU, symbolic recipe filtering, and cloud delivery. A deployed demo and automated tests do not establish readiness for public multi-user production use.
+CookingBroski is a deployed portfolio prototype. Successful tests and live demonstrations do not establish unrestricted multi-user production readiness, continuous availability, or safety certification.
 
-## Shared dialogue state
+## Shared state
 
-The current design is documented as using one in-process dialogue manager and a Prolog interface with mutable global predicates. Independent users may interfere with each other's filters, selected recipes, or conversation state.
+The documented dialogue manager and mutable Prolog state are shared in-process. Independent users can interfere with conversation state. Use one active conversation at a time; this is a stated usage constraint, not an enforced isolation mechanism.
 
-Keep demo use to one active conversation at a time. This is a usage constraint, not an enforced access-control mechanism. A single Cloud Run instance can still receive multiple connections.
+Before public multi-user use, introduce per-session state and appropriately isolated/stateless Prolog operations, then add simultaneous-user regression tests. Instance limits and session affinity alone do not solve shared state.
 
-Supporting multiple users requires explicit session isolation, request-specific Prolog state, concurrency tests, and an appropriate Socket.IO deployment architecture. Session affinity or Redis messaging alone does not repair shared mutable business state.
+## Interaction and language
 
-## Startup and persistence
+- Audio is push-to-talk, with completed recordings uploaded over Socket.IO.
+- No continuous full-duplex recognition or voice interruption is claimed.
+- Local BERT interprets individual utterances and a bounded intent/slot schema.
+- Rules and Claude extend behavior but do not guarantee correct interpretation.
+- Browser TTS quality and callbacks vary; watchdog recovery is not universal compatibility.
 
-Cloud Run can scale to zero. Reported cold startup is approximately 10–15 seconds, but it varies with runtime conditions. Early landing-page availability is distinct from model readiness.
+## Hosting and performance
 
-The recipe-video cache, process metric counters, and in-process dialogue state are ephemeral. They are not a durable user history. Browser session storage does not replace a server-side persistence design.
+The home-server service is normally warm and is recommended for demonstration. Its availability depends on host uptime, connectivity, and the tunnel. Cloud Run can add cold-start delay and network latency. No current standardized end-to-end latency benchmark is supplied.
 
-## Language and interaction boundaries
+Do not promise instantaneous responses, fixed cold-start duration, or guaranteed availability. FP32 was selected for observed cross-platform consistency, not proof of identical results on every runtime/hardware combination.
 
-- The local NLU model operates on individual utterances and has a bounded domain schema.
-- Contextual replies and compound requests can require state-aware rules or LLM assistance.
-- LLM output validation checks structure, not factual correctness or complete understanding.
-- Push-to-talk uploads a completed recording; the system does not provide continuous voice activity detection or full-duplex interruption.
-- Browser voices and speech callbacks vary across platforms. The watchdog is recovery logic, not a universal compatibility guarantee.
+## Provider failures
 
-## External dependencies
-
-Remote STT, Claude responses, YouTube lookup, and tracing depend on the configured providers. Missing credentials, quota exhaustion, service errors, or network failures can reduce functionality. Fallback paths should be tested explicitly rather than described as guaranteed high availability.
-
-The browser speech interface also should not be interpreted as a blanket guarantee of offline execution across every OS/browser configuration.
+The maintainer reports testing an Anthropic-unavailable path that returns rule/template responses without hanging. Offline behavior can have less functionality than the online system. This test does not establish all possible provider, quota, partial-response, or network failure behavior.
 
 ## Data handling
 
-The implemented provider order and observability settings determine which data leaves the host. Review the current service code and configuration before publishing a privacy statement.
+The live summary verifies functionality, not privacy or retention policies. Before making definitive public statements, inspect the actual configuration and service code.
 
-| Data | Documented processing path | What needs verification |
+| Data | Potential path | Details to confirm |
 |---|---|---|
-| Microphone audio | Sent from the browser to the application for transcription | Whether recordings are persisted; size/duration limits; cleanup |
-| Fallback audio | May be sent to ElevenLabs or OpenAI on the configured fallback path | Trigger conditions, provider settings, retention, user notice |
-| Transcripts and cooking requests | Processed by local NLU; selected requests may reach Claude | Exact prompt/context content and fallback triggers |
-| LLM traces | May be recorded through Langfuse | Content capture, redaction, retention, access permissions |
-| Operational logs | Structured events sent to configured logging | Whether transcript content is included; retention and access |
-| Recipe-video queries | Sent to YouTube search | Query contents and cache policy |
+| Audio | Browser to application; configured remote STT fallback | Persistence, deletion, size limits, provider retention |
+| Transcript/request | Local NLU; selected Claude requests | Exact prompts/context and redaction |
+| LLM traces | Optional Langfuse | Content capture, retention, access |
+| Operational events | Configured application/cloud logs | Sensitive fields, retention, access |
+| Video query | YouTube service | Query content and cache behavior |
 
-This table is a data-flow checklist, not a claim that privacy compliance has been established. Until these details are verified, visitors should not provide sensitive information.
+Visitors should not submit sensitive information. Do not imply every browser's speech implementation is fully offline merely because the application calls the browser API.
 
-## Cooking and dietary safety
+## Ephemeral state
 
-Recipe constraints and ingredient taxonomies are software filters, not a guarantee that a meal is medically suitable or allergen-free. Recipe metadata can be incomplete, and generated cooking advice can be incorrect. Users should independently verify ingredients, food-handling instructions, and relevant dietary requirements.
+Dialogue memory, video cache entries, and process-local counters are not durable storage. Restarts can reset them. Browser session storage preserves selected UI state, not independently isolated server conversations.
 
-Do not frame an exclusion such as “no peanuts” as a certified allergy-safety feature.
+## Cooking and dietary boundaries
 
-## Evaluation caveat
+Recipe metadata and ingredient filters can be incomplete. Generated cooking guidance can be wrong. Independently verify ingredients, food handling, and dietary suitability. Excluding an ingredient is not a certified allergen-safety guarantee.
 
-Earlier documentation reports conflicting split sizes and train/test overlap. Current headline model metrics should only be published after reconciling the dataset and tying the result to a specific model artifact. See [evaluation](evaluation.md).
+## Licensing
 
-## Prioritized next steps
+Independent cloud and MLOps extensions are licensed under the MIT License in [LICENSE](../LICENSE). Original course framework assets, recipe databases, and third-party models retain their respective academic and open-source attribution notices. See [attribution](documentation.md#attribution-and-licensing) and [LICENSE](../LICENSE).
 
-1. Reconcile dataset counts/overlap and publish an artifact-linked evaluation report.
-2. Isolate conversation state and add simultaneous-session regression tests.
-3. Verify missing-provider and failed-provider behavior end to end.
-4. Review public-demo controls: rate limits, request sizes, audio limits, authentication needs, and abuse handling. These are review items, not claims that such controls are currently absent.
-5. Establish data retention/redaction policies and verify tracing behavior.
-6. Add a measured startup/latency report and a tested rollback procedure.
-7. Verify licenses and attribution for inherited code, datasets, recipes, models, and media.
-8. Add an actual UI screenshot or short demo recording to the README, with no visible secrets or sensitive traces.
+## Next improvements
 
-These are proposed improvements, not completed features or promised delivery dates.
+- Implement and test independent concurrent sessions.
+- Publish sanitized, artifact-linked evidence and a downloadable model release.
+- Add reproducible cold/warm and browser-observed latency measurements.
+- Verify public-demo abuse controls, payload limits, and access requirements.
+- Define audio/log/trace retention and redaction policies.
+- Rehearse recovery and verify the deployed artifact identity.
+
+These are improvement/release tasks, not assertions that the supplied test results failed.

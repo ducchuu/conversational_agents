@@ -1,65 +1,63 @@
-# Architecture and design decisions
+# Architecture
 
-[Back to README](../README.md)
+[Documentation index](documentation.md) · [README](../README.md)
 
 ## Scope
 
-CookingBroski combines statistical language understanding with deterministic dialogue and recipe filtering. The Python dialogue manager owns conversational flow; Prolog evaluates recipe constraints; the local NLU model predicts intent and slots. An optional LLM handles selected ambiguous requests and open-ended cooking responses.
-
-This document describes the cloud extension from the supplied project notes. Exact routing conditions and runtime settings should be checked against the linked implementation when changing behavior.
+CookingBroski combines local language models, deterministic dialogue control, and symbolic recipe filtering. Claude broadens selected interpretations and responses; it does not replace the dialogue state machine or Prolog knowledge base.
 
 ## Request lifecycle
 
-1. The browser captures an utterance through `MediaRecorder`. The completed WebM recording is sent over Socket.IO. This is utterance-level upload, not continuous audio streaming.
-2. `stt_service.py` attempts local transcription with `faster-whisper`. The documented configuration uses `base.en` with CTranslate2 INT8 CPU inference. On local processing errors, configured ElevenLabs or OpenAI services can provide fallback transcription.
-3. `fast_bert_nlu.py` performs intent classification and BIO slot tagging with the quantized ONNX model. Slot normalization maps predictions into the application's domain vocabulary.
-4. `llm_nlu_service.py` coordinates additional heuristics and optional Claude extraction. Structured validation checks response shape; it does not establish that the interpretation is semantically correct. The precise ordering of heuristics and remote calls is implementation-dependent and should remain documented alongside the code.
-5. `dialog_manager.py` dispatches the interpreted request, updates dialogue state, and invokes recipe filtering where needed.
-6. `prolog_interface.py` uses `pyswip` to query the existing Prolog rules and facts in-process.
-7. The server emits response text and UI events. The browser updates recipe views and uses `window.speechSynthesis` for spoken output. A watchdog releases the interaction if a speech callback fails.
-8. Telemetry records server-side processing stages. Optional Langfuse integration traces LLM operations.
+1. The browser records a complete utterance with `MediaRecorder` and sends audio through Socket.IO.
+2. `stt_service.py` attempts local `faster-whisper` transcription. Configured ElevenLabs/OpenAI services provide error-triggered fallback paths.
+3. `fast_bert_nlu.py` executes the local ONNX model for intent and slot predictions.
+4. `llm_nlu_service.py` applies routing/heuristics and optional Claude extraction. Pydantic validates structure, not semantic correctness.
+5. The Python dialogue manager updates constraints, rejection history, and dialogue state.
+6. `prolog_interface.py` queries SWI-Prolog for recipe filtering and metadata.
+7. The server emits response text and UI events. The browser displays recipes and invokes `window.speechSynthesis`.
+8. Telemetry records server-stage timings; optional Langfuse integration traces LLM calls.
 
-## Main implementation locations
+Off-script cooking requests can use Claude response generation. The maintainer reports a tested provider-unavailable path that falls back to rules and Prolog templates without hanging or crashing. This establishes the tested failure behavior, not equivalence to all online capabilities.
 
-Paths below are relative to the repository root.
+## Main components
 
-| Component | Location |
+| Component | Location relative to `social-interaction-cloud/` |
 |---|---|
-| Dialogue routing | `social-interaction-cloud/dialog_mngr/agent_python/dialog_manager.py` |
-| Dialogue state | `social-interaction-cloud/dialog_mngr/agent_python/state.py` |
-| Prolog bridge | `social-interaction-cloud/dialog_mngr/agent_python/prolog_interface.py` |
-| Local NLU | `social-interaction-cloud/sic_framework/services/nlu/fast_bert_nlu.py` |
-| Training/export | `social-interaction-cloud/sic_framework/services/nlu/train_and_export.py` |
-| Dataset audit | `social-interaction-cloud/sic_framework/services/nlu/utils/dataset_audit.py` |
-| Web orchestration | `social-interaction-cloud/sic_framework/services/webserver/webserver_pca.py` |
-| Browser interaction | `social-interaction-cloud/sic_framework/services/webserver/static/` |
+| Dialogue routing | `dialog_mngr/agent_python/dialog_manager.py` |
+| State/history | `dialog_mngr/agent_python/state.py` |
+| Prolog bridge | `dialog_mngr/agent_python/prolog_interface.py` |
+| NLU runtime | `sic_framework/services/nlu/fast_bert_nlu.py` |
+| Training/export | `sic_framework/services/nlu/train_and_export.py` |
+| Dataset audit | `sic_framework/services/nlu/utils/dataset_audit.py` |
+| Shared tokenizer | `sic_framework/services/nlu/utils/tokenization.py` |
+| Web orchestration | `sic_framework/services/webserver/webserver_pca.py` |
 
-## Dialogue state
+## Current model backend
 
-The cloud extension describes accumulated positive and negative filters, filter history for undo, and rejected-recipe tracking. These features support refinement across turns rather than treating each request as an isolated recipe search.
+The current reported evaluation and deployment use FP32 `bert_nlu.onnx`. Earlier revisions used dynamically quantized INT8 ONNX. The maintainer selected FP32 after encountering cross-architecture INT8 behavior differences between ARM macOS development and Linux x86 hosting.
 
-Browser `sessionStorage` can preserve UI information across page transitions. It does not establish independent server-side sessions or durable conversation storage.
+This is a project-specific consistency decision. FP32 alone does not guarantee bitwise-identical output across processors, execution providers, or runtime versions. Preserve runtime settings and test representative predictions on each target platform before making stronger reproducibility claims.
 
-The current server-side design includes shared in-process state and mutable Prolog predicates. One Cloud Run instance is not equivalent to one user, and an instance cap does not solve cross-user state interference. See [limitations](limitations.md).
+The shared tokenizer wraps the Rust-backed `tokenizers` package and loads bundled `vocab.txt`. Sharing the implementation reduces preprocessing differences; vocabulary, normalization, truncation, and label alignment must also remain compatible.
 
-## Why retain Prolog?
+## Dialogue and Prolog state
 
-Keeping the existing knowledge base avoids rewriting the recipe rules while making constraint filtering explicit. My cloud deployment project focuses more on Cloud deployment, Python, CI/CD implementation and MLOps, therefore keeping the prolog knowledge base gives a nice baseline, instead of creating a new format of database, and spending lots of time on datasets The extension replaces the legacy bridge with direct Python integration rather than replacing every part of the original application.
+The original recipe assets include eight Prolog files and 895 recipes, reported intact in the latest verification. Dialogue refinement supports multiple filters, exclusions, rejection tracking, and undo.
 
-The documented database contains 895 recipes. Other ontology counts may differ because the NLU vocabulary and the recipe fact store are different assets; they should not be treated as interchangeable counts.
+The server currently shares in-process dialogue and mutable Prolog state. Browser `sessionStorage` helps UI continuity, not server-side user isolation. Restrict demo use to one active conversation; an instance cap does not enforce that restriction.
 
-## Why local quantized NLU plus a remote fallback?
+For multi-user support, introduce explicit per-session state and request-specific Prolog inputs or appropriately isolated engines. Test simultaneous conversations before adding horizontal scaling. Redis messaging and sticky sessions alone do not isolate shared business state.
 
-The local model supports a bounded cooking-domain schema without requiring a remote request for every interpretation. Also it let's me practice NLP skills and ML model deployments into a production-like environment. The LLM broadens support for open-ended user's questions at the cost of external dependencies, variable latency, and provider charges.
+## Browser and supporting services
 
-Local NLU timing is not end-to-end conversation timing. Transcription, filtering, fallback calls, transport, and browser speech each contribute separately.
+- Audio is utterance-based, not full-duplex streaming with barge-in.
+- Browser TTS has a watchdog for missing completion callbacks.
+- YouTube lookup uses a 512-entry process-local LRU cache.
+- Background model warmup separates port availability from inference readiness.
+- Cache/metric state is ephemeral. External log retention depends on configuration.
 
-## Supporting services
+## Hosting topology
 
-- YouTube search supplies recipe-video suggestions and uses an in-memory LRU cache. Older notes disagree on cache size; inspect `youtube_service.py` for the current value.
-- Telemetry exposes in-process summaries and emits structured logs. Browser speech duration should not be inferred from server processing time unless instrumented explicitly.
-- Model warmup runs in the background. Port binding, landing-page availability, and inference readiness are separate milestones.
+The home-server application is exposed through Cloudflare Tunnel at `cookingbroski.mduchlinski.eu`. The Cloud Run application is a separate deployment in `us-central1`; the tunnel is not described as a proxy to that Cloud Run origin.
 
-## State-isolation direction
-
-Before supporting concurrent users, move conversation data into explicitly session-scoped storage and make Prolog filtering operate on request-specific arguments rather than shared mutable facts. Introduce appropriate locking or engine isolation where required, test simultaneous conversations, and only then consider horizontal scaling. A Redis message broker or session affinity alone does not make shared application state safe.
+The maintainer reports faster perceived interaction on the warm home server. Do not attribute the entire difference to region or hosting price without measurements that separate network, startup, and processing time.

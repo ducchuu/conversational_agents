@@ -1,102 +1,151 @@
-# Evaluation and data quality
+# Evaluation and verification
 
-[Back to README](../README.md)
+[Documentation index](documentation.md) · [README](../README.md)
 
-## Current evidence status
+## Evidence scope
 
-The available project descriptions report evaluation tooling and historical results, but do not supply a single consistent current release benchmark. This documentation intentionally does not select the most favorable result or silently resolve contradictory data counts.
+This snapshot transcribes the maintainer's verification summary supplied on 24 October 2026. The documentation author did not independently run the repository, inspect the full local report, or reproduce the live checks. Preserve actual command output and machine-readable experiment records alongside the release where possible.
 
-| Item | Supplied information | Interpretation |
-|---|---|---|
-| Intent acceptance threshold | 0.85 | Configured minimum, not measured accuracy |
-| Slot F1 acceptance threshold | 0.80 | Configured minimum; metric definition still needs publication |
-| Intent accuracy | Approximately 93.7–94.9% across reported runs | Historical reports; identify the exact artifact and split before publishing a current value |
-| Slot F1 | Approximately 0.87–0.89 across reported runs | Historical reports; averaging and token/entity scope need clarification |
-| Local NLU inference | Approximately 6–8 ms reported | Not a verified end-to-end or percentile benchmark |
-| Dataset total | 8,765 and 8,798 appear in earlier notes | Reconcile against the current files |
-| Holdout total | 1,943 and 1,946 appear in earlier notes | Reconcile against the current files |
-| Train/test overlap | Both zero leakage and 73 overlapping utterances are reported | Unresolved; do not claim a clean holdout until explained or corrected |
-| Dialogue test count | 87 in the earlier README; 50+ in the branch comparison | Derive the current count from collection/results, including parametrization |
+The referenced source version is `2a706d891d5dea630d495c77a73245dd9c102520`, branch `cloud`, reported with a clean working tree. Later documentation commits do not automatically invalidate these results, but code/data/model changes require a new evaluation.
 
-The branch comparison also describes experiment tracking in `experiments_history.json`, including commit and dataset hashes. Use those records as a starting point, then verify they correspond to the deployed model.
+## Runtime
 
-## Dataset assets
+| Tool | Reported version |
+|---|---|
+| Python | 3.12.7 |
+| pip | 26.2.2 |
+| pytest | 9.1.1 |
 
-The documented NLU data location is:
+Execution hardware, ONNX Runtime version, thread settings, and provider configuration should be included in release evidence before publishing comparative latency or throughput claims.
+
+## Dataset
+
+| Partition | Examples |
+|---|---:|
+| Combined training | 7,037 |
+| Combined evaluation | 1,971 |
+| Total | 9,008 |
+
+The training and evaluation paths combine the base and exclusion-example files. These counts supersede earlier 8,765/8,798-example documentation; do not mix metrics from different revisions.
+
+Reported SHA-256 values:
 
 ```text
-social-interaction-cloud/sic_framework/services/nlu/utils/data/
+train.json
+244a033700e8605f3742617f8fa0343e941f384de9bfdb8baadb830eba545200
+
+test.json
+644b6ac0424bb2d3deb94d102c175003f6471f15bdb081b204d639d95ff8e3f9
+
+exclusion_examples.json
+a23ad6e6c076a35754edb05fa7d67e4ef786faba87232e751cb3fd184d5f56cf
+
+exclusion_examples_test.json
+662e879fa98ef31a908317dda29412d9456c992371629af864a8141ef6e9b490
+
+ontology.json
+c9635c7bb9866c50d9659e47eaa358bbc2756a29b4145d8cfa8a48c3849d296b
+
+vocab.txt
+07eced375cec144d27c900241f3e339478dec958f92fddbc551f295c992038a3
+
+synonyms.json
+6e52334590889148192274ff2e6a8619efd065597b5bd409e3cfe46ad06304e6
 ```
 
-Documented split files include `train.json`, `exclusion_examples.json`, `test.json`, and `exclusion_examples_test.json`. The ontology defines canonical intents and slot types; synonym assets support normalization.
+All hashes are recorded in the [release manifest](release_manifest.md) and [SHA256SUMS](SHA256SUMS).
 
-The earlier README describes 17 intents and 15 slot types, expanding to 31 BIO token labels. Confirm those counts from the current ontology before using them as release statistics.
-
-## Audit workflow
+## Dataset audit
 
 ```bash
 python social-interaction-cloud/sic_framework/services/nlu/utils/dataset_audit.py \
   --max_conflicts 0 --max_leakage 0
 ```
 
-The audit is described as using out-of-fold classification signals and TF-IDF similarity to identify suspicious labels and overlapping examples. Inspect the implementation and report to distinguish exact duplicates, similarity-based candidates, and confirmed annotation errors.
+Reported result: 9,008 audited records, zero detected cross-intent near-duplicate conflicts, and zero normalized train/test text overlaps. The maintainer resolved two overlapping contrastive examples before verification.
 
-A passing automated audit means the implemented checks passed at their configured thresholds. It does not prove the absence of every form of leakage or label error.
+The audit also flagged 846 heuristic label review candidates using Cleanlab out-of-fold probabilistic predictions. These represent natural conversational phrasing ambiguity flagged for review rather than duplicate conflicts. See [system verification report](system_verification_report.md) for full audit output.
 
-### Resolve the conflicting overlap reports
+## Model artifact and results
 
-1. Record the branch, commit, file hashes, and audit command.
-2. Recompute split counts and both raw and normalized overlap.
-3. Inspect reported overlaps and similarity candidates rather than treating every candidate as a confirmed error.
-4. Remove unintended train/test duplicates or document intentional overlaps and their evaluation consequences.
-5. Where related generated examples share a template or source, consider group-aware splitting to reduce overly similar examples across partitions.
-6. Retrain or re-evaluate the matching artifact after changes; do not retain metrics from an older split without labeling them historical.
+```text
+Backend: onnx_fp32
+File: bert_nlu.onnx
+SHA-256:
+7e77e9ef55c57af6cbf888f6ce26ed04e4c57e3f9edcc1b0dc6d57f94c11dee5
+```
 
-## Model evaluation
+| Metric | Reported result | Configured minimum |
+|---|---:|---:|
+| Intent accuracy | 94.98% | 85.00% |
+| Weighted slot-type F1 | 88.48% | 80.00% |
+
+Evaluation scope: standalone local BERT on 1,971 holdout examples, not the end-to-end hybrid system.
+
+Slot metric: support-weighted WordPiece-token slot-type F1. BIO prefixes are merged, `O` is excluded from the averaged class list, and padding/special-token labels are ignored. This does not measure entity-span or BIO-boundary correctness. Errors between `O` and selected slot classes can still affect their precision/recall.
+
+To reproduce the documented gate:
 
 ```bash
 python social-interaction-cloud/sic_framework/services/nlu/train_and_export.py \
   --eval_only --min_intent_acc 0.85 --min_slot_f1 0.80
 ```
 
-Confirm the command loads the intended INT8 ONNX artifact and evaluates the intended files. The gate is only meaningful when those inputs are unambiguous.
+Before interpreting the result, verify that the evaluator selects FP32 `bert_nlu.onnx`. Do not leave an older INT8 checkpoint where automatic artifact-selection logic could prefer it. Keep the runtime and evaluation artifact-selection settings aligned; the current summary does not provide an explicit backend-selection CLI flag.
 
-A published result should include:
+## Automated tests
 
-- Git commit, model SHA-256, dataset hashes, and ontology/vocabulary versions.
-- Split sizes and the policy used to create the split.
-- Intent accuracy and per-intent support; optionally macro F1 and a confusion matrix.
-- Exact slot metric definition: token or entity span, averaging method, and treatment of `O`, padding, and subword labels.
-- Whether the test exercises local BERT alone or the hybrid system including heuristics/LLM fallback.
-- Evaluation command, dependency versions, execution date, and linked output.
+Reported result: 138 passed in 16.61 seconds.
 
-Do not compare PyTorch and ONNX results as a quantization experiment unless they use equivalent inputs and scoring.
+| Category | Cases |
+|---|---:|
+| Single-turn golden utterances | 110 |
+| Dialogue behavior/state rollback | 7 |
+| Service initialization/subword alignment | 6 |
+| Webserver/telemetry/Prolog hydration | 12 |
+| Live deployment E2E | 3 |
+| Total | 138 |
 
-## Dialogue and application tests
-
-The documented suite includes unit tests, dialogue-behavior tests, golden dialogue cases, and live Cloud Run smoke tests.
+The golden cases are single-turn utterance evaluations, not 110 multi-turn sessions. Passing tests cover their selected scenarios, not arbitrary conversations, security, or load capacity.
 
 ```bash
-pytest social-interaction-cloud/tests/ --collect-only -q
-pytest social-interaction-cloud/tests/ -ra
+python -m pytest social-interaction-cloud/tests/ --collect-only -q
+python -m pytest social-interaction-cloud/tests/ -ra
 ```
 
-Report collected, passed, failed, and skipped tests separately. Parameterized cases, dialogue scenarios, and conversation turns are different counting units. State which one is being reported.
+Live target configuration:
 
-A golden suite establishes regression coverage for its selected cases. It does not establish conversational quality for arbitrary users. Live HTTP and WebSocket checks verify integration paths, not comprehensive security, load capacity, or multi-user isolation.
+```bash
+export CLOUD_RUN_URL="https://cookingbroski.mduchlinski.eu"
+export READY_TIMEOUT_S=120
+python -m pytest social-interaction-cloud/tests/test_e2e_cloud_run.py -ra
+```
 
-## Latency methodology
+The summary reports three live tests passed against that tunnel URL in 2.22 seconds. That suite duration is not per-turn response latency.
 
-Measure separately:
+## Integration and live checks
 
-- Cold landing-page availability.
-- Cold inference readiness.
-- Warm STT, NLU, dialogue, and server turn latency.
-- Remote-fallback latency and frequency.
-- Browser-observed time to first response and completion of speech.
+The maintainer reports:
 
-Include hardware/Cloud Run resources, runtime thread settings, utterance/audio lengths, sample count, warmup policy, and p50/p95 where possible. A 6–8 ms NLU stage must not be presented as a 6–8 ms spoken interaction.
+- Direct access to configured `claude-haiku-5-5`, structured extraction, and conversational response generation.
+- A provider-unavailable test using rule/template fallback without a hang or crash.
+- Successful health and readiness probes on both hosting endpoints.
+- WSS Socket.IO event transmission and manual microphone/filter/TTS interaction.
 
-## Release evidence checklist
+Reported healthy responses:
 
-Before updating the README's results, attach or link one reproducible evaluation report, the relevant CI run, dataset audit output, model artifact identity, and any benchmark script. Keep historical runs in the experiment history rather than repeating changing metrics across documentation pages.
+```json
+{"models_ready": true, "service": "social-agent-cloud", "status": "ok"}
+```
+
+```json
+{"models_ready": true, "status": "ready"}
+```
+
+A point-in-time health check does not establish continuous availability. The supplied summary does not identify the Cloud Run image digest or independent deployed-model hash; record them in release evidence if exact deployment provenance is claimed.
+
+## Performance reporting
+
+No standardized current per-turn latency benchmark is included. Avoid carrying forward 6–8 ms INT8 timing as an FP32 result or calling the home-server service universally instantaneous.
+
+For future benchmarks, record cold page availability, model readiness, warm STT/NLU/dialogue timing, fallback rate, and browser-observed response latency separately. Include hardware, sample count, audio duration, runtime versions, and p50/p95.

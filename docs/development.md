@@ -1,21 +1,16 @@
-# Local development and model setup
+# Development and model setup
 
-[Back to README](../README.md)
+[Documentation index](documentation.md) · [README](../README.md)
 
 ## Prerequisites
 
-- A checkout of this repository's `cloud` branch.
-- Python 3.12, matching the documented runtime environment.
-- SWI-Prolog and FFmpeg on the host.
-- Sufficient local memory for speech recognition, ONNX inference, and Prolog.
-- Model artifacts, obtained through local training or an authorized artifact download.
-- Provider credentials for any remote features you intend to exercise.
+- Git and the repository's actual clone URL.
+- Python 3.12; the reported verified environment uses 3.12.7.
+- SWI-Prolog and FFmpeg.
+- Compatible FP32 ONNX weights and bundled preprocessing assets.
+- Provider credentials only for the remote capabilities you want to enable.
 
-The branch notes mention a lower packaging minimum; this guide uses Python 3.12 to avoid implying that every supported package version has been tested.
-
-### System packages
-
-macOS with Homebrew:
+macOS/Homebrew:
 
 ```bash
 brew install swi-prolog ffmpeg
@@ -28,141 +23,134 @@ sudo apt-get update
 sudo apt-get install -y swi-prolog ffmpeg python3-venv
 ```
 
-Make sure your chosen Python interpreter is available separately. Package names and library discovery can vary by operating system. If `pyswip` cannot locate SWI-Prolog, verify the system installation and shared-library configuration before troubleshooting the application.
+Install an appropriate Python 3.12 interpreter separately if needed.
 
-## Python environment
+## Clone and install
 
-Run from the repository root:
+Clone the `cloud` branch from GitHub:
 
 ```bash
-git switch cloud
+git clone --branch cloud https://github.com/ducchuu/conversational_agents.git cookingbroski
+cd cookingbroski
 python3.12 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -e "./social-interaction-cloud[webserver,nlu,dev]"
 ```
 
-On Windows, activate the environment using `.venv\Scripts\Activate.ps1`; the system-package commands above are not Windows instructions.
+Windows PowerShell activation uses `.venv\Scripts\Activate.ps1`; the system-package commands above are not Windows instructions.
 
-The supplied installation extras are intended for application development and tests. Training may need additional dependencies; inspect `setup.py`, `pyproject.toml`, and the training imports before assuming the runtime environment includes PyTorch and export tools.
+For a specific pinned release, check out tag `v1.0.0` instead of a moving branch.
 
-The supplied Conda alternative is:
+The maintainer confirmed a functioning Python 3.12.7 environment, clean dependency installation, and complete test execution.
+
+## Pretrained model download
+
+Pretrained model weights (`bert_nlu.onnx`) and verification checksums are distributed via GitHub Release `v1.0.0` on `ducchuu/conversational_agents`.
+
+Download the compatible release assets using the GitHub CLI:
 
 ```bash
-conda env create -f environment.yaml
-conda activate PCA26
+mkdir -p social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints
+
+gh release download v1.0.0 \
+  --repo ducchuu/conversational_agents \
+  --pattern bert_nlu.onnx \
+  --pattern SHA256SUMS \
+  --dir social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints
 ```
 
-Check the `name:` field in `environment.yaml` if the environment name has changed. Use one environment approach at a time.
+Alternatively, download `bert_nlu.onnx` directly from the release page at:
+`https://github.com/ducchuu/conversational_agents/releases/tag/v1.0.0`
 
-## Credentials
+### Verify the model
 
-Configure credentials only for services you intend to use. A complete remote-fallback setup can include:
+From the repository root:
 
 ```bash
-export ANTHROPIC_API_KEY="your-anthropic-key"
-export ANTHROPIC_MODEL="your-provider-supported-model-id"
-export YOUTUBE_API_KEY="your-youtube-key"
-export ELEVENLABS_API_KEY="your-elevenlabs-key"
-export OPENAI_API_KEY="your-openai-key"
+python - <<'PY'
+import hashlib
+from pathlib import Path
+p = Path('social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints/bert_nlu.onnx')
+expected = '7e77e9ef55c57af6cbf888f6ce26ed04e4c57e3f9edcc1b0dc6d57f94c11dee5'
+actual = hashlib.sha256(p.read_bytes()).hexdigest()
+if actual != expected:
+    raise SystemExit(f'Checksum mismatch: {actual}')
+print('Model checksum verified:', actual)
+PY
 ```
 
-`ANTHROPIC_MODEL` must match both the application's configuration interface and a model available to your account. Earlier documentation gives a model identifier that has not been independently validated here; do not copy it blindly.
+This checksum applies to the documented artifact only; update it when intentionally publishing a different model. A correct checksum does not establish that the runtime selected that file. Check startup logs and evaluator output, especially if older INT8 artifacts remain present.
 
-Optional Langfuse configuration:
+## Optional provider configuration
+
+Use shell exports unless you have confirmed automatic `.env` loading:
 
 ```bash
-export LANGFUSE_SECRET_KEY="your-secret-key"
+export ANTHROPIC_API_KEY="your-key"
+export ANTHROPIC_MODEL="claude-haiku-5-5"
+export YOUTUBE_API_KEY="your-key"
+```
+
+Optional remote speech fallbacks:
+
+```bash
+export ELEVENLABS_API_KEY="your-key"
+export OPENAI_API_KEY="your-key"
+```
+
+Optional Langfuse tracing:
+
+```bash
+export LANGFUSE_SECRET_KEY="your-secret"
 export LANGFUSE_PUBLIC_KEY="your-public-key"
 export LANGFUSE_HOST="https://cloud.langfuse.com"
 ```
 
-These shell exports avoid assuming that a `.env` file is loaded automatically. Use a `.env` file only after confirming the application loads it from the intended directory. Never commit populated credential files.
+Never commit real credentials. Local BERT and local speech inference do not need remote inference keys, but credentials and provider access are required for the corresponding online features. Check startup behavior with omitted keys rather than assuming every optional-service combination has been tested.
 
-Local speech recognition and local NLU do not need remote inference keys. That does not mean every application path works without credentials: open-ended LLM responses, remote fallback, and video search require their respective services, and startup behavior should be tested with missing keys.
+Local speech recognition may download its model on first use if the host cache is empty. Container-preloaded weights do not automatically populate a local Python cache.
 
-## Obtain NLU weights
-
-The ONNX model is excluded from Git. Two workflows are documented.
-
-### Option A: train and export locally
-
-From the repository root, with training/export dependencies installed:
-
-```bash
-python social-interaction-cloud/sic_framework/services/nlu/train_and_export.py
-```
-
-The documented output directory is:
-
-```text
-social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints/
-```
-
-The runtime expects the quantized model and its compatible vocabulary/ontology assets. Keep them version-aligned. Training is not necessary when compatible pretrained weights are available.
-
-### Option B: authorized GCS download
-
-The project documentation identifies the following model object. Access requires suitable Google Cloud credentials and bucket permissions; public access is not established by this guide.
-
-```bash
-mkdir -p social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints
-gcloud storage cp \
-  gs://cloud-agent-conversational-models/bert_nlu_int8.onnx \
-  social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints/bert_nlu_int8.onnx
-```
-
-If the object has moved to a commit-tagged naming scheme, use the artifact referenced by the intended release. Do not assume a mutable unversioned object reproduces an older benchmark.
-
-Local Whisper may also need an initial model download unless its cache is already populated. The container build is described as preloading speech weights; that does not automatically populate a host Python environment.
-
-## Start the application
-
-From the repository root:
+## Run
 
 ```bash
 python social-interaction-cloud/sic_framework/services/webserver/webserver_pca.py
 ```
 
-Open `http://localhost:8080` and allow microphone access. Wait for the inference-ready indicator before recording.
+Open `http://localhost:8080`, allow microphone access, and wait for readiness.
 
-Documented endpoints:
-
-- `/api/health`: liveness information.
-- `/api/ready`: model-readiness information.
-- `/api/metrics`: in-process telemetry summaries.
-
-Confirm their current response schemas in the application code. A successful liveness response does not necessarily mean speech recognition is ready.
+- `/api/health`: liveness/health information.
+- `/api/ready`: model readiness.
+- `/api/metrics`: process-local telemetry.
 
 ## Tests and evaluation
 
 ```bash
-pytest social-interaction-cloud/tests/
-```
+python -m pytest social-interaction-cloud/tests/ -ra
 
-Live deployment tests are environment-dependent and should not be confused with isolated unit tests. Check `tests/test_e2e_cloud_run.py` for required target configuration before running it; do not assume the ordinary suite tests a public deployment.
-
-Dataset audit:
-
-```bash
 python social-interaction-cloud/sic_framework/services/nlu/utils/dataset_audit.py \
   --max_conflicts 0 --max_leakage 0
-```
 
-Model gate:
-
-```bash
 python social-interaction-cloud/sic_framework/services/nlu/train_and_export.py \
   --eval_only --min_intent_acc 0.85 --min_slot_f1 0.80
 ```
 
-See [evaluation](evaluation.md) before interpreting the output or publishing results.
+Live tests use `CLOUD_RUN_URL` and can be skipped when it is unset. See [evaluation](evaluation.md) for exact interpretation and backend-selection cautions.
 
-## Troubleshooting checklist
+## Optional training
 
-- Import error: confirm the active environment and editable installation.
-- Prolog load error: verify SWI-Prolog discovery and the working directory expected by the code.
-- Missing model: check artifact paths and access permissions.
-- Landing page works but audio fails: inspect readiness and model-loading logs.
-- Remote capability fails: verify the relevant provider configuration without logging secret values.
-- Unexpected dialogue behavior: close other sessions; current shared state can interfere with independent conversations.
+Training is not needed when compatible release weights are available. Install the training/export dependencies defined by the current packaging/environment files, then run:
+
+```bash
+python social-interaction-cloud/sic_framework/services/nlu/train_and_export.py
+```
+
+Training can create multiple artifacts. Explicitly verify which file the application and evaluator use; do not assume export order determines runtime selection.
+
+## Troubleshooting
+
+- Missing Prolog library: verify SWI-Prolog installation/discovery.
+- Missing model: check download location, checksum, and selected backend.
+- Page loads but speech fails: inspect readiness and warmup logs.
+- Provider error: check account access/configuration without logging keys.
+- Cross-session surprises: close other sessions; current server state is shared.

@@ -1,114 +1,79 @@
 # Deployment and operations
 
-[Back to README](../README.md)
+[Documentation index](documentation.md) · [README](../README.md)
 
-## Deployment definition
+## Two separate hosting paths
 
-The project describes two delivery paths:
+| Endpoint | Application host | Public access |
+|---|---|---|
+| `https://cookingbroski.mduchlinski.eu/` | Home server | Cloudflare Tunnel |
+| `https://social-agent-cloud-511906064574.us-central1.run.app/` | Google Cloud Run, `us-central1` | Cloud Run HTTPS endpoint |
 
-- [GitHub Actions](../.github/workflows/deploy.yml): developer-facing checks and deployment for the `cloud` branch.
-- [Cloud Build](../social-interaction-cloud/cloudbuild.yaml): GCP-native image build and deployment workflow.
+The recommended demonstration endpoint is the warm home-server application. The maintainer reports more responsive interaction there. The Cloud Run demo remains useful as evidence of cloud delivery and scale-to-zero operation.
 
-The [Dockerfile](../social-interaction-cloud/Dockerfile) defines the runtime image. Inspect these files for the current triggers, exact commands, permissions, and gate ordering. The pipelines should not be assumed to provide identical checks merely because they target the same service.
+Do not describe the home-server URL as tunneling to Cloud Run. Do not attribute all response delay to a cheap region: startup, network round trips, resources, inference, and provider calls are separate factors requiring measurement.
 
-This is an operational overview, not a standalone infrastructure provisioning script. Project setup, IAM bindings, buckets, secrets, registry repositories, and billing must exist before a first deployment.
+## Cloud delivery definitions
 
-## Runtime image
+- [GitHub Actions](../.github/workflows/deploy.yml)
+- [Cloud Build](../social-interaction-cloud/cloudbuild.yaml)
+- [Dockerfile](../social-interaction-cloud/Dockerfile)
 
-The branch notes describe a Python 3.12 slim image with SWI-Prolog, FFmpeg, ONNX Runtime, and CTranslate2-based speech inference. Speech model weights are preloaded during the container build, and Python bytecode is compiled ahead of startup.
+These files are the authority for triggers, IAM, checks, build steps, and resource flags. Do not assume both delivery paths enforce identical gates.
 
-Training-only libraries are intended to be excluded from the runtime image. Verify the built dependency inventory rather than inferring the final image contents from a source requirements file alone. Development/training environments can legitimately have additional dependencies.
+The documented workflow includes dataset checks, holdout model thresholds, application regression tests, container publication/deployment, and post-deployment smoke checks. A post-deployment failure does not imply automatic rollback unless implemented and tested.
 
-## Model artifacts
+## FP32 release alignment
 
-Weights are excluded from Git and retrieved from Google Cloud Storage during delivery. Earlier notes describe an unversioned `bert_nlu_int8.onnx`; the newer branch comparison describes commit-tagged artifacts and a mutable latest pointer.
+Current verified results use `bert_nlu.onnx`, not the old INT8 artifact. Audit every artifact consumer when preparing the release:
 
-For reproducibility:
+- Local inference path and automatic selection logic.
+- Model evaluation selection.
+- Docker COPY/download instructions.
+- GCS upload and retrieval paths, if retained.
+- GitHub Actions caches and cache keys.
+- Cloud Build artifact retrieval.
+- Release download instructions and hashes.
 
-1. Pin deployment to an identified model object/version.
-2. Record the artifact checksum with the application commit and dataset hashes.
-3. Evaluate that exact artifact before release.
-4. Keep vocabulary and ontology assets compatible with it.
-5. Retain the model artifact needed to reproduce or roll back a release.
+The summary reports FP32 deployed but does not provide all these configuration values. Confirm that an older INT8 cache or GCS object cannot silently override the intended model. A public GitHub Release is a distribution path; it need not replace private CI artifact storage, but both must reference the same intended model identity.
 
-A mutable latest pointer is convenient for discovery but is not a reproducible release identity. Verify the current upload/retrieval logic in the workflows before relying on commit-tagged storage.
+## Resource settings and startup
 
-## Quality gates
+Earlier configuration describes 4 vCPUs, 4 GiB, minimum instances 0, maximum instances 1, startup CPU boost, no CPU throttling, and a 3600-second timeout. Confirm actual settings in the deployment definitions and service revision before treating them as a current configuration inventory.
 
-The GitHub workflow is described as including:
+Scale-to-zero permits idle shutdown; it is not a zero-cost guarantee. Persistent connections, compute, builds, storage, logs, and provider requests can contribute costs.
 
-1. Dataset audit for configured conflict/leakage thresholds.
-2. Holdout model evaluation against configured intent/slot minimums.
-3. Unit and golden dialogue regression tests.
-4. Post-deployment live HTTP/Socket.IO checks.
+Background warmup lets the server bind before models are ready. Separate liveness from readiness; the UI should wait for `/api/ready` rather than treating page availability as inference readiness.
 
-The last gate occurs after a revision has been deployed. A failing post-deployment check does not itself prove that traffic is rolled back automatically. Confirm rollback behavior or implement a tested response procedure.
+The instance cap does not isolate users. Maintain the single-conversation demo constraint until state isolation is implemented.
 
-See [evaluation](evaluation.md) for unresolved dataset evidence and the distinction between configured thresholds and measured performance.
+## Secrets and authentication
 
-## Cloud Run settings
+The project describes Workload Identity Federation for GitHub-to-GCP authentication and Secret Manager for cloud credentials. Review actual trust bindings, service-account permissions, and secret references. Never include populated `.env` files, keys, or sensitive traces in release assets.
 
-The supplied documentation describes:
+For the home server, use the deployment's existing secret-management approach. This document does not invent a tunnel configuration, process supervisor, or host provisioning command that has not been supplied.
 
-```text
---memory=4Gi
---cpu=4
---min-instances=0
---max-instances=1
---timeout=3600
---cpu-boost
---no-cpu-throttling
-```
+## Health and observability
 
-| Setting | Intent and caveat |
-|---|---|
-| 4 vCPUs / 4 GiB | Resource budget for local speech, NLU, and Prolog; verify memory and latency under actual load |
-| Minimum instances 0 | Permits scale-to-zero; does not guarantee a zero monthly bill |
-| Maximum instances 1 | Caps instance count; does not isolate concurrent user conversations |
-| Timeout 3600 | Extends the request/connection window; clients still need reconnect handling |
-| Startup CPU boost | Provides additional startup resources; measure readiness rather than assuming a fixed speedup |
-| No CPU throttling | Supports background work; verify the selected billing behavior and cost implications |
+The maintainer reports successful health/readiness probes for both endpoints, WSS event transmission, and manual browser microphone/filter/TTS checks. See [evaluation](evaluation.md) for evidence scope.
 
-Billing can include active instances, startup activity, storage, logging, network usage, and provider APIs. Local inference avoids an external per-request inference fee; compute is not universally free.
+Use structured telemetry to distinguish STT, NLU, dialogue, and fallback costs. Process-local metrics/cache contents reset on restart. External log and Langfuse retention depend on configuration; do not call them permanent archives without a policy.
 
-## Startup and readiness
+## Release publication checklist
 
-Heavy models warm in a background thread so the web interface can bind its port before initialization completes. Keep these states separate:
+1. Finalize documentation with actual public repository (`https://github.com/ducchuu/conversational_agents`) and release tag (`v1.0.0`).
+2. Confirm redistribution rights and attribution notices in [LICENSE](../LICENSE).
+3. Verify FP32 selection in local, CI, container, and deployed paths (`bert_nlu.onnx`).
+4. Commit documentation and generate tag `v1.0.0` targeting commit `2a706d891d5dea630d495c77a73245dd9c102520` (or the documentation tag commit).
+5. Attach the compatible `bert_nlu.onnx` and [SHA256SUMS](SHA256SUMS).
+6. Include the [release manifest](release_manifest.md) containing source SHA, model hash, dataset/ontology/vocab hashes, runtime versions, and evaluation gates.
+7. Attach the sanitized [system verification report](system_verification_report.md).
+8. Completed fresh walkthrough verification of model download, checksums, application startup, and live dialogue interaction.
+9. Verify live revision and model readiness on Cloud Run (`https://social-agent-cloud-511906064574.us-central1.run.app`) and Cloudflare Tunnel (`https://cookingbroski.mduchlinski.eu/`).
+10. Publish release `v1.0.0` via `gh release create v1.0.0`.
 
-- Process listening.
-- Liveness endpoint responding.
-- Landing page usable.
-- Speech and NLU engines ready.
+See [release manifest](release_manifest.md) for full commands and asset listing.
 
-The documented `/api/ready` endpoint should control readiness messaging in the browser. Port binding alone is not evidence that the assistant can process audio.
+## Recovery
 
-The browser also includes an inactivity disconnect mechanism, described as seven minutes in the earlier README. This helps close idle sessions; actual scale-down and billing behavior must be verified in the deployed service.
-
-## Authentication and secrets
-
-GitHub Actions is described as using Workload Identity Federation rather than a stored service-account key. Scope trust to the intended repository/ref and grant the deployment identity only the permissions the workflow needs. Verify the actual IAM configuration separately from the YAML.
-
-Cloud deployment is described as using Google Secret Manager for provider and observability credentials. Check secret bindings and service-account access in the deployed revision; never publish credential values in documentation, screenshots, or logs.
-
-## Observability
-
-- `/api/health`: liveness.
-- `/api/ready`: model initialization state.
-- `/api/metrics`: process-local summaries.
-- Structured `TELEMETRY_LOG` events: stage timing and engine selection.
-- Optional Langfuse traces: LLM behavior and usage.
-
-In-memory counters reset on restart. External log/trace retention depends on configuration; neither service should be described as permanent storage without a defined retention policy. Review request content capture and access controls before enabling traces for public use.
-
-## Image cleanup and rollback
-
-The supplied workflows retain the three newest image digests and delete older images. Check that any cleanup operation preserves artifacts required by active revisions and the intended rollback window.
-
-Before relying on rollback:
-
-1. Identify a known-good application revision and its model/configuration.
-2. Confirm required images and model objects are still available.
-3. Rehearse traffic reassignment and smoke-test the result.
-4. Record the recovery procedure and limitations.
-
-Retaining three images is a storage policy, not proof of immediate or zero-downtime recovery.
+Retain compatible application images, model artifacts, and configuration for rollback. An image-pruning policy alone is not a rollback test. Document and rehearse the actual recovery process before claiming automatic or zero-downtime recovery.

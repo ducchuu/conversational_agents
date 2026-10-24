@@ -1,0 +1,56 @@
+MIT License
+
+Copyright (c) 2026 Mikołaj Duchliński (Cloud & MLOps Extensions)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+--------------------------------------------------------------------------------
+THIRD-PARTY NOTICES & ACADEMIC ATTRIBUTION
+--------------------------------------------------------------------------------
+
+1. University Coursework Baseline:
+   CookingBroski originated as an academic project for the Conversational Agents
+   course at Vrije Universiteit Amsterdam (repository: VU-PCA-2026/agent-2026-am1 ; branch `main`).
+   Original team contributors:
+   - Mikołaj Duchliński (@ducchuu)
+   - Fady Eshak (@fady-eshak)
+   - Bennett Hampel (@bugheadwhat)
+   - Abdelmatine Daddah (@Abdelmatine24)
+   - Kabir D'Souza (@kabirds7)
+   - Lazar Gyoshev (@lazargyoshev)
+
+   The original project assets included the Social Interaction Cloud (SIC)
+   framework baseline, initial MARBEL dialogue assets, and the Prolog recipe
+   knowledge base.
+
+2. Independent Cloud & MLOps Extensions:
+   The extensions contained in the `cloud` branch—including the Python dialogue
+   manager, pyswip integration, DistilBERT ONNX FP32 intent/slot pipeline,
+   dataset curation & CI/CD audit gates, Faster-Whisper local STT cascade,
+   Claude Haiku fallback streaming, Google Cloud Run containerization,
+   and Cloudflare Tunnel homelab deployment—were independently developed by
+   Mikołaj Duchliński and are licensed under the MIT License above.
+
+3. Third-Party Libraries & Models:
+   - DistilBERT: Apache 2.0 License (HuggingFace / HuggingFace Transformers)
+   - Faster-Whisper / CTranslate2: MIT License / Apache 2.0 License
+   - SWI-Prolog: Simplified BSD License (BSD-2-Clause)
+   - PySWIP: MIT License
+   - Flask & Werkzeug: BSD-3-Clause License
+

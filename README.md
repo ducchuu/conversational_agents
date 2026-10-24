@@ -1,135 +1,234 @@
 # CookingBroski
 
-A voice-driven cooking assistant that helps users find recipes through conversational filters, exclusions, and follow-up questions. CookingBroski combines local speech recognition, a quantized BERT model, a Python dialogue manager, and Prolog-based recipe filtering, with cloud LLM fallbacks for open-ended requests.
+A voice-driven cooking assistant for finding recipes through conversational filters, exclusions, and follow-up questions. It combines local speech recognition, BERT intent and slot extraction, a Python dialogue manager, and Prolog recipe filtering, with Claude fallbacks for open-ended requests.
 
-This repository extends an earlier university conversational-agent project into a browser-based application deployed on Google Cloud Run. It is a portfolio prototype with automated evaluation and deployment workflows—not a multi-user production service.
+This portfolio project extends a university conversational-agent system into a browser-based application with automated evaluation, deployment workflows, and operational telemetry.
 
-## Try the demo
+## Try it
 
-[Open the Cloud Run demo](https://social-agent-cloud-511906064574.us-central1.run.app/)
+| Demo | Hosting | What to expect |
+|---|---|---|
+| [Recommended: home-server demo](https://cookingbroski.mduchlinski.eu/) | Home server exposed through Cloudflare Tunnel | Instant, responsive interaction; availability depends on the connected users' instances |
+| [Google Cloud demo](https://social-agent-cloud-511906064574.us-central1.run.app/) | Google Cloud Run, `us-central1` | Scale-to-zero hosting; startup and network delay can make interaction slower, Deployed for cloud platform practices but deployed with low budget plpanning |
 
-- Allow approximately 10–15 seconds for startup after inactivity; actual startup time can vary.
-- Allow microphone access. Click to begin recording and click again to send your utterance.
-- Use one active conversation at a time. Shared server-side dialogue state is a known limitation.
-- Do not submit sensitive information. Configured fallback providers may receive audio or text, and tracing may record request content. See [limitations and data handling](docs/limitations.md).
+Allow microphone access, click to start recording, and click again to send an utterance. Wait for model readiness before speaking.
 
-### Example interaction
+Use one active conversation at a time: independent concurrent sessions are not yet isolated. Do not submit sensitive information; configured cloud fallbacks and tracing can process request content. See [limitations and data handling](docs/limitations.md).
 
-The following illustrates the intended workflow, not a captured benchmark transcript:
+### Example of usage
 
-> User: Find an Italian dinner with tomatoes.  
-> User: No mushrooms, and under 30 minutes.  
-> User: Undo my last filter.  
-> User: Show me another recipe.
+There is guidance instruction available on each webpage for user with inspiration of interaction with conversational agent. Here there are also some examples that illustrate supported interaction patterns, not a captured benchmark transcript:
 
-The assistant updates recipe constraints across turns and presents matching recipes in the browser. Open-ended cooking questions can use the LLM fallback.
+> Find an Italian dinner with tomatoes.  
+> No mushrooms.  
+> Under 30 minutes.  
+> Undo my last filter.  
+> Show me another recipe.
 
-## Project evolution and contributions
+The assistant maintains constraints across turns and displays matching recipes. Selected open-ended cooking questions use Claude when available.
 
-The original course project supplied the starting point for the conversational cooking domain, recipe knowledge base, and dialogue design. The `main` branch contains the earlier project; the `cloud` branch contains the cloud-oriented extension described here.
+## Current limitations
 
-The cloud extension adds or changes:
+- Shared dialogue and mutable Prolog state are not isolated across independent users.
+- Audio uses push-to-talk utterance upload, not continuous full-duplex streaming.
+- Cloud Run can introduce startup delay; the home-server demo is not an availability guarantee.
+- Browser speech behavior varies; in-memory caches and counters reset on restart.
+- External fallback features depend on provider access and connectivity.
+- Recipe filtering and generated advice are not an allergy or medical-suitability guarantee.
 
-- **Dialogue runtime:** replaces the legacy agent/Java bridge with a Python state machine and direct `pyswip` integration, retaining SWI-Prolog reasoning.
-- **NLU and data:** curates and expands intent/slot examples, adds dataset auditing, and exports the BERT model to dynamically quantized INT8 ONNX.
-- **Browser experience:** introduces browser audio capture, recipe views, filter badges, video lookup, and speech-synthesis recovery behavior.
-- **Delivery:** adds a containerized runtime, Cloud Run deployment, model-artifact retrieval, and CI quality checks.
-- **Evaluation and operations:** adds dialogue regression tests, model-performance gates, structured telemetry, and optional Langfuse tracing.
+See [limitations](docs/limitations.md).
 
-The inherited system and these extensions should be considered separately when assessing the project's scope. Detailed licensing and original contributor attribution must be checked in the repository's original materials; this README does not assign a new license to inherited assets.
-
-## Architecture at a glance
+## Architecture
 
 ```mermaid
 flowchart TD
-    Browser[Browser: microphone and recipe UI] -->|Recorded audio over Socket.IO| STT[Local faster-whisper]
-    STT -.->|On local engine error| RemoteSTT[Configured cloud STT fallback]
-    STT --> NLU[INT8 ONNX BERT: intent and slots]
+    Browser[Browser microphone and recipe UI] -->|Completed audio recording| STT[Local faster-whisper]
+    STT -.->|On processing error| RemoteSTT[Configured cloud STT fallback]
+    STT --> NLU[Local FP32 ONNX BERT]
     RemoteSTT --> NLU
-    NLU --> Router[NLU routing and validation]
-    Router <--> LLM[Optional Claude fallback]
-    Router --> DM[Python dialogue manager]
-    DM <--> Prolog[SWI-Prolog recipe filtering]
-    DM --> Response[Response text and UI events]
-    Response --> Browser
-    Browser --> TTS[Browser speech synthesis]
+    NLU --> Routing[Intent and slot routing]
+    Routing <--> Claude[Optional Claude fallback]
+    Routing --> Dialogue[Python dialogue manager]
+    Dialogue <--> Prolog[SWI-Prolog: 895 recipes]
+    Dialogue --> Output[Response text and UI events]
+    Output --> Browser
+    Browser --> Speech[Browser speech synthesis]
 ```
 
-The browser records complete utterances rather than implementing continuous full-duplex audio. Local processing avoids a remote inference request for supported paths; configured fallbacks provide additional functionality, not guaranteed availability.
+The current evaluated and reported deployed NLU backend is FP32 ONNX. INT8 export remains part of the project's development history but is not the basis of the results below. See [architecture](docs/architecture.md).
 
-See [architecture and design decisions](docs/architecture.md) for the request lifecycle and state model.
+## Repository layout
 
-## Engineering highlights
+```text
+conversational_agents/
+├── .github/
+│   └── workflows/
+│       └── deploy.yml              
+├── docs/
+│   ├── documentation.md
+│   ├── architecture.md
+│   ├── development.md
+│   ├── evaluation.md
+│   ├── deployment.md
+│   ├── limitations.md
+│   ├── release_manifest.md
+│   ├── SHA256SUMS
+│   └── system_verification_report.md # Verifiable record of model eval, audit gate, and test execution
+├── social-interaction-cloud/       # Core application source and framework
+│   ├── Dockerfile                  
+│   ├── cloudbuild.yaml             
+│   ├── pyproject.toml              # Build system, package dependencies, and optional extras
+│   ├── requirements.txt            # Locked runtime dependencies
+│   ├── dialog_mngr/                # Dialogue management & symbolic recipe knowledge base
+│   │   ├── agent_python/           # Python dialogue orchestrator, state tracker, and pyswip bridge
+│   │   │   ├── dialog_manager.py   # Turn-by-turn conversational policy and intent dispatcher
+│   │   │   ├── state.py            # Turn history, accumulated positive/negative filters, undo stack
+│   │   │   └── prolog_interface.py # In-process SWI-Prolog query engine via pyswip
+│   │   ├── recipe_database.pl      # Knowledge base with 895 structured Prolog recipe facts
+│   │   ├── ingredient_hierarchies.pl # Taxonomy of ingredients, cuisines, and dietary restrictions
+│   │   └── dialog.pl, dialogflow.pl, responses.pl # Deterministic dialogue rules & template responses
+│   ├── sic_framework/services/
+│   │   ├── nlu/                    # Natural Language Understanding pipeline
+│   │   │   ├── fast_bert_nlu.py    # ONNX inference engine (FP32 DistilBERT intent & slot tagging)
+│   │   │   ├── train_and_export.py # PyTorch training, evaluation gate, and ONNX export utility
+│   │   │   └── utils/
+│   │   │       ├── dataset_audit.py # CI/CD gate for train-test leakage and label conflicts
+│   │   │       ├── tokenization.py  # Fast WordPiece tokenizer wrapper (Rust tokenizers)
+│   │   │       ├── dataset.py       # PyTorch Dataset and joint Intent/Slot DistilBERT model
+│   │   │       ├── checkpoints/     # Local model weights (bert_nlu.onnx) & experiment history
+│   │   │       └── data/            # Ontology, vocabulary (vocab.txt), train/test/exclusion splits
+│   │   └── webserver/              # Web application and external service integrations
+│   │       ├── webserver_pca.py    # Flask & Socket.IO server, audio reception, telemetry endpoints
+│   │       ├── llm_nlu_service.py  # Claude Haiku fallback, prompt caching, Pydantic NLU extraction
+│   │       ├── stt_service.py      # Faster-Whisper local STT with ElevenLabs/OpenAI fallbacks
+│   │       ├── tts_service.py      # Google Cloud / browser speech synthesis coordination
+│   │       ├── telemetry.py        # Stage-by-stage latency logging and Langfuse tracing hooks
+│   │       ├── templates/          # Jinja2 HTML views (welcome, recipe grid, confirmation)
+│   │       └── static/             # Client-side JS (audio recording, WebM upload, TTS callbacks), CSS
+│   └── tests/                      # full test suite (138 tests)
+│       ├── evals/
+│       │   └── test_golden_dialogues.py # 110 single-turn golden utterance regression evaluations
+│       ├── test_dialog_behaviors.py     # Dialogue state, undo, filtering, and rejection tests
+│       ├── test_e2e_cloud_run.py        # Live HTTP, WebSocket, and readiness smoke tests
+│       ├── test_google_services.py      # STT / TTS service unit tests
+│       ├── test_openai_services.py      # FastBERTNLU and subword alignment unit tests
+│       └── test_webserver.py            # Webserver routing, health probes, and cache tests
+├── LICENSE                         # MIT License for cloud extensions with third-party notices
+└── README.md
+```
+## API and protocol overview
 
-| Area | Implementation |
+CookingBroski exposes HTTP endpoints for health probes, telemetry, and UI views, alongside a WebSocket (Socket.IO) protocol for real-time voice and dialogue orchestration.
+
+### HTTP REST and probe endpoints
+
+| Method | Path | Format | Description |
+|---|---|---|---|
+| `GET` | `/` | HTML | Application landing view (`start.html`); resets session state |
+| `GET` | `/<page>.html` | HTML | Dynamic Jinja2 view rendering (`welcome.html`, `recipe_overview.html`, `recipe_confirmation.html`) |
+| `GET` | `/api/health` | JSON | Liveness probe: responds immediately with `{status: "ok", models_ready: bool}` |
+| `GET` | `/api/ready` | JSON | Readiness probe: returns `200` once Faster-Whisper and FastBERTNLU finish warmup (`503` during warmup) |
+| `GET` | `/api/metrics` | JSON | Operational telemetry: component latency histograms (STT, NLU, Prolog), cache hit counters, and errors |
+| `GET` | `/api/youtube/search` | JSON | Recipe video lookup via YouTube Data API with a 512-entry LRU in-memory cache |
+
+### Real-time Socket.IO protocol
+
+| Direction | Event | Payload | Description |
+|---|---|---|---|
+| Client → Server | `connect` | — | Establishes WebSocket transport with a disconnect grace timer to preserve active state |
+| Client → Server | `client_start` | `{}` | Signals UI readiness; triggers agent greeting and initial overview |
+| Client → Server | `audio_stream` | `Blob` (WebM) | Transmits recorded utterance for STT transcription, NLU intent/slot tagging, and Prolog query |
+| Client → Server | `buttonClick` | `{button: str, ...}` | Forwards button and filter click interactions directly to the dialogue policy |
+| Server → Client | `speech` | `str` | Full agent response string to be spoken by browser `window.speechSynthesis` |
+| Server → Client | `speech_chunk` | `{text, is_first, is_final}` | Streamed speech clause chunks from Claude Haiku for lower perceived speech latency |
+| Server → Client | `load_page` | `{page: str}` | Signals browser to navigate between views while preserving WebSocket connection |
+
+
+## Evaluation snapshot
+
+The following results are transcribed from the maintainer's verification summary supplied on 24 October 2026. They describe a specific tested version, not an uptime or general-quality guarantee.
+
+| Check | Reported result |
 |---|---|
-| Local NLU | Joint intent/slot BERT model exported to INT8 ONNX for CPU inference |
-| Dialogue | Stateful Python routing, accumulated filters, rejection tracking, and undo support |
-| Recipe reasoning | SWI-Prolog facts and deterministic constraint filtering |
-| Speech | Local `faster-whisper`, optional remote STT fallbacks, browser TTS |
-| Evaluation | Dataset audit, model thresholds, unit/dialogue regression tests, live smoke tests |
-| Deployment | Docker, GitHub Actions, Cloud Build, Google Cloud Run |
-| Operations | Per-stage timing, structured logs, optional Langfuse tracing |
+| Verified source | `2a706d891d5dea630d495c77a73245dd9c102520`, branch `cloud` |
+| Runtime | Python 3.12.7 |
+| Dataset | 9,008 examples: 7,037 training / 1,971 evaluation |
+| Normalized train/test text overlap | 0 detected |
+| Cross-intent near-duplicate conflicts | 0 detected under the audit's configured checks |
+| Local NLU backend | FP32 ONNX, `bert_nlu.onnx` |
+| Intent accuracy | 94.98% on 1,971 evaluation examples |
+| Slot-type F1 | 88.48%, support-weighted WordPiece-token F1; BIO prefixes merged, `O` excluded from averaged classes |
+| Automated suite | 138 passed in the reported run, including 110 single-turn golden cases |
 
-## Evaluation status
+These model metrics evaluate local BERT, not the complete speech/heuristic/LLM pipeline. Full methodology, artifact identity, and test breakdown: [evaluation](docs/evaluation.md) and [system verification report](docs/system_verification_report.md).
 
-The deployment workflow is described as enforcing minimum intent accuracy of 85% and slot F1 of 80%, alongside dataset checks and regression tests. These are configured acceptance thresholds, not measured results or guarantees of real-world accuracy.
-
-Earlier project notes report approximately 6–8 ms for local BERT inference and intent accuracy around 93.7–94.9%, with slot F1 around 0.87–0.89. Those reports are not presented here as a single verified current benchmark: the supplied documentation contains conflicting dataset counts and train/test overlap statements.
-
-For reproducible evaluation commands, the evidence needed to publish a benchmark, and the unresolved dataset reconciliation, see [evaluation and data quality](docs/evaluation.md).
 
 ## Local quickstart
 
-Use the `cloud` branch for this version. From an existing checkout:
+Install Python 3.12, SWI-Prolog, and FFmpeg first. Clone the `cloud` branch from GitHub:
 
 ```bash
-git switch cloud
+git clone --branch cloud https://github.com/ducchuu/conversational_agents.git cookingbroski
+cd cookingbroski
 python3.12 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -e "./social-interaction-cloud[webserver,nlu,dev]"
 ```
 
-Install SWI-Prolog and FFmpeg, configure any required credentials, and obtain the model artifacts before starting the application. The model weights are not included in Git; a fresh checkout is not sufficient on its own.
+Obtain the compatible pretrained FP32 model, configure the optional services you want to use, then start the application:
 
 ```bash
 python social-interaction-cloud/sic_framework/services/webserver/webserver_pca.py
 ```
 
-Open `http://localhost:8080`. See [local development](docs/development.md) for system prerequisites, environment variables, model setup, and tests.
+Open `http://localhost:8080` and wait for readiness. Full instructions: [development guide](docs/development.md).
 
-## Current limitations
+### Pretrained model downloads
 
-- Shared in-process dialogue and Prolog state: not suitable for independent concurrent users without additional isolation.
-- Scale-to-zero startup delay; the landing page can become available before inference models are ready.
-- Browser-dependent microphone and speech-synthesis behavior.
-- No continuous speech streaming or mid-response voice interruption.
-- In-memory caches and metric counters reset when the process restarts.
-- Cloud fallback capabilities depend on credentials, provider access, and network availability.
+Pretrained model weights are distributed via GitHub Releases (`v1.0.0`). Download the compatible model asset directly into the expected checkpoints directory:
 
-See [limitations, data handling, and next steps](docs/limitations.md).
+```bash
+mkdir -p social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints
+
+gh release download v1.0.0 \
+  --repo ducchuu/conversational_agents \
+  --pattern bert_nlu.onnx \
+  --dir social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints
+```
+
+The expected runtime location is:
+
+```text
+social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints/bert_nlu.onnx
+```
+
+Verify its SHA-256 checksum (`7e77e9ef55c57af6cbf888f6ce26ed04e4c57e3f9edcc1b0dc6d57f94c11dee5`). See [release and model download instructions](docs/development.md#pretrained-model-download) for full details and offline verification scripts.
+
+
+## What changed from the original project?
+
+The earlier `main` branch contains the university project. The `cloud` branch contains the extension described here.
+
+The original project supplied the Social Interaction Cloud framework integration, MARBEL-based dialogue system, initial NLU data, and Prolog recipe knowledge base. The independent extension adds or changes:
+
+- Python dialogue routing and direct `pyswip` integration in place of the legacy agent/Java bridge.
+- Accumulated inclusion/exclusion filters, rejected-recipe tracking, and undo behavior.
+- Curated NLU data, a shared WordPiece tokenizer, ONNX inference, and dataset-quality gates.
+- Browser microphone capture, recipe views, video lookup, and speech-synthesis recovery.
+- Local speech recognition, Claude fallbacks, structured telemetry, and optional LLM tracing.
+- Containerized hosting, CI/CD, regression tests, and live deployment checks.
+
+See [attribution and licensing](docs/documentation.md#attribution-and-licensing) for original contributors and unresolved licensing boundaries.
+
 
 ## Documentation
 
-- [Architecture and design decisions](docs/architecture.md)
-- [Local development and model setup](docs/development.md)
-- [Evaluation and data quality](docs/evaluation.md)
+Start with the [documentation index](docs/documentation.md), or go directly to:
+
+- [Architecture](docs/architecture.md)
+- [Development and model setup](docs/development.md)
+- [Evaluation](docs/evaluation.md)
 - [Deployment and operations](docs/deployment.md)
-- [Limitations, data handling, and next steps](docs/limitations.md)
+- [Limitations and data handling](docs/limitations.md)
 
-## Repository map
-
-```text
-.github/workflows/deploy.yml       # GitHub Actions checks and deployment
-social-interaction-cloud/
-  Dockerfile                      # Runtime image
-  cloudbuild.yaml                 # GCP build/deployment workflow
-  dialog_mngr/
-    agent_python/                 # Dialogue manager, state, Prolog bridge
-    *.pl                          # Recipe facts and reasoning rules
-  sic_framework/services/
-    nlu/                          # Inference, training/export, dataset audit
-    webserver/                    # Flask/Socket.IO, STT, LLM, UI, telemetry
-  tests/                          # Unit, dialogue, and live integration tests
-```
