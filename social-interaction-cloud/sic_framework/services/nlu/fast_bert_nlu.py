@@ -143,6 +143,78 @@ def normalize_slots(slots):
     return normalized_slots
 
 
+def correct_exclusion_polarity(text: str, slots: dict) -> dict:
+    """
+    Inference Guard: Remap erroneously extracted positive slots (cuisine, ingredient, tag)
+    to their exclusion counterparts (excludeCuisine, excludeIngredient, excludeTag) when the
+    utterance context explicitly negates or excludes that entity (e.g. 'exclude ...', 'no ...',
+    'without ...', 'don't want any ...', 'skip ...', 'omit ...').
+    """
+    if not slots:
+        return slots
+
+    text_lower = text.lower()
+    mapping = {
+        "cuisine": "excludeCuisine",
+        "ingredient": "excludeIngredient",
+        "ingredientType": "excludeIngredient",
+        "tag": "excludeTag",
+        "mealType": "excludeMealType",
+    }
+
+    neg_patterns = [
+        r"\b(?:exclude|without|no|omit|skip|avoid|except\s+for|except)\s+(?:any\s+)?(?:the\s+)?(?:all\s+)?",
+        r"\b(?:don\'t|dont|do\s+not)\s+want\s+(?:any\s+)?(?:the\s+)?",
+    ]
+
+    is_overall_exclusion = bool(
+        re.match(r"^(?:please\s+)?(?:exclude|without|no|omit|skip|avoid)\b", text_lower)
+    )
+
+    updated = dict(slots)
+    for pos_key, neg_key in mapping.items():
+        if pos_key in updated:
+            vals = updated[pos_key]
+            val_list = vals if isinstance(vals, list) else [vals]
+            remaining_pos = []
+
+            for v in val_list:
+                v_str = str(v).lower()
+                is_negated = False
+                for p in neg_patterns:
+                    pattern = p + r"[^,.]*?\b" + re.escape(v_str) + r"\b"
+                    if re.search(pattern, text_lower):
+                        is_negated = True
+                        break
+
+                if not is_negated and is_overall_exclusion:
+                    is_negated = True
+
+                if is_negated:
+                    if neg_key in updated:
+                        curr = (
+                            updated[neg_key]
+                            if isinstance(updated[neg_key], list)
+                            else [updated[neg_key]]
+                        )
+                        if v not in curr:
+                            curr.append(v)
+                        updated[neg_key] = curr
+                    else:
+                        updated[neg_key] = v
+                else:
+                    remaining_pos.append(v)
+
+            if remaining_pos:
+                updated[pos_key] = (
+                    remaining_pos if isinstance(vals, list) else remaining_pos[0]
+                )
+            else:
+                del updated[pos_key]
+
+    return updated
+
+
 def extract_slots_from_text(slots_array, inference_text, subword_tokens=None):
     """
     Extracts slot values from the predicted BIO slots array and input text.
@@ -439,6 +511,7 @@ class FastBERTNLU:
 
         slot_dict = extract_slots_from_text(slots, text, subword_tokens=subword_tokens)
         normalized_slots = normalize_slots(slot_dict)
+        normalized_slots = correct_exclusion_polarity(text, normalized_slots)
 
         # Quantitative slot extraction (servings, nrOfIngredients, nrOfSteps)
         # These constraints exist in the dialogue manager and Prolog engine but

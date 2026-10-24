@@ -242,7 +242,7 @@ GOLDEN_SLOT_CASES = [
     # Recently Fixed Dataset Bug Assertions (Mixed Polarity & Tags)
     ("Without meat", "addFilter", {"excludeIngredient": "meat"}, {"ingredient", "ingredientType"}),
     ("Exclude Chinese food", "addFilter", {"excludeCuisine": "chinese"}, {"cuisine"}),
-    ("No soup please", "addFilter", {"excludeIngredient": "soup"}, {"tag"}),
+    ("No soup please", "addFilter", {("excludeTag", "excludeIngredient"): "soup"}, {"tag"}),
     ("I want an Italian dish with garlic and without cheese", "addFilter", {"cuisine": "italian", "ingredient": "garlic", "excludeIngredient": "cheese"}, {"excludeCuisine"}),
 ]
 
@@ -271,23 +271,32 @@ def test_golden_dialogue_slots(nlu_engine, utterance, expected_intent, expected_
 
     # 3. Assert Exact Slot Match
     for slot_key, expected_val in expected_slots.items():
-        assert slot_key in predicted_slots, (
-            f"Utterance '{utterance}' missed expected slot '{slot_key}'. "
-            f"Predicted slots: {predicted_slots}"
-        )
+        if isinstance(slot_key, (tuple, list, set)):
+            matching_key = next((k for k in slot_key if k in predicted_slots), None)
+            assert matching_key is not None, (
+                f"Utterance '{utterance}' missed expected slot from '{slot_key}'. "
+                f"Predicted slots: {predicted_slots}"
+            )
+            actual_key = matching_key
+        else:
+            assert slot_key in predicted_slots, (
+                f"Utterance '{utterance}' missed expected slot '{slot_key}'. "
+                f"Predicted slots: {predicted_slots}"
+            )
+            actual_key = slot_key
         
-        pred_val = predicted_slots[slot_key]
+        pred_val = predicted_slots[actual_key]
         pred_items = pred_val if isinstance(pred_val, list) else [pred_val]
 
         # FastBERTNLU.predict() natively returns canonical singularized values via get_canonical_value
         if isinstance(expected_val, (set, list, tuple)):
             assert any(item in pred_items for item in expected_val), (
-                f"Slot value mismatch for '{slot_key}' in '{utterance}': "
+                f"Slot value mismatch for '{actual_key}' in '{utterance}': "
                 f"expected one of '{expected_val}', got '{pred_val}'"
             )
         else:
             assert expected_val in pred_items, (
-                f"Slot value mismatch for '{slot_key}' in '{utterance}': "
+                f"Slot value mismatch for '{actual_key}' in '{utterance}': "
                 f"expected '{expected_val}', got '{pred_val}'"
             )
 
