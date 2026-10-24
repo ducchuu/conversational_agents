@@ -860,7 +860,7 @@
     "text": "I'm not in the mood for Chinese or Japanese cuisine, so exclude both.",
     "intent": "addFilter",
     "slots": {
-      "excludeCuisine": "Chinese"
+      "cuisine": "Chinese"
     }
   },
   {
@@ -1102,9 +1102,9 @@
     "text": "i would like a dish from bulgaria without noodles that takes less than 15 minutes",
     "intent": "addFilter",
     "slots": {
-      "tag": "noodles",
+      "excludeTag": "noodles",
       "duration": "15 minutes",
-      "excludeCuisine": "bulgaria"
+      "cuisine": "bulgaria"
     }
   },
   {
@@ -1406,8 +1406,8 @@
     "text": "I want English meal without meat",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "meat",
-      "excludeCuisine": "English"
+      "excludeIngredient": "meat",
+      "cuisine": "English"
     }
   },
   {
@@ -1423,9 +1423,9 @@
     "text": "i would like a dish from bulgaria without noodles that takes more than 15 minutes",
     "intent": "addFilter",
     "slots": {
-      "tag": "noodles",
+      "excludeTag": "noodles",
       "duration": "15 minutes",
-      "excludeCuisine": "bulgaria"
+      "cuisine": "bulgaria"
     }
   },
   {
@@ -1465,9 +1465,9 @@
     "text": "something spanish without curry which takes no longer than 25 minutes",
     "intent": "addFilter",
     "slots": {
-      "tag": "curry",
+      "excludeTag": "curry",
       "duration": "25 minutes",
-      "excludeCuisine": "spanish"
+      "cuisine": "spanish"
     }
   },
   {
@@ -1483,7 +1483,7 @@
     "text": "no bulgarian and no dinner recipes",
     "intent": "addFilter",
     "slots": {
-      "tag": "dinner",
+      "excludeTag": "dinner",
       "excludeCuisine": "bulgarian"
     }
   },
@@ -1492,9 +1492,9 @@
     "text": "something spanish without curry which takes less than 25 minutes",
     "intent": "addFilter",
     "slots": {
-      "tag": "curry",
+      "excludeTag": "curry",
       "duration": "25 minutes",
-      "excludeCuisine": "spanish"
+      "cuisine": "spanish"
     }
   },
   {
@@ -1510,9 +1510,9 @@
     "text": "i would like a dish from bulgaria without noodles that does not take more than 15 minutes",
     "intent": "addFilter",
     "slots": {
-      "tag": "noodles",
+      "excludeTag": "noodles",
       "duration": "15 minutes",
-      "excludeCuisine": "bulgaria"
+      "cuisine": "bulgaria"
     }
   },
   {
@@ -1520,8 +1520,10 @@
     "text": "i want a dish without garlic and without cheese",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "cheese",
-      "excludeIngredient": "garlic"
+      "excludeIngredient": [
+        "cheese",
+        "garlic"
+      ]
     }
   },
   {
@@ -1585,7 +1587,7 @@
     "text": "Do not include poultry in my meal.",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "poultry"
+      "excludeIngredient": "poultry"
     }
   },
   {
@@ -1593,7 +1595,7 @@
     "text": "I want to cook something that is not from Italy",
     "intent": "addFilter",
     "slots": {
-      "cuisine": "Italy"
+      "excludeCuisine": "Italy"
     }
   },
   {
@@ -1601,7 +1603,7 @@
     "text": "does not have yellow mustard",
     "intent": "addFilter",
     "slots": {
-      "ingredient": "yellow mustard"
+      "excludeIngredient": "yellow mustard"
     }
   },
   {
@@ -1610,7 +1612,7 @@
     "intent": "addFilter",
     "slots": {
       "tag": "brunch",
-      "ingredientType": "egg"
+      "excludeIngredient": "egg"
     }
   },
   {
@@ -1618,7 +1620,7 @@
     "text": "I'd love anything without meat",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "meat"
+      "excludeIngredient": "meat"
     }
   },
   {
@@ -1627,7 +1629,7 @@
     "intent": "addFilter",
     "slots": {
       "tag": "bbq",
-      "ingredientType": "meat"
+      "excludeIngredient": "meat"
     }
   },
   {
@@ -1635,7 +1637,7 @@
     "text": "I do not want crisps in the ingredients.",
     "intent": "addFilter",
     "slots": {
-      "ingredient": "crisps"
+      "excludeIngredient": "crisps"
     }
   },
   {
@@ -1643,7 +1645,7 @@
     "text": "I want something that does not have pepper",
     "intent": "addFilter",
     "slots": {
-      "ingredient": "pepper"
+      "excludeIngredient": "pepper"
     }
   },
   {
@@ -1651,7 +1653,7 @@
     "text": "A recipe without lamb",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "lamb"
+      "excludeIngredient": "lamb"
     }
   },
   {
@@ -1659,7 +1661,7 @@
     "text": "not orange",
     "intent": "addFilter",
     "slots": {
-      "ingredient": "orange"
+      "excludeIngredient": "orange"
     }
   },
   {
@@ -1667,7 +1669,7 @@
     "text": "does not have purple sprouting broccoli",
     "intent": "addFilter",
     "slots": {
-      "ingredient": "purple sprouting broccoli"
+      "excludeIngredient": "purple sprouting broccoli"
     }
   },
   {
@@ -1675,7 +1677,7 @@
     "text": "Please, no meat in the recipes.",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "meat"
+      "excludeIngredient": "meat"
     }
   },
   {
@@ -1683,7 +1685,7 @@
     "text": "I'm not yearning for Singaporean food.",
     "intent": "addFilter",
     "slots": {
-      "cuisine": "Singaporean"
+      "excludeCuisine": "Singaporean"
     }
   },
   {
@@ -1691,7 +1693,7 @@
     "text": "does not include white tuna",
     "intent": "addFilter",
     "slots": {
-      "ingredient": "white tuna"
+      "excludeIngredient": "white tuna"
     }
   },
   {
@@ -1699,7 +1701,7 @@
     "text": "does not have white tuna",
     "intent": "addFilter",
     "slots": {
-      "ingredient": "white tuna"
+      "excludeIngredient": "white tuna"
     }
   },
   {
@@ -1707,7 +1709,7 @@
     "text": "I do not want Mexican recipes",
     "intent": "addFilter",
     "slots": {
-      "cuisine": "Mexican"
+      "excludeCuisine": "Mexican"
     }
   },
   {
@@ -1715,7 +1717,7 @@
     "text": "give me a dish without meat",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "meat"
+      "excludeIngredient": "meat"
     }
   },
   {
@@ -1723,7 +1725,7 @@
     "text": "I'm not feeling having beef this meal",
     "intent": "addFilter",
     "slots": {
-      "ingredient": "beef"
+      "excludeIngredient": "beef"
     }
   },
   {
@@ -1731,7 +1733,7 @@
     "text": "not white seaweed",
     "intent": "addFilter",
     "slots": {
-      "ingredient": "white seaweed"
+      "excludeIngredient": "white seaweed"
     }
   },
   {
@@ -1739,7 +1741,7 @@
     "text": "Do you have recipes without egg ?",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "egg"
+      "excludeIngredient": "egg"
     }
   },
   {
@@ -1747,7 +1749,7 @@
     "text": "Anything that does not have cucumber in it",
     "intent": "addFilter",
     "slots": {
-      "ingredient": "cucumber"
+      "excludeIngredient": "cucumber"
     }
   },
   {
@@ -1755,7 +1757,7 @@
     "text": "A recipe without cheese",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "cheese"
+      "excludeIngredient": "cheese"
     }
   },
   {
@@ -1763,7 +1765,7 @@
     "text": "Please exclude the recipes with corn",
     "intent": "addFilter",
     "slots": {
-      "ingredient": "corn"
+      "excludeIngredient": "corn"
     }
   },
   {
@@ -1771,7 +1773,7 @@
     "text": "No meat",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "meat"
+      "excludeIngredient": "meat"
     }
   },
   {
@@ -1779,7 +1781,7 @@
     "text": "something without dairy",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "dairy"
+      "excludeIngredient": "dairy"
     }
   },
   {
@@ -1787,7 +1789,7 @@
     "text": "Can you recommend a pasta without meat ?",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "meat"
+      "excludeIngredient": "meat"
     }
   },
   {
@@ -1795,7 +1797,7 @@
     "text": "I'm not interested in Japanese or Korean dishes, so please exclude both.",
     "intent": "addFilter",
     "slots": {
-      "cuisine": "Korean"
+      "excludeCuisine": "Korean"
     }
   },
   {
@@ -1804,7 +1806,7 @@
     "intent": "addFilter",
     "slots": {
       "cuisine": "Asian",
-      "ingredient": "garlic"
+      "excludeIngredient": "garlic"
     }
   },
   {
@@ -1812,7 +1814,7 @@
     "text": "I'd rather not include pasta",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "pasta"
+      "excludeIngredient": "pasta"
     }
   },
   {
@@ -1820,7 +1822,7 @@
     "text": "Do not include rice in the recipe.",
     "intent": "addFilter",
     "slots": {
-      "ingredient": "rice"
+      "excludeIngredient": "rice"
     }
   },
   {
@@ -1828,7 +1830,7 @@
     "text": "I prefer to have no eggs in my meal.",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "eggs"
+      "excludeIngredient": "eggs"
     }
   },
   {
@@ -1836,7 +1838,7 @@
     "text": "I would like to have no cheese in my ingredients.",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "cheese"
+      "excludeIngredient": "cheese"
     }
   },
   {
@@ -1844,7 +1846,7 @@
     "text": "no soup",
     "intent": "addFilter",
     "slots": {
-      "tag": "soup"
+      "excludeTag": "soup"
     }
   },
   {
@@ -1852,7 +1854,7 @@
     "text": "Are there recipes that do not include almond ?",
     "intent": "addFilter",
     "slots": {
-      "ingredient": "almond"
+      "excludeIngredient": "almond"
     }
   },
   {
@@ -1861,7 +1863,7 @@
     "intent": "addFilter",
     "slots": {
       "ingredient": "onion",
-      "cuisine": "Spain"
+      "excludeCuisine": "Spain"
     }
   },
   {
@@ -1869,8 +1871,8 @@
     "text": "i do not want pasta or any italian cuisine",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "pasta",
-      "cuisine": "italian"
+      "excludeIngredient": "pasta",
+      "excludeCuisine": "italian"
     }
   },
   {
@@ -1878,7 +1880,7 @@
     "text": "Can I have a meal recipe without pork ?",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "pork"
+      "excludeIngredient": "pork"
     }
   },
   {
@@ -1886,7 +1888,7 @@
     "text": "I'm not feeling like Indian food today .",
     "intent": "addFilter",
     "slots": {
-      "cuisine": "Indian"
+      "excludeCuisine": "Indian"
     }
   },
   {
@@ -1894,7 +1896,7 @@
     "text": "I'm not a fan of recipes with lamb",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "lamb"
+      "excludeIngredient": "lamb"
     }
   },
   {
@@ -1902,8 +1904,8 @@
     "text": "i don't want any dishes that contain rice or chicken and skip italian recipes",
     "intent": "addFilter",
     "slots": {
-      "ingredient": "chicken",
-      "cuisine": "italian"
+      "excludeIngredient": "chicken",
+      "excludeCuisine": "italian"
     }
   },
   {
@@ -1919,7 +1921,7 @@
     "text": "I want dishes without fruit",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "fruit"
+      "excludeIngredient": "fruit"
     }
   },
   {
@@ -1927,7 +1929,7 @@
     "text": "Do you have a recipe without some type of egg ?",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "egg"
+      "excludeIngredient": "egg"
     }
   },
   {
@@ -1936,7 +1938,7 @@
     "intent": "addFilter",
     "slots": {
       "tag": "stew",
-      "ingredientType": "meat"
+      "excludeIngredient": "meat"
     }
   },
   {
@@ -1944,7 +1946,7 @@
     "text": "i want a dish without salad but with",
     "intent": "addFilter",
     "slots": {
-      "tag": "salad"
+      "excludeTag": "salad"
     }
   },
   {
@@ -1952,7 +1954,7 @@
     "text": "Recommend me a recipe that is not British .",
     "intent": "addFilter",
     "slots": {
-      "cuisine": "British"
+      "excludeCuisine": "British"
     }
   },
   {
@@ -1960,7 +1962,7 @@
     "text": "i must avoid lactose in any recipe suggestions",
     "intent": "addFilter",
     "slots": {
-      "ingredient": "lactose"
+      "excludeIngredient": "lactose"
     }
   },
   {
@@ -1968,7 +1970,7 @@
     "text": "I'd like to cook a recipe with no meat",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "meat"
+      "excludeIngredient": "meat"
     }
   },
   {
@@ -1976,7 +1978,7 @@
     "text": "Stilton free",
     "intent": "addFilter",
     "slots": {
-      "ingredient": "Stilton"
+      "excludeIngredient": "Stilton"
     }
   },
   {
@@ -1984,7 +1986,7 @@
     "text": "Don't include olive oil",
     "intent": "addFilter",
     "slots": {
-      "ingredient": "olive oil"
+      "excludeIngredient": "olive oil"
     }
   },
   {
@@ -1992,7 +1994,7 @@
     "text": "I want to cook something without cheese",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "cheese"
+      "excludeIngredient": "cheese"
     }
   },
   {
@@ -2000,7 +2002,7 @@
     "text": "I do not want any eggs in my ingredients.",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "eggs"
+      "excludeIngredient": "eggs"
     }
   },
   {
@@ -2008,7 +2010,7 @@
     "text": "I'd like a recipe with no eggs",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "eggs"
+      "excludeIngredient": "eggs"
     }
   },
   {
@@ -2016,7 +2018,7 @@
     "text": "I would like to have no cheese in the recipe.",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "cheese"
+      "excludeIngredient": "cheese"
     }
   },
   {
@@ -2024,7 +2026,7 @@
     "text": "give me a recipe that does not have eggs",
     "intent": "addFilter",
     "slots": {
-      "ingredient": "eggs"
+      "excludeIngredient": "eggs"
     }
   },
   {
@@ -2032,7 +2034,7 @@
     "text": "I do not want beans .",
     "intent": "addFilter",
     "slots": {
-      "ingredient": "beans"
+      "excludeIngredient": "beans"
     }
   },
   {
@@ -2048,7 +2050,7 @@
     "text": "I'd like anything with no cheese",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "cheese"
+      "excludeIngredient": "cheese"
     }
   },
   {
@@ -2056,7 +2058,7 @@
     "text": "The meal should be without fish .",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "fish"
+      "excludeIngredient": "fish"
     }
   },
   {
@@ -2064,7 +2066,7 @@
     "text": "I do not want meat",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "meat"
+      "excludeIngredient": "meat"
     }
   },
   {
@@ -2072,7 +2074,7 @@
     "text": "does not include yellow onion",
     "intent": "addFilter",
     "slots": {
-      "ingredient": "yellow onion"
+      "excludeIngredient": "yellow onion"
     }
   },
   {
@@ -2080,7 +2082,7 @@
     "text": "i wish for a dish without beef",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "beef"
+      "excludeIngredient": "beef"
     }
   },
   {
@@ -2088,7 +2090,7 @@
     "text": "Please, no duck",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "duck"
+      "excludeIngredient": "duck"
     }
   },
   {
@@ -2096,7 +2098,7 @@
     "text": "Please exclude Chinese recipes",
     "intent": "addFilter",
     "slots": {
-      "cuisine": "Chinese"
+      "excludeCuisine": "Chinese"
     }
   },
   {
@@ -2104,7 +2106,7 @@
     "text": "A recipe with no cheese",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "cheese"
+      "excludeIngredient": "cheese"
     }
   },
   {
@@ -2112,7 +2114,7 @@
     "text": "no more cheese",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "cheese"
+      "excludeIngredient": "cheese"
     }
   },
   {
@@ -2120,7 +2122,7 @@
     "text": "I do not want dates .",
     "intent": "addFilter",
     "slots": {
-      "ingredient": "dates"
+      "excludeIngredient": "dates"
     }
   },
   {
@@ -2128,7 +2130,7 @@
     "text": "give me somethig which is not non-vegetarian",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "non-vegetarian"
+      "excludeIngredient": "non-vegetarian"
     }
   },
   {
@@ -2136,7 +2138,7 @@
     "text": "do not include dairy",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "dairy"
+      "excludeIngredient": "dairy"
     }
   },
   {
@@ -2144,7 +2146,7 @@
     "text": "no cheese",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "cheese"
+      "excludeIngredient": "cheese"
     }
   },
   {
@@ -2152,7 +2154,7 @@
     "text": "I'm not interested in Central American cuisine, please exclude it.",
     "intent": "addFilter",
     "slots": {
-      "cuisine": "Central American"
+      "excludeCuisine": "Central American"
     }
   },
   {
@@ -2160,7 +2162,7 @@
     "text": "avoid mexican cuisine tonight",
     "intent": "addFilter",
     "slots": {
-      "cuisine": "mexican"
+      "excludeCuisine": "mexican"
     }
   },
   {
@@ -2168,7 +2170,7 @@
     "text": "i would like a recipe that does not include red wine",
     "intent": "addFilter",
     "slots": {
-      "ingredient": "red wine"
+      "excludeIngredient": "red wine"
     }
   },
   {
@@ -2176,7 +2178,7 @@
     "text": "a not non-vegan dish",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "non-vegan"
+      "excludeIngredient": "non-vegan"
     }
   },
   {
@@ -2184,7 +2186,7 @@
     "text": "something with no cheese",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "cheese"
+      "excludeIngredient": "cheese"
     }
   },
   {
@@ -2192,7 +2194,7 @@
     "text": "something without fries and with",
     "intent": "addFilter",
     "slots": {
-      "tag": "fries"
+      "excludeTag": "fries"
     }
   },
   {
@@ -2208,7 +2210,7 @@
     "text": "i'm not into pancakes recipes",
     "intent": "addFilter",
     "slots": {
-      "tag": "pancakes"
+      "excludeTag": "pancakes"
     }
   },
   {
@@ -2216,7 +2218,7 @@
     "text": "Is there a recipe that does not include beef ?",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "beef"
+      "excludeIngredient": "beef"
     }
   },
   {
@@ -2224,7 +2226,7 @@
     "text": "yea without cheese",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "cheese"
+      "excludeIngredient": "cheese"
     }
   },
   {
@@ -2232,7 +2234,7 @@
     "text": "give me a dinner recipe that does not have salad",
     "intent": "addFilter",
     "slots": {
-      "tag": "salad"
+      "excludeTag": "salad"
     }
   },
   {
@@ -2240,7 +2242,7 @@
     "text": "no snack recipes",
     "intent": "addFilter",
     "slots": {
-      "tag": "snack"
+      "excludeTag": "snack"
     }
   },
   {
@@ -2248,7 +2250,7 @@
     "text": "not a meal prep",
     "intent": "addFilter",
     "slots": {
-      "tag": "meal prep"
+      "excludeTag": "meal prep"
     }
   },
   {
@@ -2256,7 +2258,7 @@
     "text": "I'm not fond of meat",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "meat"
+      "excludeIngredient": "meat"
     }
   },
   {
@@ -2264,7 +2266,7 @@
     "text": "Something without chicken or cheese",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "cheese"
+      "excludeIngredient": "cheese"
     }
   },
   {
@@ -2272,7 +2274,7 @@
     "text": "I want a recipe that is not from Japanese cusine",
     "intent": "addFilter",
     "slots": {
-      "cuisine": "Japanese"
+      "excludeCuisine": "Japanese"
     }
   },
   {
@@ -2280,7 +2282,7 @@
     "text": "Please, no lamb in the recipes.",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "lamb"
+      "excludeIngredient": "lamb"
     }
   },
   {
@@ -2296,7 +2298,7 @@
     "text": "no recipes for making pizza",
     "intent": "addFilter",
     "slots": {
-      "tag": "pizza"
+      "excludeTag": "pizza"
     }
   },
   {
@@ -2304,7 +2306,7 @@
     "text": "i want a recipe that is not indian",
     "intent": "addFilter",
     "slots": {
-      "cuisine": "indian"
+      "excludeCuisine": "indian"
     }
   },
   {
@@ -2312,7 +2314,7 @@
     "text": "bro English cuisines not very bussing",
     "intent": "addFilter",
     "slots": {
-      "cuisine": "English"
+      "excludeCuisine": "English"
     }
   },
   {
@@ -2320,7 +2322,7 @@
     "text": "Dairy -free meal inspirations.",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "Dairy"
+      "excludeIngredient": "Dairy"
     }
   },
   {
@@ -2328,7 +2330,7 @@
     "text": "Not pizza",
     "intent": "addFilter",
     "slots": {
-      "tag": "pizza"
+      "excludeTag": "pizza"
     }
   },
   {
@@ -2336,7 +2338,7 @@
     "text": "Not Italian food",
     "intent": "addFilter",
     "slots": {
-      "cuisine": "Italian"
+      "excludeCuisine": "Italian"
     }
   },
   {
@@ -2344,7 +2346,7 @@
     "text": "i want a recipe that is not dinner",
     "intent": "addFilter",
     "slots": {
-      "tag": "dinner"
+      "excludeTag": "dinner"
     }
   },
   {
@@ -2352,7 +2354,7 @@
     "text": "Recommend me a meal that does not use jalapeno .",
     "intent": "addFilter",
     "slots": {
-      "ingredient": "jalapeno"
+      "excludeIngredient": "jalapeno"
     }
   },
   {
@@ -2360,7 +2362,7 @@
     "text": "does not use black vinegar",
     "intent": "addFilter",
     "slots": {
-      "ingredient": "black vinegar"
+      "excludeIngredient": "black vinegar"
     }
   },
   {
@@ -2368,7 +2370,7 @@
     "text": "i want a recipe for fries , not pancakes",
     "intent": "addFilter",
     "slots": {
-      "tag": "pancakes"
+      "excludeTag": "pancakes"
     }
   },
   {
@@ -2376,7 +2378,7 @@
     "text": "I do not want rice in the recipe.",
     "intent": "addFilter",
     "slots": {
-      "ingredient": "rice"
+      "excludeIngredient": "rice"
     }
   },
   {
@@ -2384,7 +2386,7 @@
     "text": "no cheese in my dishes please",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "cheese"
+      "excludeIngredient": "cheese"
     }
   },
   {
@@ -2392,7 +2394,7 @@
     "text": "A recipe with no pork",
     "intent": "addFilter",
     "slots": {
-      "ingredientType": "pork"
+      "excludeIngredient": "pork"
     }
   },
   {
@@ -2400,7 +2402,7 @@
     "text": "Share a recipe that does not use grapes .",
     "intent": "addFilter",
     "slots": {
-      "ingredient": "grapes"
+      "excludeIngredient": "grapes"
     }
   },
   {
@@ -2696,7 +2698,7 @@
     "text": "Nothing for a break.",
     "intent": "addFilter",
     "slots": {
-      "excludeMealType": "break"
+      "mealType": "break"
     }
   },
   {
@@ -3216,7 +3218,7 @@
     "text": "It's too early for dinner.",
     "intent": "addFilter",
     "slots": {
-      "excludeMealType": "dinner"
+      "mealType": "dinner"
     }
   },
   {
@@ -3224,7 +3226,7 @@
     "text": "I'm not hungry for a snack.",
     "intent": "addFilter",
     "slots": {
-      "excludeMealType": "snack"
+      "mealType": "snack"
     }
   },
   {
@@ -3280,7 +3282,7 @@
     "text": "I don't want anything for a dinnerparty.",
     "intent": "addFilter",
     "slots": {
-      "excludeMealType": "dinnerparty"
+      "mealType": "dinnerparty"
     }
   },
   {
@@ -3320,7 +3322,7 @@
     "text": "I don't want recipes for a break.",
     "intent": "addFilter",
     "slots": {
-      "excludeMealType": "break"
+      "mealType": "break"
     }
   },
   {

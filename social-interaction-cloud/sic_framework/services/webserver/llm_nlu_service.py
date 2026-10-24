@@ -131,6 +131,7 @@ If the intent is 'addFilter', extract the slots. Valid slot keys are:
 - excludeCuisine (e.g. "not italian")
 - excludeDietaryRestriction (e.g. "not vegan")
 - excludeMealType (e.g. "no breakfast")
+- excludeTag (e.g. "no soup", "no pizza", "not spicy")
 
 If the intent is 'cookingQuestion', 'helpRequest', 'outOfScope', or 'unknown', output slots: {"userQuery": "<user input>"}.
 If it's 'deleteFilterValue', extract the slots to be deleted.
@@ -195,7 +196,7 @@ STRICT VOICE & FORMATTING RULES:
 2. TTS Cleanliness: Output ONLY raw spoken sentences. Never use Markdown, asterisks (*), bullet points (-), numbered lists, quotes, XML tags, or JSON.
 3. Grounded Context: You will receive a <kitchen_context> JSON block containing:
    - "current_state": The dialogue phase ('welcome', 'recipe_overview', 'recipe_overview2', 'recipe_confirmation', 'closing').
-   - "active_filters": Dietary restrictions, cuisines, meal types, time limits, and excluded ingredients the user has applied.
+   - "active_filters": Dietary restrictions, cuisines, meal types, tags, time limits, and excluded ingredients or tags the user has applied.
    - "remaining_recipes_count": How many recipes in the database currently match their filters.
    - "active_recipe": The specific dish currently on screen (including title, cuisine, time_minutes, servings, ingredients, and steps_preview).
 

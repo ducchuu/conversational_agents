@@ -2,10 +2,13 @@ MULTI_VALUE_FILTER_KEYS = frozenset({
     'ingredient', 'ingredients',
     'ingredienttype', 'ingredient_type',
     'tag', 'tags',
+    'excludetag', 'exclude_tag', 'excludetags',
     'excludeingredient', 'exclude_ingredient', 'excludeingredients',
     'excludeingredienttype', 'exclude_ingredient_type',
     'dietaryrestriction', 'dietary_restriction',
     'excludedietaryrestriction', 'exclude_dietary_restriction',
+    'excludecuisine', 'exclude_cuisine',
+    'excludemealtype', 'exclude_meal_type',
 })
 
 class DialogState:

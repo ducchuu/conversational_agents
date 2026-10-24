@@ -81,7 +81,12 @@ ingredient_type_keywords([
 tag_keywords([
     'vegan', 'vegetarian', 'gluten-free', 'dairy-free', 'low-carb', 
     'high-protein', 'keto', 'paleo', 'spicy', 'sweet', 'quick', 
-    'healthy', 'comfort-food', 'budget-friendly'
+    'healthy', 'comfort-food', 'budget-friendly', 'bbq', 'bowl', 
+    'breakfast', 'brunch', 'burger', 'burgers', 'carbs', 'curry', 
+    'dessert', 'dinner', 'dinnerparty', 'dumplings', 'fries', 'lunch', 
+    'meal-prep', 'noodles', 'pancakes', 'pasta', 'pizza', 'risotto', 
+    'salad', 'sandwich', 'sandwiches', 'side', 'snack', 'soup', 'stew', 
+    'taco', 'tacos', 'wrap'
 ]).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -338,8 +343,9 @@ format_text_value(Filter, Ingredients, String) :-
 format_text_value(Filter, Ingredients, String) :-
 	(Filter == 'ingredient' ; Filter == 'ingredienttype'),
 	convert_to_string(Ingredients, String), !.
-format_text_value('tag', Tags, String) :-
-	convert_to_string(Tags, String).
+format_text_value(Filter, Tags, String) :-
+	(Filter == 'tag' ; Filter == 'excludetag'),
+	convert_to_string(Tags, String), !.
 format_text_value(_, Value, Value).
 
 % Format text for one filter

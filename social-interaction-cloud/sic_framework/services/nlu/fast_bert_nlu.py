@@ -110,7 +110,7 @@ def get_canonical_value(synonyms_dict, slot_type, slot_value):
         if base_type in slots_onto:
             known_values = slots_onto[base_type]
 
-            if base_type == "ingredient":
+            if base_type in ("ingredient", "tag"):
                 if clean_lower.endswith("ies") and (clean_lower[:-3] + "y") in known_values:
                     return clean_lower[:-3] + "y"
                 elif clean_lower.endswith("es") and clean_lower[:-2] in known_values:
