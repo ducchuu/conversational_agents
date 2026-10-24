@@ -7,6 +7,21 @@
 
   <title>CookingBroski — Confirm Recipe</title>
 
+  <script>
+    (function () {
+      function lock1080p() {
+        var base = 1920;
+        var w = document.documentElement.clientWidth || window.innerWidth;
+        if (w && w > 0) {
+          document.documentElement.style.zoom = (w / base);
+        }
+      }
+      lock1080p();
+      window.addEventListener("resize", lock1080p);
+      window.addEventListener("orientationchange", lock1080p);
+    })();
+  </script>
+
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
   <link rel="stylesheet" href="static/css/bootstrap.min.css">
   <link rel="stylesheet" href="static/css/pca_sleek.css">
@@ -40,7 +55,7 @@
 
     <main class="container-fluid px-3 px-xl-5 py-4 py-md-5 flex-grow-1">
       <div class="row">
-        <aside class="col-12 col-md-5 col-lg-4 col-xl-3 mb-4 mb-md-0">
+        <aside class="col-3 mb-4 mb-md-0">
           <div class="pca-guide-sidebar">
             <div class="pca-guide-card">
               <div class="pca-guide-header">
@@ -100,7 +115,7 @@
             </div>
           </div>
         </aside>
-        <section class="col-12 col-md-7 col-lg-8 col-xl-9">
+        <section class="col-9">
           <div class="pca-detail" id="recipeDetailCard">
             <div class="pca-detail-media" id="recipeImage" role="img" aria-label="Recipe image"></div>
 

@@ -440,6 +440,37 @@ class FastBERTNLU:
         slot_dict = extract_slots_from_text(slots, text, subword_tokens=subword_tokens)
         normalized_slots = normalize_slots(slot_dict)
 
+        # Quantitative slot extraction (servings, nrOfIngredients, nrOfSteps)
+        # These constraints exist in the dialogue manager and Prolog engine but
+        # are not part of the token classification vocabulary.
+        if "servings" not in normalized_slots:
+            m = re.search(
+                r"\b(?:for\s+)?(\d+)\s+servings?\b|\bservings?\s*(?:of|for)?\s*(\d+)\b|\bfor\s+(\d+)\s+(?:people|persons?|guests?)\b|\bserves?\s+(\d+)\b",
+                text,
+                re.I,
+            )
+            if m:
+                val = next(g for g in m.groups() if g is not None)
+                normalized_slots["servings"] = val
+
+        if "nrOfIngredients" not in normalized_slots:
+            m = re.search(
+                r"\b(?:under|less than|fewer than|at most|max|maximum)\s+(\d+)\s+ingredients?\b",
+                text,
+                re.I,
+            )
+            if m:
+                normalized_slots["nrOfIngredients"] = m.group(1)
+
+        if "nrOfSteps" not in normalized_slots:
+            m = re.search(
+                r"\b(?:under|less than|fewer than|at most|max|maximum)\s+(\d+)\s+steps?\b",
+                text,
+                re.I,
+            )
+            if m:
+                normalized_slots["nrOfSteps"] = m.group(1)
+
         if intent in ("addFilter", "checkCapability") and re.match(
             r"^(can\s+i\s+make\s+(this|it)\b|is\s+(it|this)\s+\w+|how\s+(spicy|long)\b|what\s+side\s+dish\b|what\s+ingredients\b)",
             text.strip(),

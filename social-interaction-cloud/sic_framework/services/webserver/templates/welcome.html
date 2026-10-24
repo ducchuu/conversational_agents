@@ -6,6 +6,21 @@
 
   <title>CookingBroski — Welcome</title>
 
+  <script>
+    (function () {
+      function lock1080p() {
+        var base = 1920;
+        var w = document.documentElement.clientWidth || window.innerWidth;
+        if (w && w > 0) {
+          document.documentElement.style.zoom = (w / base);
+        }
+      }
+      lock1080p();
+      window.addEventListener("resize", lock1080p);
+      window.addEventListener("orientationchange", lock1080p);
+    })();
+  </script>
+
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
   <link rel="stylesheet" href="static/css/bootstrap.min.css">
   <link rel="stylesheet" href="static/css/pca_sleek.css">

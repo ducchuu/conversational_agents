@@ -1,5 +1,20 @@
 "use strict";
 
+// 1080p Reference Scale Engine: guarantees identical positioning & layout across all screens and resolutions
+(function lock1080pResolution() {
+  var TARGET_WIDTH = 1920;
+  function applyScale() {
+    var w = document.documentElement.clientWidth || window.innerWidth;
+    if (w && w > 0) {
+      var scale = w / TARGET_WIDTH;
+      document.documentElement.style.zoom = scale;
+    }
+  }
+  applyScale();
+  window.addEventListener("resize", applyScale);
+  window.addEventListener("orientationchange", applyScale);
+})();
+
 var socket = io();
 
 var user_turn = false;

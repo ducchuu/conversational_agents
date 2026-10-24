@@ -93,7 +93,7 @@ GOLDEN_DIALOGUE_CASES = [
     ("restart the conversation", "restart"),
 
     # 51-60: Website Interaction Guide — recipe_overview.html
-    ("With garlic and pasta. Something vegeterian.", "addFilter"),
+    ("With garlic and pasta. Something vegetarian.", "addFilter"),
     ("Under 45 minutes", "addFilter"),
     ("Italian cuisine", "addFilter"),
     ("Without onions", "addFilter"),
@@ -155,11 +155,12 @@ STRICT_EQUIVALENCES = {
 # Semantic dual-intent utterances: asking for "another recipe" can act as rejecting the active
 # dish (disconfirmation) or requesting a new suggestion (requestRecommendation). Both intents
 # execute valid recipe-switch transitions in DialogManager.
-# Similarly, expressing ingredient preferences and dietary restrictions ("With garlic and pasta. Something vegeterian.")
+# Similarly, expressing ingredient preferences, servings, or dietary restrictions
 # acts either as positive filter specification (addFilter) or as a query for matching suggestions (requestRecommendation).
 DUAL_INTENT_UTTERANCES = {
     "Find another recipe": {"requestRecommendation", "disconfirmation"},
-    "With garlic and pasta. Something vegeterian.": {"addFilter", "requestRecommendation"},
+    "With garlic and pasta. Something vegetarian.": {"addFilter", "requestRecommendation"},
+    "make something for 4 servings": {"addFilter", "requestRecommendation"},
 }
 
 
@@ -208,3 +209,85 @@ def test_golden_dialogue_utterance(nlu_engine, utterance, expected_intent):
     assert predicted in allowed or predicted == expected or (expected, predicted) in STRICT_EQUIVALENCES, (
         f"Utterance '{utterance}' predicted '{predicted}', expected '{expected}'"
     )
+
+
+# ==============================================================================
+# Golden Slot Benchmarks (UI Interaction Guide & Core Filters)
+# ==============================================================================
+GOLDEN_SLOT_CASES = [
+    # (Utterance, Expected Intent, Expected Slots, Forbidden Slots)
+    
+    # Website Guide: recipe_overview.html
+    ("Under 45 minutes", "addFilter", {"duration": "45"}, set()),
+    ("Italian cuisine", "addFilter", {"cuisine": "italian"}, {"excludeCuisine"}),
+    ("Without onions", "addFilter", {"excludeIngredient": "onion"}, {"ingredient", "ingredientType"}),
+    ("No dairy please", "addFilter", {"excludeIngredient": "dairy"}, {"ingredient", "ingredientType"}),
+    ("Exclude mushrooms", "addFilter", {"excludeIngredient": "mushroom"}, {"ingredient", "ingredientType"}),
+    ("With garlic and pasta. Something vegetarian.", "addFilter", {"dietaryRestriction": "vegetarian", "ingredient": {"garlic", "pasta"}}, {"excludeDietaryRestriction"}),
+
+    # Website Guide: recipe_overview2.html
+    ("Some dishes that you cook under 20 minutes", "addFilter", {"duration": "20"}, set()),
+    ("I want something vegetarian", "addFilter", {"dietaryRestriction": "vegetarian"}, {"excludeDietaryRestriction"}),
+    ("Without dairy", "addFilter", {"dietaryRestriction": "lactose-free"}, {"ingredient", "ingredientType"}),
+
+    # Core standard filter additions & exclusions
+    ("I want something with chicken", "addFilter", {"ingredient": "chicken"}, {"excludeIngredient"}),
+    ("show me italian recipes", "addFilter", {"cuisine": "italian"}, {"excludeCuisine"}),
+    ("under 30 minutes please", "addFilter", {"duration": "30"}, set()),
+    ("make something for 4 servings", "addFilter", {"servings": "4"}, set()),
+    ("without garlic", "addFilter", {"excludeIngredient": "garlic"}, {"ingredient", "ingredientType"}),
+    ("something without butter", "addFilter", {"excludeIngredient": "butter"}, {"ingredient", "ingredientType"}),
+    ("no peanuts", "addFilter", {"excludeIngredient": "peanut"}, {"ingredient", "ingredientType"}),
+    
+    # Recently Fixed Dataset Bug Assertions (Mixed Polarity & Tags)
+    ("Without meat", "addFilter", {"excludeIngredient": "meat"}, {"ingredient", "ingredientType"}),
+    ("Exclude Chinese food", "addFilter", {"excludeCuisine": "chinese"}, {"cuisine"}),
+    ("No soup please", "addFilter", {"excludeIngredient": "soup"}, {"tag"}),
+    ("I want an Italian dish with garlic and without cheese", "addFilter", {"cuisine": "italian", "ingredient": "garlic", "excludeIngredient": "cheese"}, {"excludeCuisine"}),
+]
+
+@pytest.mark.parametrize("utterance,expected_intent,expected_slots,forbidden_slot_keys", GOLDEN_SLOT_CASES)
+def test_golden_dialogue_slots(nlu_engine, utterance, expected_intent, expected_slots, forbidden_slot_keys):
+    """
+    Verifies critical filter slots (especially those featured in the HTML interaction guide) 
+    are accurately parsed, normalized to their canonical values, and entirely free of 
+    conflicting polarity leaks (e.g., extracting an excluded ingredient as a positive filter).
+    """
+    if nlu_engine is None:
+        pytest.skip("FastBERTNLU checkpoint is not loaded in this environment")
+
+    intent, _conf, predicted_slots, _ = nlu_engine.predict(utterance)
+
+    # 1. Assert Intent Match
+    assert intent == expected_intent, (
+        f"Intent mismatch for '{utterance}': expected '{expected_intent}', got '{intent}'"
+    )
+
+    # 2. Assert No Polarity Contamination (The Inference Guard)
+    for forbidden_key in forbidden_slot_keys:
+        assert forbidden_key not in predicted_slots, (
+            f"Forbidden polarity slot '{forbidden_key}' leaked in '{utterance}': {predicted_slots}"
+        )
+
+    # 3. Assert Exact Slot Match
+    for slot_key, expected_val in expected_slots.items():
+        assert slot_key in predicted_slots, (
+            f"Utterance '{utterance}' missed expected slot '{slot_key}'. "
+            f"Predicted slots: {predicted_slots}"
+        )
+        
+        pred_val = predicted_slots[slot_key]
+        pred_items = pred_val if isinstance(pred_val, list) else [pred_val]
+
+        # FastBERTNLU.predict() natively returns canonical singularized values via get_canonical_value
+        if isinstance(expected_val, (set, list, tuple)):
+            assert any(item in pred_items for item in expected_val), (
+                f"Slot value mismatch for '{slot_key}' in '{utterance}': "
+                f"expected one of '{expected_val}', got '{pred_val}'"
+            )
+        else:
+            assert expected_val in pred_items, (
+                f"Slot value mismatch for '{slot_key}' in '{utterance}': "
+                f"expected '{expected_val}', got '{pred_val}'"
+            )
+

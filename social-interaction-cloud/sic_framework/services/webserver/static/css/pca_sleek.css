@@ -16,6 +16,8 @@
 html,
 body {
   height: 100%;
+  min-width: 1920px;
+  width: 100%;
 }
 
 body {
@@ -348,29 +350,7 @@ body {
   margin: 0;
 }
 
-@media (max-width: 992px) {
-  .pca-recipe {
-    grid-column: span 6;
-  }
-
-  .pca-detail {
-    grid-template-columns: 1fr;
-  }
-
-  .pca-detail-media {
-    min-height: 220px;
-  }
-
-  .pca-split {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 576px) {
-  .pca-recipe {
-    grid-column: span 12;
-  }
-}
+/* 1080p Locked Layout: Recipe grid is locked to 3 cards (span 4), detail is locked to side-by-side */
 
 .pca-guide-sidebar {
   position: sticky;
@@ -516,50 +496,4 @@ body {
   gap: 8px;
 }
 
-@media (max-width: 991px) {
-  .pca-guide-sidebar {
-    position: static;
-    max-height: none;
-    margin-bottom: 20px;
-  }
-}
-
-@media (max-width: 768px) {
-  .pca-topbar .navbar {
-    padding: 1rem 1.25rem;
-    min-height: auto;
-  }
-
-  .pca-logo {
-    width: 58px;
-    height: 58px;
-    font-size: 2rem;
-    border-radius: 18px;
-  }
-
-  .pca-brand .font-weight-bold {
-    font-size: 1.45rem;
-  }
-
-  .pca-brand small {
-    font-size: 0.95rem;
-  }
-
-  .pca-mic--sm {
-    width: 74px;
-    height: 74px;
-  }
-
-  .pca-mic--sm img {
-    width: 2.2rem;
-  }
-
-  .pca-guide-title {
-    font-size: 1.35rem;
-  }
-
-  .pca-guide-item {
-    font-size: 1.1rem;
-    padding: 8px 12px;
-  }
-}
+/* 1080p Locked Layout: Sidebar stays sticky and navigation/typography maintain desktop proportions */
