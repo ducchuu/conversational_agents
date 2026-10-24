@@ -150,7 +150,7 @@ The following results are transcribed from the maintainer's verification summary
 
 | Check | Reported result |
 |---|---|
-| Verified source | `2a706d891d5dea630d495c77a73245dd9c102520`, branch `cloud` |
+| Verified source | `79beb1bc5f04474120234cadd53c34e0a1f22d35`, branch `cloud` |
 | Runtime | Python 3.12.7 |
 | Dataset | 9,008 examples: 7,037 training / 1,971 evaluation |
 | Normalized train/test text overlap | 0 detected |

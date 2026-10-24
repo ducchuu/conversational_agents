@@ -18,7 +18,7 @@
 
 Configuration files and code define implemented behavior. Evaluation reports describe results for a specific artifact and dataset. The README is an overview, not an alternative configuration inventory.
 
-The current documentation snapshot uses the maintainer's verification summary supplied on 24 October 2026 and references source commit `2a706d891d5dea630d495c77a73245dd9c102520`. The complete sanitized verification report is committed in the repository at [system_verification_report.md](system_verification_report.md) and attached to release `v1.0.0`.
+The current documentation snapshot uses the maintainer's verification summary supplied on 24 October 2026 and references source commit `79beb1bc5f04474120234cadd53c34e0a1f22d35`. The complete sanitized verification report is committed in the repository at [system_verification_report.md](system_verification_report.md) and attached to release `v1.0.0`.
 
 The summary supersedes earlier INT8 metrics, 8,765/8,798-record counts, and 87-case golden-suite descriptions. Preserve earlier results only as clearly labeled history.
 

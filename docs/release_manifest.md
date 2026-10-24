@@ -1,7 +1,7 @@
 # Release Manifest: CookingBroski v1.0.0
 
 **Release Tag**: `v1.0.0`  
-**Target Source Commit**: `2a706d891d5dea630d495c77a73245dd9c102520`  
+**Target Source Commit**: `79beb1bc5f04474120234cadd53c34e0a1f22d35`  
 **Repository**: `ducchuu/conversational_agents`  
 **Release Date**: October 2026  
 **Evaluated Backend**: FP32 ONNX (`bert_nlu.onnx`)  

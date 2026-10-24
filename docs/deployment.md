@@ -64,7 +64,7 @@ Use structured telemetry to distinguish STT, NLU, dialogue, and fallback costs. 
 1. Finalize documentation with actual public repository (`https://github.com/ducchuu/conversational_agents`) and release tag (`v1.0.0`).
 2. Confirm redistribution rights and attribution notices in [LICENSE](../LICENSE).
 3. Verify FP32 selection in local, CI, container, and deployed paths (`bert_nlu.onnx`).
-4. Commit documentation and generate tag `v1.0.0` targeting commit `2a706d891d5dea630d495c77a73245dd9c102520` (or the documentation tag commit).
+4. Commit documentation and generate tag `v1.0.0` targeting commit `79beb1bc5f04474120234cadd53c34e0a1f22d35` (or the documentation tag commit).
 5. Attach the compatible `bert_nlu.onnx` and [SHA256SUMS](SHA256SUMS).
 6. Include the [release manifest](release_manifest.md) containing source SHA, model hash, dataset/ontology/vocab hashes, runtime versions, and evaluation gates.
 7. Attach the sanitized [system verification report](system_verification_report.md).

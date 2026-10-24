@@ -6,7 +6,7 @@
 
 This snapshot transcribes the maintainer's verification summary supplied on 24 October 2026. The documentation author did not independently run the repository, inspect the full local report, or reproduce the live checks. Preserve actual command output and machine-readable experiment records alongside the release where possible.
 
-The referenced source version is `2a706d891d5dea630d495c77a73245dd9c102520`, branch `cloud`, reported with a clean working tree. Later documentation commits do not automatically invalidate these results, but code/data/model changes require a new evaluation.
+The referenced source version is `79beb1bc5f04474120234cadd53c34e0a1f22d35`, branch `cloud`, reported with a clean working tree. Later documentation commits do not automatically invalidate these results, but code/data/model changes require a new evaluation.
 
 ## Runtime
 
