@@ -137,6 +137,12 @@ def process_and_emit_actions(actions):
 def html_page(page_name="start.html"):
     if not page_name.endswith(".html"):
         return render_template_string("<h1>404 Not Found</h1>"), 404
+
+    # If accessed while background AI models are still loading during cold start,
+    # instantaneously serve the lightweight warm-up splash screen.
+    if page_name in ["start.html", "index.html"] and not models_ready():
+        return render_template("warming_up.html")
+
     if page_name in ["start.html", "index.html"]:
         brain.state.reset()
     try:

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>CookingBroski — Starting Up</title>
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+  <link rel="stylesheet" href="static/css/bootstrap.min.css">
+  <link rel="stylesheet" href="static/css/pca_sleek.css">
+  <style>
+    /* Self-contained styling for instantaneous rendering */
+    body {
+      background: radial-gradient(1100px 700px at 15% -10%, rgba(124, 92, 255, .35), transparent 60%),
+                  radial-gradient(900px 600px at 110% 0%, rgba(46, 233, 166, .20), transparent 60%),
+                  #0b0d12;
+      color: rgba(255, 255, 255, .92);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      padding: 1rem;
+    }
+    .warmup-card {
+      background: rgba(255, 255, 255, .08);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, .15);
+      border-radius: 20px;
+      padding: 2.5rem 2rem;
+      max-width: 620px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, .55);
+    }
+    .warmup-icon {
+      font-size: 3.5rem;
+      display: inline-block;
+      animation: pulse 1.8s ease-in-out infinite;
+      margin-bottom: 1rem;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(124, 92, 255, 0.4)); }
+      50% { transform: scale(1.12); filter: drop-shadow(0 0 25px rgba(46, 233, 166, 0.7)); }
+    }
+    .warmup-title {
+      font-size: 1.85rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+      letter-spacing: -0.02em;
+    }
+    .warmup-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.85rem;
+      background: rgba(124, 92, 255, 0.2);
+      border: 1px solid rgba(124, 92, 255, 0.4);
+      color: #b7a3ff;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+    }
+    .warmup-desc {
+      color: rgba(255, 255, 255, 0.75);
+      font-size: 1rem;
+      line-height: 1.55;
+      margin-bottom: 1.5rem;
+    }
+    .notice-box {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 0.85rem 1rem;
+      font-size: 0.88rem;
+      color: rgba(255, 255, 255, 0.65);
+      margin-bottom: 1.75rem;
+      text-align: left;
+    }
+    .notice-box strong {
+      color: #2ee9a6;
+    }
+    .progress-container {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 999px;
+      height: 10px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+      position: relative;
+    }
+    .progress-bar-fill {
+      background: linear-gradient(90deg, #7c5cff, #2ee9a6);
+      height: 100%;
+      width: 15%;
+      border-radius: 999px;
+      transition: width 0.6s ease;
+    }
+    .status-text {
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.85);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    .spinner-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #2ee9a6;
+      animation: blink 1.2s infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+    .btn-enter {
+      margin-top: 1.25rem;
+      background: #7c5cff;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 0.65rem 1.75rem;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: none;
+    }
+    .btn-enter:hover {
+      background: #6a44ff;
+    }
+  </style>
+</head>
+<body>
+  <div class="warmup-card">
+    <div class="warmup-icon">🍲</div>
+    <div class="warmup-badge">
+      <span>⚡</span> Scale-to-Zero Cloud Instance
+    </div>
+    <h1 class="warmup-title">CookingBroski is Waking Up</h1>
+    
+    <p class="warmup-desc">
+      Please hang tight! This application runs on a low-budget Cloud Run container that scales to zero when idle. 
+      A cold start can take up to <strong>10–15 seconds</strong> while the Faster-Whisper STT and BERT NLU models initialize in memory.
+    </p>
+
+    <div class="notice-box">
+      ℹ️ <strong>Automatic transition:</strong> You don't need to refresh. As soon as model warmup completes, you will automatically be directed to the start screen.
+    </div>
+
+    <div class="progress-container">
+      <div class="progress-bar-fill" id="progressBar"></div>
+    </div>
+
+    <div class="status-text" id="statusText">
+      <span class="spinner-dot"></span>
+      <span id="statusLabel">Initializing speech & language models...</span>
+    </div>
+
+    <button id="btnEnter" class="btn-enter" onclick="navigateToStart()">
+      Start Cooking →
+    </button>
+  </div>
+
+  <script>
+    let elapsedSeconds = 0;
+    const progressBar = document.getElementById("progressBar");
+    const statusLabel = document.getElementById("statusLabel");
+    const btnEnter = document.getElementById("btnEnter");
+    let isRedirecting = false;
+
+    function navigateToStart() {
+      window.location.replace("/start.html");
+    }
+
+    function checkReadiness() {
+      if (isRedirecting) return;
+
+      fetch("/api/ready")
+        .then(function(res) {
+          if (res.status === 200) {
+            isRedirecting = true;
+            progressBar.style.width = "100%";
+            statusLabel.textContent = "✅ Models ready! Switching to start page...";
+            if (btnEnter) btnEnter.style.display = "inline-block";
+            setTimeout(navigateToStart, 600);
+          } else {
+            elapsedSeconds += 1;
+            // Estimated progress curve reaching ~92% around 14 seconds
+            const progress = Math.min(15 + elapsedSeconds * 6, 92);
+            progressBar.style.width = progress + "%";
+            if (elapsedSeconds > 6) {
+              statusLabel.textContent = "Warming up Whisper & DistilBERT ONNX runtime (" + elapsedSeconds + "s)...";
+            }
+            setTimeout(checkReadiness, 1000);
+          }
+        })
+        .catch(function(err) {
+          elapsedSeconds += 1;
+          setTimeout(checkReadiness, 1000);
+        });
+    }
+
+    // Begin polling immediately
+    setTimeout(checkReadiness, 800);
+  </script>
+</body>
+</html>
+

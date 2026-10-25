@@ -16,6 +16,28 @@ def test_webserver_html_routing(client):
         assert response.status_code == 200
         assert response.data == b"MOCKED_HTML"
 
+
+def test_warmup_splash_routing_when_not_ready(client):
+    """When models are warming up (cold start), visiting / or /start.html serves warming_up.html."""
+    with patch('sic_framework.services.webserver.webserver_pca.models_ready', return_value=False):
+        with patch('sic_framework.services.webserver.webserver_pca.render_template', return_value="WARMUP_HTML") as mock_render:
+            response = client.get('/')
+            assert response.status_code == 200
+            mock_render.assert_called_with("warming_up.html")
+
+            response_start = client.get('/start.html')
+            assert response_start.status_code == 200
+            mock_render.assert_called_with("warming_up.html")
+
+
+def test_start_page_routing_when_ready(client):
+    """When models are warm, visiting / or /start.html serves start.html."""
+    with patch('sic_framework.services.webserver.webserver_pca.models_ready', return_value=True):
+        with patch('sic_framework.services.webserver.webserver_pca.render_template', return_value="START_HTML") as mock_render:
+            response = client.get('/')
+            assert response.status_code == 200
+            mock_render.assert_called_with("start.html")
+
 def test_webserver_non_html_routing(client):
     """Test that requesting non-html files returns a 404."""
     response = client.get('/style.css')
