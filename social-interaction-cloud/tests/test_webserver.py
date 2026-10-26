@@ -66,6 +66,11 @@ def test_health_and_readiness_probes(client):
     assert "models_ready" in health.get_json()
     assert health.headers.get("Access-Control-Allow-Origin") == "*"
 
+    # Preflight OPTIONS check
+    opt = client.options('/api/ready')
+    assert opt.status_code == 204
+    assert opt.headers.get("Access-Control-Allow-Origin") == "*"
+
     with patch('sic_framework.services.webserver.webserver_pca.models_ready', return_value=False):
         resp = client.get('/api/ready')
         assert resp.status_code == 503
@@ -73,7 +78,7 @@ def test_health_and_readiness_probes(client):
         assert resp.headers.get("Access-Control-Allow-Origin") == "*"
 
     with patch('sic_framework.services.webserver.webserver_pca.models_ready', return_value=True):
-        resp = client.get('/api/ready')
+        resp = client.get('/api/ready?wait=1')
         assert resp.status_code == 200
         assert resp.get_json()["models_ready"] is True
         assert resp.headers.get("Access-Control-Allow-Origin") == "*"

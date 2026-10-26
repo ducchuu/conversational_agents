@@ -207,6 +207,7 @@
   </div>
 
   <script>
+    const CLOUD_RUN_ORIGIN = "https://social-agent-cloud-511906064574.us-central1.run.app";
     let elapsedSeconds = 0;
     let isRedirecting = false;
 
@@ -217,73 +218,53 @@
 
     function navigateToStart() {
       sessionStorage.setItem("cb_warm", "true");
-      window.location.replace(CLOUD_RUN_START_URL);
+      window.location.replace(CLOUD_RUN_ORIGIN + "/");
     }
 
-    // Independent smooth timer and status updates
     const uiTimer = setInterval(function() {
       if (isRedirecting) return;
       elapsedSeconds += 1;
-      timerDisplay.textContent = "Elapsed: " + elapsedSeconds + "s (typical: 15–25s)";
+      timerDisplay.textContent = "Elapsed: " + elapsedSeconds + "s (typical: ~15s)";
 
-      // Asymptotic progress bar reaching ~90% around 20s without freezing
-      const progress = Math.min(14 + Math.round(82 * (1 - Math.exp(-elapsedSeconds / 10))), 96);
-      progressBar.style.width = progress + "%";
+      const asymptoticProgress = Math.min(12 + Math.round(83 * (1 - Math.exp(-elapsedSeconds / 8))), 95);
+      progressBar.style.width = asymptoticProgress + "%";
 
-      if (elapsedSeconds < 4) {
-        statusLabel.textContent = "Contacting Cloud Run service...";
-      } else if (elapsedSeconds < 12) {
-        statusLabel.textContent = "Booting container & initializing ONNX runtime...";
-      } else if (elapsedSeconds < 25) {
-        statusLabel.textContent = "Loading Faster-Whisper STT & FP32 BERT into memory...";
-      } else if (elapsedSeconds < 40) {
-        statusLabel.textContent = "Hydrating SWI-Prolog knowledge base (895 recipes)...";
+      if (elapsedSeconds < 5) {
+        statusLabel.textContent = "Provisioning Google Cloud Run container...";
+      } else if (elapsedSeconds < 11) {
+        statusLabel.textContent = "Loading Faster-Whisper STT & FP32 BERT ONNX into memory...";
       } else {
-        statusLabel.textContent = "Cold start provisioning almost complete...";
+        statusLabel.textContent = "Hydrating SWI-Prolog knowledge base & verifying readiness...";
       }
     }, 1000);
 
-    function handleReadySuccess() {
+    async function checkReadiness() {
       if (isRedirecting) return;
-      isRedirecting = true;
-      clearInterval(uiTimer);
-      progressBar.style.width = "100%";
-      timerDisplay.textContent = "Ready in " + elapsedSeconds + "s!";
-      statusLabel.textContent = "✅ Models ready! Switching to start page...";
-      if (btnEnter) btnEnter.style.display = "inline-block";
-      setTimeout(navigateToStart, 50); // Instant 50ms transition
-    }
 
-    // Independent resilient probe that never cuts off an in-progress cold start
-    async function probeOnce(url) {
-      if (isRedirecting) return;
-      const controller = new AbortController();
-      // Generous 45s safety margin so cold starts taking 18s, 22s, etc. are never aborted prematurely
-      const timeoutId = setTimeout(() => controller.abort(), 45000);
       try {
-        const res = await fetch(url + (url.includes("?") ? "&" : "?") + "t=" + Date.now(), {
-          signal: controller.signal,
+        const res = await fetch(CLOUD_RUN_ORIGIN + "/api/ready?wait=1&t=" + Date.now(), {
+          method: "GET",
+          mode: "cors",
           cache: "no-store"
         });
-        clearTimeout(timeoutId);
+
         if (res.status === 200) {
-          handleReadySuccess();
+          isRedirecting = true;
+          clearInterval(uiTimer);
+          progressBar.style.width = "100%";
+          timerDisplay.textContent = "Ready in " + elapsedSeconds + "s!";
+          statusLabel.textContent = "✅ Models ready! Switching to start page...";
+          if (btnEnter) btnEnter.style.display = "inline-block";
+          setTimeout(navigateToStart, 300);
           return;
         }
-      } catch (e) {
-        clearTimeout(timeoutId);
+      } catch (err) {
       }
 
-      // If still warming up (503) or retrying, probe again in 1.2s
-      if (!isRedirecting) {
-        setTimeout(() => probeOnce(url), 1200);
-      }
+      setTimeout(checkReadiness, 1500);
     }
 
-    // Launch independent parallel probes: direct Cloud Run and Firebase rewrite proxy.
-    // Whichever responds with 200 first triggers the transition immediately without waiting for the other!
-    probeOnce(CLOUD_RUN_START_URL + "api/ready");
-    probeOnce("/api/ready");
+    checkReadiness();
   </script>
 </body>
 </html>

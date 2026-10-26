@@ -6,7 +6,7 @@ import asyncio
 import tempfile
 import threading
 from pathlib import Path
-from flask import Flask, render_template_string, render_template, request, jsonify
+from flask import Flask, render_template_string, render_template, request, jsonify, make_response
 from flask_socketio import SocketIO, emit
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
@@ -152,28 +152,49 @@ def html_page(page_name="start.html"):
         return render_template_string("<h1>Template not found</h1>"), 404
 
 
-@app.route("/api/health", methods=["GET"])
+@app.route("/api/health", methods=["GET", "OPTIONS"])
 def health_check():
     """Liveness probe: answers immediately (port binds before models load) and reports warmup status."""
-    resp = jsonify({
-        "status": "ok",
-        "service": "social-agent-cloud",
-        "models_ready": models_ready(),
-    })
+    if request.method == "OPTIONS":
+        resp = make_response("", 204)
+    else:
+        resp = jsonify({
+            "status": "ok",
+            "service": "social-agent-cloud",
+            "models_ready": models_ready(),
+        })
+        resp.status_code = 200
+
     resp.headers["Access-Control-Allow-Origin"] = "*"
-    return resp, 200
+    resp.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+    resp.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
 
 
-@app.route("/api/ready", methods=["GET"])
-def readiness_check():
-    """Readiness probe: 200 only after faster-whisper and FastBERTNLU finished background warmup."""
-    if not models_ready():
-        resp = jsonify({"status": "warming_up", "models_ready": False})
-        resp.headers["Access-Control-Allow-Origin"] = "*"
-        return resp, 503
-    resp = jsonify({"status": "ready", "models_ready": True})
+@app.route("/api/ready", methods=["GET", "OPTIONS"])
+def api_ready():
+    """Readiness probe: 200 once faster-whisper and FastBERTNLU finish warmup. Supports ?wait=1 long-polling."""
+    if request.method == "OPTIONS":
+        resp = make_response("", 204)
+    else:
+        wait_for_ready = request.args.get("wait") == "1"
+        deadline = time.time() + 25.0
+        while wait_for_ready and not models_ready() and time.time() < deadline:
+            time.sleep(0.25)
+
+        if models_ready():
+            resp = jsonify({"status": "ready", "models_ready": True})
+            resp.status_code = 200
+        else:
+            resp = jsonify({"status": "warming_up", "models_ready": False})
+            resp.status_code = 503
+
     resp.headers["Access-Control-Allow-Origin"] = "*"
-    return resp, 200
+    resp.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+    resp.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
 
 
 @app.route("/api/metrics", methods=["GET"])
