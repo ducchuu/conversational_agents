@@ -9,7 +9,7 @@ This portfolio project extends a university conversational-agent system into a b
 | Demo | Hosting | What to expect |
 |---|---|---|
 | [Recommended: home-server demo](https://cookingbroski.mduchlinski.eu/) | Home server exposed through Cloudflare Tunnel | Instant, responsive interaction; availability depends on the connected users' instances |
-| [Google Cloud demo](https://social-agent-cloud-511906064574.us-central1.run.app/) | Google Cloud Run, `us-central1` | Scale-to-zero hosting; startup and network delay can make interaction slower, Deployed for cloud platform practices but deployed with low budget plpanning |
+| [Google Cloud demo](https://cloud-agent-conversational.web.app/) | Google Cloud Run, `us-central1` | Scale-to-zero hosting; startup and network delay can make interaction slower, Deployed for cloud platform practices but deployed with low budget plpanning |
 
 Allow microphone access, click to start recording, and click again to send an utterance. Wait for model readiness before speaking.
 
