@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>CookingBroski — Starting Up</title>
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+  
+  <!-- Preconnect to Cloud Run origin immediately to eliminate DNS/TLS latency on redirect -->
+  <link rel="preconnect" href="https://social-agent-cloud-511906064574.us-central1.run.app" crossorigin>
+  <link rel="dns-prefetch" href="https://social-agent-cloud-511906064574.us-central1.run.app">
+
+  <script>
+    // FAST PATH: If this browser tab already verified the instance is warm, bypass the gatekeeper immediately
+    const CLOUD_RUN_START_URL = "https://social-agent-cloud-511906064574.us-central1.run.app/";
+    if (sessionStorage.getItem("cb_warm") === "true") {
+      window.location.replace(CLOUD_RUN_START_URL);
+    }
+  </script>
+
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      background: radial-gradient(1100px 700px at 15% -10%, rgba(124, 92, 255, .35), transparent 60%),
+                  radial-gradient(900px 600px at 110% 0%, rgba(46, 233, 166, .20), transparent 60%),
+                  #0b0d12;
+      color: rgba(255, 255, 255, .92);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      padding: 1rem;
+    }
+    .warmup-card {
+      background: rgba(255, 255, 255, .08);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, .15);
+      border-radius: 20px;
+      padding: 2.5rem 2rem;
+      max-width: 620px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, .55);
+    }
+    .warmup-icon {
+      font-size: 3.5rem;
+      display: inline-block;
+      animation: pulse 1.8s ease-in-out infinite;
+      margin-bottom: 1rem;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(124, 92, 255, 0.4)); }
+      50% { transform: scale(1.12); filter: drop-shadow(0 0 25px rgba(46, 233, 166, 0.7)); }
+    }
+    .warmup-title {
+      font-size: 1.85rem;
+      font-weight: 700;
+      margin-top: 0;
+      margin-bottom: 0.75rem;
+      letter-spacing: -0.02em;
+    }
+    .warmup-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.85rem;
+      background: rgba(124, 92, 255, 0.2);
+      border: 1px solid rgba(124, 92, 255, 0.4);
+      color: #b7a3ff;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+    }
+    .warmup-desc {
+      color: rgba(255, 255, 255, 0.75);
+      font-size: 1rem;
+      line-height: 1.55;
+      margin-bottom: 1.5rem;
+    }
+    .notice-box {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 0.85rem 1rem;
+      font-size: 0.88rem;
+      color: rgba(255, 255, 255, 0.65);
+      margin-bottom: 1.5rem;
+      text-align: left;
+      line-height: 1.45;
+    }
+    .notice-box strong {
+      color: #2ee9a6;
+    }
+    .timer-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.65);
+      margin-bottom: 0.5rem;
+      padding: 0 0.25rem;
+      font-variant-numeric: tabular-nums;
+    }
+    .timer-badge {
+      color: #2ee9a6;
+      font-weight: 600;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    .progress-container {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 999px;
+      height: 10px;
+      overflow: hidden;
+      margin-bottom: 1.1rem;
+      position: relative;
+    }
+    .progress-bar-fill {
+      background: linear-gradient(90deg, #7c5cff, #2ee9a6, #7c5cff);
+      background-size: 200% 100%;
+      animation: shimmer 2s linear infinite;
+      height: 100%;
+      width: 12%;
+      border-radius: 999px;
+      transition: width 0.8s ease;
+    }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    .status-text {
+      font-size: 0.92rem;
+      color: rgba(255, 255, 255, 0.88);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    .spinner-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #2ee9a6;
+      animation: blink 1.2s infinite;
+      flex-shrink: 0;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+    .btn-enter {
+      margin-top: 1.25rem;
+      background: #7c5cff;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 0.65rem 1.75rem;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: none;
+    }
+    .btn-enter:hover {
+      background: #6a44ff;
+    }
+  </style>
+</head>
+<body>
+  <div class="warmup-card" id="cardContainer">
+    <div class="warmup-icon">🍲</div>
+    <div class="warmup-badge">
+      <span>⚡</span> Scale-to-Zero Cloud Instance
+    </div>
+    <h1 class="warmup-title">CookingBroski is Waking Up</h1>
+    
+    <p class="warmup-desc">
+      Please hang tight! This application runs on a low-budget Google Cloud Run container that scales to zero when idle. 
+      A cold start usually takes <strong>15–25 seconds</strong> while Google Cloud Run allocates the container and Faster-Whisper STT, FP32 BERT NLU, and SWI-Prolog initialize in memory. Once warm, visits are instant.
+    </p>
+
+    <div class="notice-box">
+      ℹ️ <strong>Automatic transition:</strong> You don't need to refresh. As soon as model warmup completes, you will automatically be directed to the start screen.
+    </div>
+
+    <div class="timer-row">
+      <span>Cold-start progress</span>
+      <span class="timer-badge" id="timerDisplay">Elapsed: 0s (typical: 15–25s)</span>
+    </div>
+
+    <div class="progress-container">
+      <div class="progress-bar-fill" id="progressBar"></div>
+    </div>
+
+    <div class="status-text" id="statusText">
+      <span class="spinner-dot" id="spinnerDot"></span>
+      <span id="statusLabel">Contacting Cloud Run service...</span>
+    </div>
+
+    <button id="btnEnter" class="btn-enter" onclick="navigateToStart()">
+      Start Cooking →
+    </button>
+  </div>
+
+  <script>
+    let elapsedSeconds = 0;
+    let isRedirecting = false;
+
+    const progressBar = document.getElementById("progressBar");
+    const statusLabel = document.getElementById("statusLabel");
+    const timerDisplay = document.getElementById("timerDisplay");
+    const btnEnter = document.getElementById("btnEnter");
+
+    function navigateToStart() {
+      sessionStorage.setItem("cb_warm", "true");
+      window.location.replace(CLOUD_RUN_START_URL);
+    }
+
+    // Independent smooth timer and status updates
+    const uiTimer = setInterval(function() {
+      if (isRedirecting) return;
+      elapsedSeconds += 1;
+      timerDisplay.textContent = "Elapsed: " + elapsedSeconds + "s (typical: 15–25s)";
+
+      // Asymptotic progress bar reaching ~90% around 20s without freezing
+      const progress = Math.min(14 + Math.round(82 * (1 - Math.exp(-elapsedSeconds / 10))), 96);
+      progressBar.style.width = progress + "%";
+
+      if (elapsedSeconds < 4) {
+        statusLabel.textContent = "Contacting Cloud Run service...";
+      } else if (elapsedSeconds < 12) {
+        statusLabel.textContent = "Booting container & initializing ONNX runtime...";
+      } else if (elapsedSeconds < 25) {
+        statusLabel.textContent = "Loading Faster-Whisper STT & FP32 BERT into memory...";
+      } else if (elapsedSeconds < 40) {
+        statusLabel.textContent = "Hydrating SWI-Prolog knowledge base (895 recipes)...";
+      } else {
+        statusLabel.textContent = "Cold start provisioning almost complete...";
+      }
+    }, 1000);
+
+    function handleReadySuccess() {
+      if (isRedirecting) return;
+      isRedirecting = true;
+      clearInterval(uiTimer);
+      progressBar.style.width = "100%";
+      timerDisplay.textContent = "Ready in " + elapsedSeconds + "s!";
+      statusLabel.textContent = "✅ Models ready! Switching to start page...";
+      if (btnEnter) btnEnter.style.display = "inline-block";
+      setTimeout(navigateToStart, 50); // Instant 50ms transition
+    }
+
+    // Independent resilient probe that never cuts off an in-progress cold start
+    async function probeOnce(url) {
+      if (isRedirecting) return;
+      const controller = new AbortController();
+      // Generous 45s safety margin so cold starts taking 18s, 22s, etc. are never aborted prematurely
+      const timeoutId = setTimeout(() => controller.abort(), 45000);
+      try {
+        const res = await fetch(url + (url.includes("?") ? "&" : "?") + "t=" + Date.now(), {
+          signal: controller.signal,
+          cache: "no-store"
+        });
+        clearTimeout(timeoutId);
+        if (res.status === 200) {
+          handleReadySuccess();
+          return;
+        }
+      } catch (e) {
+        clearTimeout(timeoutId);
+      }
+
+      // If still warming up (503) or retrying, probe again in 1.2s
+      if (!isRedirecting) {
+        setTimeout(() => probeOnce(url), 1200);
+      }
+    }
+
+    // Launch independent parallel probes: direct Cloud Run and Firebase rewrite proxy.
+    // Whichever responds with 200 first triggers the transition immediately without waiting for the other!
+    probeOnce(CLOUD_RUN_START_URL + "api/ready");
+    probeOnce("/api/ready");
+  </script>
+</body>
+</html>

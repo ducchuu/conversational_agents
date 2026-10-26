@@ -64,6 +64,10 @@ conversational_agents/
 ├── .github/
 │   └── workflows/
 │       └── deploy.yml              
+├── cloud-gatekeeper/               # Edge gatekeeper hosted on Firebase Hosting CDN
+│   ├── firebase.json               # Edge rewrite proxy configuration to Cloud Run
+│   └── public/
+│       └── index.html              # Instant cold-start progress UI & warm-session bypass
 ├── docs/
 │   ├── documentation.md
 │   ├── architecture.md

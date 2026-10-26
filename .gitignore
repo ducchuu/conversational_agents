@@ -189,3 +189,7 @@ social-interaction-cloud/sic_framework/services/nlu/utils/checkpoints/model_chec
 *.pdf
 *.onnx
 nlu_audit_report.json
+
+# Firebase CLI cache & runtime files
+.firebase/
+

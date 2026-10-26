@@ -155,19 +155,25 @@ def html_page(page_name="start.html"):
 @app.route("/api/health", methods=["GET"])
 def health_check():
     """Liveness probe: answers immediately (port binds before models load) and reports warmup status."""
-    return jsonify({
+    resp = jsonify({
         "status": "ok",
         "service": "social-agent-cloud",
         "models_ready": models_ready(),
-    }), 200
+    })
+    resp.headers["Access-Control-Allow-Origin"] = "*"
+    return resp, 200
 
 
 @app.route("/api/ready", methods=["GET"])
 def readiness_check():
     """Readiness probe: 200 only after faster-whisper and FastBERTNLU finished background warmup."""
     if not models_ready():
-        return jsonify({"status": "warming_up", "models_ready": False}), 503
-    return jsonify({"status": "ready", "models_ready": True}), 200
+        resp = jsonify({"status": "warming_up", "models_ready": False})
+        resp.headers["Access-Control-Allow-Origin"] = "*"
+        return resp, 503
+    resp = jsonify({"status": "ready", "models_ready": True})
+    resp.headers["Access-Control-Allow-Origin"] = "*"
+    return resp, 200
 
 
 @app.route("/api/metrics", methods=["GET"])

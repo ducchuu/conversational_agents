@@ -5,10 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>CookingBroski — Starting Up</title>
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
-  <link rel="stylesheet" href="static/css/bootstrap.min.css">
-  <link rel="stylesheet" href="static/css/pca_sleek.css">
   <style>
-    /* Self-contained styling for instantaneous rendering */
+    * { box-sizing: border-box; }
     body {
       background: radial-gradient(1100px 700px at 15% -10%, rgba(124, 92, 255, .35), transparent 60%),
                   radial-gradient(900px 600px at 110% 0%, rgba(46, 233, 166, .20), transparent 60%),
@@ -47,6 +45,7 @@
     .warmup-title {
       font-size: 1.85rem;
       font-weight: 700;
+      margin-top: 0;
       margin-bottom: 0.75rem;
       letter-spacing: -0.02em;
     }
@@ -76,30 +75,52 @@
       padding: 0.85rem 1rem;
       font-size: 0.88rem;
       color: rgba(255, 255, 255, 0.65);
-      margin-bottom: 1.75rem;
+      margin-bottom: 1.5rem;
       text-align: left;
+      line-height: 1.45;
     }
     .notice-box strong {
       color: #2ee9a6;
+    }
+    .timer-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.65);
+      margin-bottom: 0.5rem;
+      padding: 0 0.25rem;
+      font-variant-numeric: tabular-nums;
+    }
+    .timer-badge {
+      color: #2ee9a6;
+      font-weight: 600;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     }
     .progress-container {
       background: rgba(255, 255, 255, 0.1);
       border-radius: 999px;
       height: 10px;
       overflow: hidden;
-      margin-bottom: 1rem;
+      margin-bottom: 1.1rem;
       position: relative;
     }
     .progress-bar-fill {
-      background: linear-gradient(90deg, #7c5cff, #2ee9a6);
+      background: linear-gradient(90deg, #7c5cff, #2ee9a6, #7c5cff);
+      background-size: 200% 100%;
+      animation: shimmer 2s linear infinite;
       height: 100%;
-      width: 15%;
+      width: 12%;
       border-radius: 999px;
-      transition: width 0.6s ease;
+      transition: width 0.8s ease;
+    }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
     }
     .status-text {
-      font-size: 0.9rem;
-      color: rgba(255, 255, 255, 0.85);
+      font-size: 0.92rem;
+      color: rgba(255, 255, 255, 0.88);
       font-weight: 500;
       display: flex;
       align-items: center;
@@ -112,6 +133,7 @@
       border-radius: 50%;
       background: #2ee9a6;
       animation: blink 1.2s infinite;
+      flex-shrink: 0;
     }
     @keyframes blink {
       0%, 100% { opacity: 0.3; }
@@ -144,12 +166,17 @@
     <h1 class="warmup-title">CookingBroski is Waking Up</h1>
     
     <p class="warmup-desc">
-      Please hang tight! This application runs on a low-budget Cloud Run container that scales to zero when idle. 
-      A cold start can take up to <strong>10–15 seconds</strong> while the Faster-Whisper STT and BERT NLU models initialize in memory.
+      Please hang tight! This application runs on a low-budget Google Cloud Run container that scales to zero when idle. 
+      A cold start usually takes <strong>15–25 seconds</strong> while Google Cloud Run allocates the container and Faster-Whisper STT, FP32 BERT NLU, and SWI-Prolog initialize in memory. Once warm, visits are instant.
     </p>
 
     <div class="notice-box">
       ℹ️ <strong>Automatic transition:</strong> You don't need to refresh. As soon as model warmup completes, you will automatically be directed to the start screen.
+    </div>
+
+    <div class="timer-row">
+      <span>Cold-start progress</span>
+      <span class="timer-badge" id="timerDisplay">Elapsed: 0s (typical: 15–25s)</span>
     </div>
 
     <div class="progress-container">
@@ -157,8 +184,8 @@
     </div>
 
     <div class="status-text" id="statusText">
-      <span class="spinner-dot"></span>
-      <span id="statusLabel">Initializing speech & language models...</span>
+      <span class="spinner-dot" id="spinnerDot"></span>
+      <span id="statusLabel">Initializing AI models in memory...</span>
     </div>
 
     <button id="btnEnter" class="btn-enter" onclick="navigateToStart()">
@@ -167,47 +194,60 @@
   </div>
 
   <script>
+    const START_URL = "/start.html";
     let elapsedSeconds = 0;
-    const progressBar = document.getElementById("progressBar");
-    const statusLabel = document.getElementById("statusLabel");
-    const btnEnter = document.getElementById("btnEnter");
     let isRedirecting = false;
 
+    const progressBar = document.getElementById("progressBar");
+    const statusLabel = document.getElementById("statusLabel");
+    const timerDisplay = document.getElementById("timerDisplay");
+    const btnEnter = document.getElementById("btnEnter");
+
     function navigateToStart() {
-      window.location.replace("/start.html");
+      window.location.replace(START_URL);
     }
 
-    function checkReadiness() {
+    const uiTimer = setInterval(function() {
+      if (isRedirecting) return;
+      elapsedSeconds += 1;
+      timerDisplay.textContent = "Elapsed: " + elapsedSeconds + "s (typical: 15–25s)";
+
+      const asymptoticProgress = Math.min(12 + Math.round(83 * (1 - Math.exp(-elapsedSeconds / 10))), 95);
+      progressBar.style.width = asymptoticProgress + "%";
+
+      if (elapsedSeconds < 5) {
+        statusLabel.textContent = "Booting container & initializing ONNX runtime...";
+      } else if (elapsedSeconds < 18) {
+        statusLabel.textContent = "Loading Faster-Whisper STT & FP32 BERT into memory...";
+      } else if (elapsedSeconds < 35) {
+        statusLabel.textContent = "Hydrating SWI-Prolog knowledge base & verifying readiness...";
+      } else {
+        statusLabel.textContent = "Cold start provisioning almost complete...";
+      }
+    }, 1000);
+
+    async function checkReadiness() {
       if (isRedirecting) return;
 
-      fetch("/api/ready")
-        .then(function(res) {
-          if (res.status === 200) {
-            isRedirecting = true;
-            progressBar.style.width = "100%";
-            statusLabel.textContent = "✅ Models ready! Switching to start page...";
-            if (btnEnter) btnEnter.style.display = "inline-block";
-            setTimeout(navigateToStart, 600);
-          } else {
-            elapsedSeconds += 1;
-            // Estimated progress curve reaching ~92% around 14 seconds
-            const progress = Math.min(15 + elapsedSeconds * 6, 92);
-            progressBar.style.width = progress + "%";
-            if (elapsedSeconds > 6) {
-              statusLabel.textContent = "Warming up Whisper & DistilBERT ONNX runtime (" + elapsedSeconds + "s)...";
-            }
-            setTimeout(checkReadiness, 1000);
-          }
-        })
-        .catch(function(err) {
-          elapsedSeconds += 1;
-          setTimeout(checkReadiness, 1000);
-        });
+      try {
+        const res = await fetch("/api/ready?t=" + Date.now(), { cache: "no-store" });
+        if (res.status === 200) {
+          isRedirecting = true;
+          clearInterval(uiTimer);
+          progressBar.style.width = "100%";
+          timerDisplay.textContent = "Ready in " + elapsedSeconds + "s!";
+          statusLabel.textContent = "✅ Models ready! Switching to start page...";
+          if (btnEnter) btnEnter.style.display = "inline-block";
+          setTimeout(navigateToStart, 500);
+          return;
+        }
+      } catch (err) {
+      }
+
+      setTimeout(checkReadiness, 1000);
     }
 
-    // Begin polling immediately
-    setTimeout(checkReadiness, 800);
+    checkReadiness();
   </script>
 </body>
 </html>
-

@@ -64,16 +64,19 @@ def test_health_and_readiness_probes(client):
     health = client.get('/api/health')
     assert health.status_code == 200
     assert "models_ready" in health.get_json()
+    assert health.headers.get("Access-Control-Allow-Origin") == "*"
 
     with patch('sic_framework.services.webserver.webserver_pca.models_ready', return_value=False):
         resp = client.get('/api/ready')
         assert resp.status_code == 503
         assert resp.get_json()["status"] == "warming_up"
+        assert resp.headers.get("Access-Control-Allow-Origin") == "*"
 
     with patch('sic_framework.services.webserver.webserver_pca.models_ready', return_value=True):
         resp = client.get('/api/ready')
         assert resp.status_code == 200
         assert resp.get_json()["models_ready"] is True
+        assert resp.headers.get("Access-Control-Allow-Origin") == "*"
 
 
 def test_telemetry_counts_onnx_int8_as_local_hit():

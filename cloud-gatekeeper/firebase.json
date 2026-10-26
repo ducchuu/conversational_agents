@@ -1,0 +1,38 @@
+{
+  "hosting": {
+    "public": "public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "headers": [
+      {
+        "source": "**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-store, no-cache, must-revalidate"
+          }
+        ]
+      }
+    ],
+    "rewrites": [
+      {
+        "source": "/api/ready",
+        "run": {
+          "serviceId": "social-agent-cloud",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/health",
+        "run": {
+          "serviceId": "social-agent-cloud",
+          "region": "us-central1"
+        }
+      }
+    ]
+  }
+}
+
